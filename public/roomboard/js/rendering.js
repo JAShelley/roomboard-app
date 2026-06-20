@@ -573,8 +573,10 @@
       if(room.needsCleaning){
         el.style.borderColor = "";
         el.style.background = "";
+        el.style.removeProperty("--roomAccent");
       } else {
         el.style.borderColor = effectiveColor + "55";
+        el.style.setProperty("--roomAccent", effectiveColor);
         el.style.background = "linear-gradient(180deg, " + effectiveColor + "E6, " + effectiveColor + "CC)";
         applyRoomCardContrastVars(el, (state.settings.cardTextMode === "light") ? "#ffffff" : (state.settings.cardTextMode === "dark") ? "#0b1220" : pickReadableTextColor(effectiveColor));
       }
@@ -1325,8 +1327,10 @@
       if(room.needsCleaning){
         el.style.borderColor = "";
         el.style.background = "";
+        el.style.removeProperty("--roomAccent");
       } else {
         el.style.borderColor = effectiveColor + "55";
+        el.style.setProperty("--roomAccent", effectiveColor);
         el.style.background = "linear-gradient(180deg, " + effectiveColor + "22, rgba(255,255,255,.03))";
         applyRoomCardContrastVars(el, (state.settings.cardTextMode === "light") ? "#ffffff" : (state.settings.cardTextMode === "dark") ? "#0b1220" : pickReadableTextColor(effectiveColor));
       }
