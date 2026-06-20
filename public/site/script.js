@@ -167,9 +167,11 @@
 
         var body;
         if (r.state === "empty") {
-          body = '<div class="roomBody"><span class="roomEmptyText">Empty</span></div>';
+          body = '<div class="roomBody"><span class="roomEmptyText">Empty</span>'
+            + '<div class="roomFoot"><span class="timer" data-timer>' + fmt(0) + '</span></div></div>';
         } else if (r.state === "cleaning") {
-          body = '<div class="roomBody"><span class="roomCleanPill">NEEDS TO BE CLEANED</span></div>';
+          body = '<div class="roomBody"><span class="roomCleanPill">NEEDS TO BE CLEANED</span>'
+            + '<div class="roomFoot"><span class="timer warn" data-timer>' + fmt(r.secs) + '</span></div></div>';
         } else {
           var d = DOCS[r.doc] || { img: BASE + "seaturtle-badge.png", init: "DR" };
           var info = esc(r.patient) + '<span class="sep">•</span>' + esc(ty.label) + '<span class="sep">•</span>' + esc(r.doc);
@@ -179,14 +181,34 @@
           body = '<div class="roomBody">'
             + '<span class="noteDock">📝</span>'
             + '<div class="roomInfoLine">' + info + '</div>'
-            + '<div class="roomFoot">' + badge + '</div>'
+            + '<div class="roomFoot"><span class="timer' + (alert ? " alert" : (warn ? " warn" : "")) + '" data-timer>' + fmt(r.secs) + '</span>'
+            + badge + '</div>'
             + '</div>';
         }
+        el.setAttribute("data-room", r.name);
         el.innerHTML = top + body;
         grid.appendChild(el);
       });
     }
     render();
+
+    // Tick timers in-place — update only the text node, never rebuild DOM,
+    // so badge images don't flash on every second.
+    setInterval(function () {
+      rooms.forEach(function (r) {
+        if (r.state === "empty") return;
+        r.secs += 1;
+        var el = grid.querySelector('[data-room="' + r.name + '"]');
+        if (!el) return;
+        var timerEl = el.querySelector("[data-timer]");
+        if (!timerEl) return;
+        var alert = r.state === "active" && r.secs > TIMER_ALERT;
+        var warn  = r.state === "active" && r.secs > TIMER_WARN && !alert;
+        timerEl.textContent = fmt(r.secs);
+        timerEl.className = "timer" + (alert ? " alert" : (warn ? " warn" : ""));
+        el.classList.toggle("alert", alert);
+      });
+    }, 1000);
 
     var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!reduceMotion) {
