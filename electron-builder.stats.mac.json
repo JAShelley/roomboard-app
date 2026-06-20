@@ -1,0 +1,34 @@
+{
+  "appId": "com.roomboard.stats",
+  "artifactName": "RoomBoard-Stats-macOS.${ext}",
+  "asar": true,
+  "directories": {
+    "buildResources": "build",
+    "output": "dist-stats-mac"
+  },
+  "productName": "RoomBoard Stats",
+  "extraMetadata": {
+    "main": "desktop/stats-main.cjs",
+    "name": "roomboard-stats",
+    "description": "Private Mac stats viewer for RoomBoard."
+  },
+  "files": [
+    "desktop/stats-main.cjs",
+    "public/stats-viewer/**/*",
+    "package.json"
+  ],
+  "mac": {
+    "category": "public.app-category.business",
+    "gatekeeperAssess": false,
+    "hardenedRuntime": false,
+    "identity": null,
+    "target": [
+      {
+        "target": "dir"
+      },
+      {
+        "target": "zip"
+      }
+    ]
+  }
+}

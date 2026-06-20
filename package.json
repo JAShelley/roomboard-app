@@ -1,0 +1,123 @@
+{
+  "name": "roomboard",
+  "description": "Desktop RoomBoard app for clinic room status display and workflow updates.",
+  "version": "0.1.0",
+  "author": "RoomBoard",
+  "license": "UNLICENSED",
+  "main": "desktop/main.cjs",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "desktop:assets": "node scripts/generate-desktop-assets.mjs",
+    "desktop:dev": "electron .",
+    "predesktop:pack": "npm run desktop:assets",
+    "desktop:pack": "electron-builder --dir",
+    "predesktop:dist": "npm run desktop:assets",
+    "desktop:dist": "electron-builder",
+    "predesktop:dist:win": "npm run desktop:assets",
+    "desktop:dist:win": "electron-builder --win nsis",
+    "predesktop:dist:mac": "npm run desktop:assets && npm run capture:helper:build:mac",
+    "desktop:dist:mac": "electron-builder --mac",
+    "predesktop:dist:mac:release": "npm run desktop:assets && npm run capture:helper:build:mac",
+    "desktop:dist:mac:release": "ROOMBOARD_REQUIRE_NOTARIZATION=1 electron-builder --mac",
+    "mac:verify": "node scripts/verify-mac-notarization.cjs",
+    "capture:dev": "electron desktop/capture-main.cjs",
+    "capture:helper:build": "dotnet publish desktop/capture-helper/RoomBoard.Capture.Helper.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true",
+    "capture:helper:build:mac": "swift build -c release --package-path desktop/capture-helper-mac",
+    "stats:dev": "electron desktop/stats-main.cjs",
+    "stats:pack:mac": "electron-builder --config electron-builder.stats.mac.json --mac dir",
+    "stats:dist:mac": "electron-builder --config electron-builder.stats.mac.json --mac",
+    "precapture:pack": "npm run desktop:assets && npm run capture:helper:build",
+    "capture:pack": "electron-builder --config electron-builder.capture.json --dir",
+    "precapture:dist:win": "npm run desktop:assets && npm run capture:helper:build",
+    "capture:dist:win": "electron-builder --config electron-builder.capture.json --win nsis",
+    "precapture:dist:mac": "npm run desktop:assets && npm run capture:helper:build:mac",
+    "capture:dist:mac": "electron-builder --config electron-builder.capture.mac.json --mac"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "stripe": "^17.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "electron": "^41.2.1",
+    "electron-builder": "^26.8.1",
+    "png-to-ico": "^3.0.1",
+    "typescript": "^5.7.2"
+  },
+  "build": {
+    "appId": "com.roomboard.desktop",
+    "artifactName": "RoomBoard-Setup-Windows-x64.${ext}",
+    "directories": {
+      "buildResources": "build"
+    },
+    "productName": "RoomBoard",
+    "asar": true,
+    "afterPack": "scripts/strip-mac-xattrs.cjs",
+    "afterSign": "scripts/notarize-mac.cjs",
+    "afterAllArtifactBuild": "scripts/notarize-mac-artifacts.cjs",
+    "files": [
+      "desktop/**/*",
+      "public/roomboard/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "build/icon.png",
+        "to": "tray-icon.png"
+      }
+    ],
+    "mac": {
+      "artifactName": "RoomBoard-macOS.${ext}",
+      "category": "public.app-category.productivity",
+      "extraResources": [
+        {
+          "from": "desktop/capture-helper-mac/.build/release",
+          "to": "capture-helper-mac",
+          "filter": [
+            "RoomBoardCaptureHelper"
+          ]
+        }
+      ],
+      "binaries": [
+        "Contents/Resources/capture-helper-mac/RoomBoardCaptureHelper"
+      ],
+      "forceCodeSigning": true,
+      "hardenedRuntime": true,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.inherit.plist",
+      "target": [
+        {
+          "target": "dmg"
+        },
+        {
+          "target": "zip"
+        }
+      ]
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
