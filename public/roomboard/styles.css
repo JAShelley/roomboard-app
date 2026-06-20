@@ -133,6 +133,11 @@
       gap:10px;
       min-width:0;
     }
+    .brandHomeLink{
+      text-decoration:none;
+      color:inherit;
+      display:contents;
+    }
     .brandWordmark{
       font-size:clamp(32px, 4vw, 46px);
       font-weight:800;

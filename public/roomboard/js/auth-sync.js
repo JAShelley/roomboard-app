@@ -3953,7 +3953,7 @@
 	        applySessionUiPrefs(state);
 	        saveLocal();
 	        refreshUiFromState({ applyTheme: true });
-	        setStatus("Logged out.");
+	        window.location.href = "/";
 	        setSyncUI("idle", "Guest");
 	        currentBillingAccess = null;
 	        setBillingCardVisible(false);
