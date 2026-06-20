@@ -167,11 +167,9 @@
 
         var body;
         if (r.state === "empty") {
-          body = '<div class="roomBody"><span class="roomEmptyText">Empty</span>'
-            + '<div class="roomFoot"><span class="timer">' + fmt(0) + '</span></div></div>';
+          body = '<div class="roomBody"><span class="roomEmptyText">Empty</span></div>';
         } else if (r.state === "cleaning") {
-          body = '<div class="roomBody"><span class="roomCleanPill">NEEDS TO BE CLEANED</span>'
-            + '<div class="roomFoot"><span class="timer">' + fmt(r.secs) + '</span></div></div>';
+          body = '<div class="roomBody"><span class="roomCleanPill">NEEDS TO BE CLEANED</span></div>';
         } else {
           var d = DOCS[r.doc] || { img: BASE + "seaturtle-badge.png", init: "DR" };
           var info = esc(r.patient) + '<span class="sep">•</span>' + esc(ty.label) + '<span class="sep">•</span>' + esc(r.doc);
@@ -181,8 +179,7 @@
           body = '<div class="roomBody">'
             + '<span class="noteDock">📝</span>'
             + '<div class="roomInfoLine">' + info + '</div>'
-            + '<div class="roomFoot"><span class="timer' + (alert ? " alert" : (warn ? " warn" : "")) + '">' + fmt(r.secs) + '</span>'
-            + badge + '</div>'
+            + '<div class="roomFoot">' + badge + '</div>'
             + '</div>';
         }
         el.innerHTML = top + body;
@@ -193,12 +190,6 @@
 
     var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!reduceMotion) {
-      // tick running timers (active + cleaning) every second
-      setInterval(function () {
-        rooms.forEach(function (r) { if (r.state !== "empty") r.secs += 1; });
-        render();
-      }, 1000);
-
       // occasional live-feeling state changes
       var names = ["S. Rivera", "K. Adams", "T. Brooks", "L. Hayes", "D. Flynn", "C. Wells", "P. Shah"];
       var docKeys = Object.keys(DOCS);
