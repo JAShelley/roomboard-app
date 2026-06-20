@@ -819,6 +819,7 @@
 
     function scheduleActiveDisplayFitAfterReturn(){
       if(document && document.hidden) return;
+      markActiveDisplayFitPendingReturn();
       scheduleActiveDisplayFit();
       if(activeDisplayFitRetryTimer) clearTimeout(activeDisplayFitRetryTimer);
       activeDisplayFitRetryTimer = setTimeout(function(){
