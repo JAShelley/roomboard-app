@@ -107,11 +107,11 @@
   if (grid) {
     // Visit types with soft color fills (the whole tile fills with this color).
     var TYPES = {
-      exam:      { label: "Exam",      c: "#5fae7e" },
-      followup:  { label: "Follow-up", c: "#4a9fd0" },
-      procedure: { label: "Procedure", c: "#e7727f" },
-      consult:   { label: "Consult",   c: "#9a86e0" },
-      workin:    { label: "Work-In",   c: "#46b0b7" }
+      exam:      { label: "Exam",      c: "#3b82f6" },
+      followup:  { label: "Follow-up", c: "#18b06b" },
+      procedure: { label: "Procedure", c: "#ef476f" },
+      consult:   { label: "Consult",   c: "#8b5cf6" },
+      workin:    { label: "Work-In",   c: "#f59e0b" }
     };
     // Doctor -> animal badge + initials, like the real board (turtle "LS").
     var BASE = "../public/roomboard/";
