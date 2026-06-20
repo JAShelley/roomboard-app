@@ -149,46 +149,49 @@
       return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.58 ? "#12233b" : "#ffffff";
     }
 
+    function makeCard(r) {
+      var ty = TYPES[r.type] || TYPES.exam;
+      var el = document.createElement("article");
+      var alert = r.state === "active" && r.secs > TIMER_ALERT;
+      var warn = r.state === "active" && r.secs > TIMER_WARN && !alert;
+      el.className = "room" + (r.state === "empty" ? " empty" : "") + (r.state === "cleaning" ? " cleaning" : "") + (alert ? " alert" : "");
+      el.setAttribute("data-room", r.name);
+      if (r.state === "active") { el.style.setProperty("--c", ty.c); el.style.color = readableText(ty.c); }
+      var icons = '<span class="roomIcons">🐾 ↪ ▤</span>';
+      var top = '<div class="roomTop"><span class="roomName">' + esc(r.name) + '</span>' + icons + '</div>';
+      var body;
+      if (r.state === "empty") {
+        body = '<div class="roomBody"><span class="roomEmptyText">Empty</span>'
+          + '<div class="roomFoot"><span class="timer" data-timer>' + fmt(0) + '</span></div></div>';
+      } else if (r.state === "cleaning") {
+        body = '<div class="roomBody"><span class="roomCleanPill">NEEDS TO BE CLEANED</span>'
+          + '<div class="roomFoot"><span class="timer warn" data-timer>' + fmt(r.secs) + '</span></div></div>';
+      } else {
+        var d = DOCS[r.doc] || { img: BASE + "seaturtle-badge.png", init: "DR" };
+        var info = esc(r.patient) + '<span class="sep">•</span>' + esc(ty.label) + '<span class="sep">•</span>' + esc(r.doc);
+        var badge = '<span class="docBadge"><img alt="" src="' + d.img
+          + '" onerror="this.parentNode.classList.add(\'fallback\');this.remove();">'
+          + '<span class="docBadgeInit">' + d.init + '</span></span>';
+        body = '<div class="roomBody">'
+          + '<span class="noteDock">📝</span>'
+          + '<div class="roomInfoLine">' + info + '</div>'
+          + '<div class="roomFoot"><span class="timer' + (alert ? " alert" : (warn ? " warn" : "")) + '" data-timer>' + fmt(r.secs) + '</span>'
+          + badge + '</div></div>';
+      }
+      el.innerHTML = top + body;
+      return el;
+    }
+
+    function renderOne(r) {
+      var old = grid.querySelector('[data-room="' + r.name + '"]');
+      var neu = makeCard(r);
+      if (old) grid.replaceChild(neu, old);
+      else grid.appendChild(neu);
+    }
+
     function render() {
       grid.innerHTML = "";
-      rooms.forEach(function (r) {
-        var ty = TYPES[r.type] || TYPES.exam;
-        var el = document.createElement("article");
-        var alert = r.state === "active" && r.secs > TIMER_ALERT;
-        var warn = r.state === "active" && r.secs > TIMER_WARN && !alert;
-        el.className = "room" + (r.state === "empty" ? " empty" : "") + (r.state === "cleaning" ? " cleaning" : "") + (alert ? " alert" : "");
-        if (r.state === "active") {
-          el.style.setProperty("--c", ty.c);
-          el.style.color = readableText(ty.c);
-        }
-
-        var icons = '<span class="roomIcons">🐾 ↪ ▤</span>';
-        var top = '<div class="roomTop"><span class="roomName">' + esc(r.name) + '</span>' + icons + '</div>';
-
-        var body;
-        if (r.state === "empty") {
-          body = '<div class="roomBody"><span class="roomEmptyText">Empty</span>'
-            + '<div class="roomFoot"><span class="timer" data-timer>' + fmt(0) + '</span></div></div>';
-        } else if (r.state === "cleaning") {
-          body = '<div class="roomBody"><span class="roomCleanPill">NEEDS TO BE CLEANED</span>'
-            + '<div class="roomFoot"><span class="timer warn" data-timer>' + fmt(r.secs) + '</span></div></div>';
-        } else {
-          var d = DOCS[r.doc] || { img: BASE + "seaturtle-badge.png", init: "DR" };
-          var info = esc(r.patient) + '<span class="sep">•</span>' + esc(ty.label) + '<span class="sep">•</span>' + esc(r.doc);
-          var badge = '<span class="docBadge"><img alt="" src="' + d.img
-            + '" onerror="this.parentNode.classList.add(\'fallback\');this.remove();">'
-            + '<span class="docBadgeInit">' + d.init + '</span></span>';
-          body = '<div class="roomBody">'
-            + '<span class="noteDock">📝</span>'
-            + '<div class="roomInfoLine">' + info + '</div>'
-            + '<div class="roomFoot"><span class="timer' + (alert ? " alert" : (warn ? " warn" : "")) + '" data-timer>' + fmt(r.secs) + '</span>'
-            + badge + '</div>'
-            + '</div>';
-        }
-        el.setAttribute("data-room", r.name);
-        el.innerHTML = top + body;
-        grid.appendChild(el);
-      });
+      rooms.forEach(function (r) { grid.appendChild(makeCard(r)); });
     }
     render();
 
@@ -221,7 +224,6 @@
         var r = rooms[flips % rooms.length];
         flips++;
         if (r.state === "empty") {
-          // patient checks in
           r.state = "active";
           r.patient = names[Math.floor(Math.random() * names.length)];
           r.doc = docKeys[Math.floor(Math.random() * docKeys.length)];
@@ -230,10 +232,10 @@
         } else if (r.state === "cleaning") {
           r.state = "empty"; r.secs = 0;
         } else if (r.secs > TIMER_ALERT && Math.random() > 0.5) {
-          // long visit -> discharge -> needs cleaning
           r.state = "cleaning"; r.secs = Math.floor(Math.random() * 60) + 5;
-        }
-        render();
+        } else { return; } // no state change, skip redraw
+        // Only redraw the single card that changed
+        renderOne(r);
       }, 2800);
     }
   }
