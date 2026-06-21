@@ -826,6 +826,7 @@
       if(activeDisplayFitRetryTimer) clearTimeout(activeDisplayFitRetryTimer);
       activeDisplayFitRetryTimer = setTimeout(function(){
         activeDisplayFitRetryTimer = 0;
+        if(!document.hidden) markActiveDisplayFitPendingReturn();
         scheduleActiveDisplayFit();
       }, 160);
     }
@@ -940,6 +941,11 @@
       var isList = (renderMode === "list");
       var groupByDoctor = shouldRenderActiveDisplayDoctorGroups(renderMode);
       clearActiveDisplayFit();
+      // Re-mark pending after clearActiveDisplayFit cleared it, so the grid
+      // stays hidden while cards are being rebuilt and the scale re-applied.
+      if(document.body && document.body.classList.contains("displayTabActive")){
+        markActiveDisplayFitPendingReturn();
+      }
       grid.classList.toggle("activeDisplayFitSingle", renderMode === "grid" && groupByDoctor && displayRooms.length === 1);
       grid.classList.toggle("mobileQuickViewGrid", renderMode === "quick" || renderMode === "mobilecards");
       grid.classList.toggle("activeDoctorGrouped", groupByDoctor);
@@ -948,11 +954,13 @@
       rememberDisplayStructure(grid, displayRooms, renderMode);
 
       if(renderMode === "quick"){
+        clearActiveDisplayFitPendingReturn();
         renderMobileQuickViewDisplay(skipTimerBindingRefresh);
         return;
       }
 
       if(renderMode === "mobilecards"){
+        clearActiveDisplayFitPendingReturn();
         renderMobileDisplayCards(skipTimerBindingRefresh);
         return;
       }
@@ -966,6 +974,7 @@
           requestAnimationFrame(applyWbRoomNameMarquee);
           syncRoomNotesLayers();
           if(!skipTimerBindingRefresh) rebuildTimerBindings();
+          clearActiveDisplayFitPendingReturn();
           return;
         }
         for(var i=0;i<Math.min(lines, displayRooms.length);i++){
@@ -976,6 +985,7 @@
         requestAnimationFrame(applyWbRoomNameMarquee);
         syncRoomNotesLayers();
         if(!skipTimerBindingRefresh) rebuildTimerBindings();
+        clearActiveDisplayFitPendingReturn();
         return;
       }
 
@@ -984,6 +994,7 @@
           grid.appendChild(createActiveEmptyElement());
           syncRoomNotesLayers();
           if(!skipTimerBindingRefresh) rebuildTimerBindings();
+          clearActiveDisplayFitPendingReturn();
           return;
         }
         appendActiveDoctorDisplayGroups(grid, displayRooms, renderMode);
