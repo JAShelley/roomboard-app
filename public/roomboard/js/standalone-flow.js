@@ -120,18 +120,183 @@
     }catch(e){}
   }
 
+  /* ── Auth overlay ──────────────────────────────────────────────────── */
+
+  function injectAuthOverlayStyles(){
+    if(document.getElementById("rbAuthOverlayStyles")) return;
+    var s = document.createElement("style");
+    s.id = "rbAuthOverlayStyles";
+    s.textContent = [
+      "#rbAuthOverlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;",
+        "background:rgba(4,9,18,.93);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);",
+        "padding:20px;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;}",
+      ".rbACard{background:#0d1929;border:1px solid rgba(255,255,255,.11);border-radius:22px;",
+        "padding:36px 38px;max-width:460px;width:100%;box-shadow:0 48px 96px rgba(0,0,0,.75);",
+        "overflow-y:auto;max-height:90vh;}",
+      ".rbABrand{display:flex;align-items:center;gap:11px;justify-content:center;margin-bottom:28px;}",
+      ".rbAMark{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;flex:none;",
+        "background:linear-gradient(140deg,#11a39b,#0a5f5b);color:#fff;}",
+      ".rbAMark svg{width:21px;height:21px;}",
+      ".rbAWordmark{font-size:24px;font-weight:800;color:#eaf1ff;letter-spacing:-.04em;font-style:italic;}",
+      ".rbATabs{display:flex;background:rgba(255,255,255,.06);border-radius:12px;padding:3px;gap:3px;margin-bottom:24px;}",
+      ".rbATab{flex:1;background:none;border:none;color:rgba(220,232,255,.45);font-size:14px;font-weight:600;",
+        "padding:10px;border-radius:9px;cursor:pointer;transition:background .15s,color .15s;}",
+      ".rbATab.active{background:rgba(255,255,255,.11);color:#eaf1ff;}",
+      ".rbAField{margin-bottom:14px;}",
+      ".rbAField label{display:block;font-size:11.5px;font-weight:700;color:rgba(160,178,218,.75);",
+        "text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}",
+      ".rbAField input,.rbAField select{width:100%;padding:11px 13px;",
+        "background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);",
+        "border-radius:10px;color:#eaf1ff;font-size:14px;outline:none;",
+        "transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;}",
+      ".rbAField input:focus,.rbAField select:focus{border-color:rgba(17,163,155,.65);",
+        "box-shadow:0 0 0 3px rgba(17,163,155,.14);}",
+      ".rbAField input::placeholder{color:rgba(160,178,218,.35);}",
+      ".rbAField select option{background:#0d1929;color:#eaf1ff;}",
+      ".rbARow{display:grid;grid-template-columns:1fr 1fr;gap:12px;}",
+      "@media(max-width:500px){.rbARow{grid-template-columns:1fr;}}",
+      ".rbAError{background:rgba(239,68,68,.11);border:1px solid rgba(239,68,68,.28);border-radius:10px;",
+        "padding:10px 14px;font-size:13px;color:#fca5a5;margin-bottom:14px;display:none;}",
+      ".rbASubmit{width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;",
+        "font-size:15px;font-weight:700;letter-spacing:-.01em;",
+        "background:linear-gradient(135deg,#11a39b,#0a6060);color:#fff;",
+        "transition:opacity .15s,transform .2s cubic-bezier(.22,1,.36,1);margin-bottom:16px;}",
+      ".rbASubmit:hover:not(:disabled){opacity:.88;transform:translateY(-1px);}",
+      ".rbASubmit:disabled{opacity:.5;cursor:default;transform:none;}",
+      ".rbAFooter{text-align:center;}",
+      ".rbAFooter a{color:rgba(160,178,218,.5);font-size:13px;text-decoration:none;transition:color .15s;}",
+      ".rbAFooter a:hover{color:rgba(160,178,218,.85);}",
+      ".rbADivider{height:1px;background:rgba(255,255,255,.07);margin:18px 0;}"
+    ].join("");
+    (document.head || document.documentElement).appendChild(s);
+  }
+
+  function showAuthOverlay(initMode){
+    injectAuthOverlayStyles();
+    if(document.getElementById("rbAuthOverlay")){ setOverlayMode(initMode); return; }
+
+    var SPECIALTIES = ["General Practice","Dental","Dermatology","Cardiology","Pediatrics",
+      "Orthopedics","Ophthalmology","Obstetrics & Gynecology","ENT","Urgent Care","Other"];
+    var specOpts = SPECIALTIES.map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join("");
+
+    var overlay = document.createElement("div");
+    overlay.id = "rbAuthOverlay";
+    overlay.innerHTML = [
+      '<div class="rbACard">',
+        '<div class="rbABrand">',
+          '<span class="rbAMark"><svg viewBox="0 0 24 24" fill="none">',
+            '<rect x="3" y="4" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="2"/>',
+            '<path d="M3 9h18M9 9v11" stroke="currentColor" stroke-width="2"/>',
+          '</svg></span>',
+          '<span class="rbAWordmark">RoomBoard</span>',
+        '</div>',
+        '<div class="rbATabs" id="rbATabs">',
+          '<button class="rbATab" data-mode="login" type="button">Sign in</button>',
+          '<button class="rbATab" data-mode="create" type="button">Create clinic</button>',
+        '</div>',
+        '<div id="rbACreateFields" style="display:none">',
+          '<div class="rbARow">',
+            '<div class="rbAField"><label>Practice name</label><input id="rbaPracticeName" placeholder="Clinic name" type="text" autocomplete="organization"></div>',
+            '<div class="rbAField"><label>Admin name</label><input id="rbaFullName" placeholder="Your name" type="text" autocomplete="name"></div>',
+          '</div>',
+          '<div class="rbARow">',
+            '<div class="rbAField"><label>Phone</label><input id="rbaPhone" placeholder="(555) 000-0000" type="tel" autocomplete="tel"></div>',
+            '<div class="rbAField"><label>City &amp; State</label><input id="rbaLocation" placeholder="Austin, TX" type="text"></div>',
+          '</div>',
+          '<div class="rbAField"><label>Specialty</label><select id="rbaSpecialty">'+specOpts+'</select></div>',
+          '<div class="rbAField" id="rbaSpecialtyOtherWrap" style="display:none"><label>Describe specialty</label><input id="rbaSpecialtyOther" placeholder="e.g. Sports Medicine" type="text"></div>',
+          '<div class="rbADivider"></div>',
+        '</div>',
+        '<div class="rbAField"><label>Email</label><input id="rbaEmail" placeholder="name@clinic.com" type="email" autocomplete="username"></div>',
+        '<div class="rbAField"><label>Password</label><input id="rbaPassword" placeholder="Password" type="password" autocomplete="current-password"></div>',
+        '<div class="rbAError" id="rbAError"></div>',
+        '<button class="rbASubmit" id="rbaSubmit" type="button">Sign in</button>',
+        '<div class="rbAFooter"><a href="/">← Back to theroomboard.com</a></div>',
+      '</div>'
+    ].join("");
+    document.body.appendChild(overlay);
+
+    var tabs       = overlay.querySelectorAll(".rbATab");
+    var createWrap = document.getElementById("rbACreateFields");
+    var submitBtn  = document.getElementById("rbaSubmit");
+    var errorDiv   = document.getElementById("rbAError");
+    var specSel    = document.getElementById("rbaSpecialty");
+    var specOther  = document.getElementById("rbaSpecialtyOtherWrap");
+    var curMode    = (initMode === "create") ? "create" : "login";
+
+    function applyMode(mode){
+      curMode = mode;
+      tabs.forEach(function(t){ t.classList.toggle("active", t.getAttribute("data-mode") === mode); });
+      createWrap.style.display = mode === "create" ? "" : "none";
+      submitBtn.textContent = mode === "create" ? "Create clinic" : "Sign in";
+      hideErr();
+    }
+    function showErr(msg){ errorDiv.textContent = msg; errorDiv.style.display = ""; }
+    function hideErr(){ errorDiv.style.display = "none"; }
+    function setBusy(b){ submitBtn.disabled = !!b; submitBtn.textContent = b ? (curMode === "create" ? "Creating clinic…" : "Signing in…") : (curMode === "create" ? "Create clinic" : "Sign in"); }
+
+    window.roomboardShowAuthError = function(msg){ showErr(msg); setBusy(false); };
+    window.setOverlayMode = applyMode;
+
+    tabs.forEach(function(t){ t.addEventListener("click", function(){ applyMode(t.getAttribute("data-mode")); }); });
+    if(specSel) specSel.addEventListener("change", function(){ specOther.style.display = specSel.value === "Other" ? "" : "none"; });
+
+    function gVal(id){ var el = document.getElementById(id); return el ? (el.value || "").trim() : ""; }
+    function sVal(id, v){ var el = document.getElementById(id); if(el) el.value = v; }
+
+    submitBtn.addEventListener("click", function(){
+      hideErr();
+      var email = gVal("rbaEmail"), pass = gVal("rbaPassword");
+      if(!email || !pass){ showErr("Email and password are required."); return; }
+
+      if(curMode === "create"){
+        var pName = gVal("rbaPracticeName"), admin = gVal("rbaFullName");
+        if(!pName || !admin){ showErr("Practice name and your name are required."); return; }
+        sVal("practiceName", pName);
+        sVal("fullName", admin);
+        sVal("email", email);
+        sVal("password", pass);
+        sVal("practicePhone", gVal("rbaPhone"));
+        sVal("practiceLocation", gVal("rbaLocation"));
+        var spec = specSel ? specSel.value : "General Practice";
+        sVal("practiceSpecialty", spec);
+        if(spec === "Other") sVal("practiceSpecialtyOther", gVal("rbaSpecialtyOther"));
+        setBusy(true);
+        if(typeof window.roomboardAuthSignup === "function") window.roomboardAuthSignup();
+      } else {
+        sVal("email", email);
+        sVal("password", pass);
+        setBusy(true);
+        if(typeof window.roomboardAuthLogin === "function") window.roomboardAuthLogin();
+      }
+    });
+
+    overlay.addEventListener("keydown", function(e){ if(e.key === "Enter" && e.target.tagName !== "BUTTON") submitBtn.click(); });
+    applyMode(curMode);
+    window.setTimeout(function(){ var f = document.getElementById("rbaEmail"); if(f) f.focus(); }, 60);
+  }
+
+  function hideAuthOverlay(){
+    var el = document.getElementById("rbAuthOverlay");
+    if(el) el.parentNode.removeChild(el);
+    window.roomboardShowAuthError = null;
+  }
+
+  function setOverlayMode(mode){
+    if(typeof window.setOverlayMode === "function") window.setOverlayMode(mode);
+  }
+
   function enterAuth(){
     var route = getRoute();
     if(!route.standalone) return;
     setVisualStage("auth");
-    activateSettingsTab("tabAccount");
-    applyAuthMode(route.authMode);
-    openSettingsSurface();
+    showAuthOverlay(route.authMode);
   }
 
   function enterSetup(options){
     var route = getRoute();
     if(!route.standalone) return;
+    hideAuthOverlay();
     setVisualStage("setup");
     activateSettingsTab("tabRooms");
     openSettingsSurface();
@@ -360,6 +525,7 @@
     }
     // Gate the board behind an active trial or subscription.
     checkBillingThenOpen(function(){
+      hideAuthOverlay();
       if(document.body){
         document.body.classList.remove("roomboardStandaloneMode", "standaloneAuthMode", "standaloneSetupMode");
       }

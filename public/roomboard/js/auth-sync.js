@@ -23,6 +23,26 @@
       return String(err);
     }
 
+    function humanizeAuthError(raw){
+      var m = String(raw || "").toLowerCase();
+      if(m.indexOf("invalid login credentials") >= 0 || m.indexOf("invalid_credentials") >= 0)
+        return "Incorrect email or password. Please try again.";
+      if(m.indexOf("email not confirmed") >= 0 || m.indexOf("email_not_confirmed") >= 0)
+        return "Please confirm your email first — check your inbox for a verification link.";
+      if(m.indexOf("user already registered") >= 0 || m.indexOf("already been registered") >= 0)
+        return "An account with this email already exists. Try signing in instead.";
+      if(m.indexOf("weak") >= 0 && m.indexOf("password") >= 0)
+        return "Password is too weak — use at least 8 characters.";
+      if(m.indexOf("rate limit") >= 0 || m.indexOf("too many requests") >= 0 || m.indexOf("over_email_send_rate_limit") >= 0)
+        return "Too many attempts — please wait a minute and try again.";
+      return raw;
+    }
+
+    function showAuthFeedback(msg){
+      if(typeof window.roomboardShowAuthError === "function") window.roomboardShowAuthError(msg);
+      else setStatus(msg);
+    }
+
     var PRACTICE_SETTINGS_BASE_SELECT = "practice_id, board_columns, show_only_active, board_view, highlight_doctor_id";
     var PRACTICE_SETTINGS_DEFAULT_APPOINTMENT_TYPE_COLUMN = "default_appointment_type_id";
     var practiceSettingsDefaultAppointmentTypeColumnAvailable = true;
@@ -3870,8 +3890,9 @@
         await withTimeout(finishAuthenticatedFlow({ attempts: 8, waitMs: 250 }), 15000, "Clinic setup");
       }catch(e){
         console.error("signup failed:", e);
-        alert(getErrorMessage(e));
-        setStatus("Clinic signup failed: " + getErrorMessage(e));
+        var signupErrMsg = humanizeAuthError(getErrorMessage(e));
+        showAuthFeedback(signupErrMsg);
+        setStatus("Clinic signup failed: " + signupErrMsg);
         setSyncUI("err", "Signup failed");
       } finally {
         authFlowInProgress = false;
@@ -3940,8 +3961,9 @@
         }
       }catch(e){
         console.error("login failed:", e);
-        alert(getErrorMessage(e));
-        setStatus("Login failed: " + getErrorMessage(e));
+        var loginErrMsg = humanizeAuthError(getErrorMessage(e));
+        showAuthFeedback(loginErrMsg);
+        setStatus("Login failed: " + loginErrMsg);
         setSyncUI("err", "Login failed");
       } finally {
         authFlowInProgress = false;
@@ -3983,6 +4005,9 @@
     $("joinPracticeBtn").addEventListener("click", function(){ if(!supabase) return; joinPractice(); });
     $("loginBtn").addEventListener("click", function(){ if(!supabase) return; login(); });
     $("logoutBtn").addEventListener("click", function(){ if(!supabase) return; logout(); });
+
+    window.roomboardAuthLogin  = function(){ if(supabase) login(); };
+    window.roomboardAuthSignup = function(){ if(supabase) signup(); };
     if($("billingRefreshBtn")){
       $("billingRefreshBtn").addEventListener("click", function(){
         setBillingBusy(true);
