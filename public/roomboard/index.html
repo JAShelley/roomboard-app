@@ -126,14 +126,46 @@
 <button class="authModeBtn active" data-auth-mode="login" type="button">Login</button>
 <button class="authModeBtn" data-auth-mode="create" type="button">Create clinic</button>
 </div>
-<div class="miniRow" id="authCreateFields" hidden>
+<div id="authCreateFields" hidden>
+<div class="miniRow">
 <div class="field">
 <label>Practice name</label>
 <input autocomplete="organization" id="practiceName" placeholder="Clinic name" type="text">
 </div>
 <div class="field">
-<label>Full name</label>
-<input autocomplete="name" id="fullName" placeholder="Admin name" type="text">
+<label>Admin full name</label>
+<input autocomplete="name" id="fullName" placeholder="Your name" type="text">
+</div>
+</div>
+<div class="miniRow">
+<div class="field">
+<label>Phone</label>
+<input autocomplete="tel" id="practicePhone" placeholder="(555) 000-0000" type="tel">
+</div>
+<div class="field">
+<label>City &amp; State</label>
+<input autocomplete="address-level2" id="practiceLocation" placeholder="e.g. Austin, TX" type="text">
+</div>
+</div>
+<div class="field">
+<label>Specialty</label>
+<select id="practiceSpecialty">
+<option value="General Practice">General Practice</option>
+<option value="Dental">Dental</option>
+<option value="Dermatology">Dermatology</option>
+<option value="Cardiology">Cardiology</option>
+<option value="Pediatrics">Pediatrics</option>
+<option value="Orthopedics">Orthopedics</option>
+<option value="Ophthalmology">Ophthalmology</option>
+<option value="Obstetrics &amp; Gynecology">Obstetrics &amp; Gynecology</option>
+<option value="ENT">ENT</option>
+<option value="Urgent Care">Urgent Care</option>
+<option value="Other">Other…</option>
+</select>
+</div>
+<div class="field" id="specialtyOtherField" hidden>
+<label>Describe your specialty</label>
+<input id="practiceSpecialtyOther" placeholder="e.g. Sports Medicine" type="text">
 </div>
 </div>
 <div class="miniRow" id="authCredentialsFields">

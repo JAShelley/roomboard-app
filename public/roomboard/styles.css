@@ -1047,7 +1047,7 @@
     }
     .field{display:flex; flex-direction:column; gap:6px;}
     label{font-size:12px; color:var(--muted)}
-	    input[type="text"], input[type="password"], select, textarea, input[type="number"]{
+	    input[type="text"], input[type="password"], input[type="tel"], select, textarea, input[type="number"]{
       width:100%;
       padding:10px 10px;
       border-radius:0px;
@@ -1058,7 +1058,7 @@
 	      font-size:  var(--fontInput);
 	      transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease;
 	    }
-	    input[type="text"]:focus, input[type="password"]:focus, select:focus, textarea:focus, input[type="number"]:focus{
+	    input[type="text"]:focus, input[type="password"]:focus, input[type="tel"]:focus, select:focus, textarea:focus, input[type="number"]:focus{
 	      border-color: rgba(125,211,252,.38);
 	      box-shadow: 0 0 0 3px rgba(110,168,254,.12);
 	    }

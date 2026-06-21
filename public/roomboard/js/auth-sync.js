@@ -3806,6 +3806,12 @@
         var fullName = ($("fullName").value || "").trim();
         var email = ($("email").value || "").trim();
         var password = ($("password").value || "").trim();
+        var practicePhone = ($("practicePhone") ? $("practicePhone").value || "" : "").trim();
+        var practiceLocation = ($("practiceLocation") ? $("practiceLocation").value || "" : "").trim();
+        var specialtyRaw = $("practiceSpecialty") ? $("practiceSpecialty").value : "";
+        var practiceSpecialty = specialtyRaw === "Other"
+          ? ($("practiceSpecialtyOther") ? ($("practiceSpecialtyOther").value || "").trim() : "")
+          : specialtyRaw;
         setRememberMePreference(!!($("rememberMe") && $("rememberMe").checked));
         var existingSession = await supabase.auth.getSession();
         if(!practiceName || !fullName || (!(existingSession && existingSession.data && existingSession.data.session) && (!email || !password))){
@@ -3841,8 +3847,18 @@
           await delay(250);
         }
         if(rpcError) throw rpcError;
+        var newPracticeId = rpcRes.data || null;
+        if(newPracticeId && (practicePhone || practiceLocation || practiceSpecialty)){
+          try{
+            await supabase.from("practices").update({
+              phone: practicePhone || null,
+              location: practiceLocation || null,
+              specialty: practiceSpecialty || null
+            }).eq("id", newPracticeId);
+          }catch(e){ console.warn("Could not save extra practice fields:", e); }
+        }
         updateAuthUI(true);
-        currentPracticeId = rpcRes.data || null;
+        currentPracticeId = newPracticeId;
         currentPracticeName = practiceName;
         window.__roomboardPracticeId = currentPracticeId;
         updateClinicContextUi();
@@ -3989,6 +4005,12 @@
         setAuthAccessMode(btn.getAttribute("data-auth-mode"));
       });
       setAuthAccessMode("login");
+    }
+    if($("practiceSpecialty")){
+      $("practiceSpecialty").addEventListener("change", function(){
+        var otherField = $("specialtyOtherField");
+        if(otherField) otherField.hidden = (this.value !== "Other");
+      });
     }
     if($("practiceInviteCode")){
       $("practiceInviteCode").addEventListener("input", function(){
