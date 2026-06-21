@@ -44,17 +44,22 @@
     });
   }
 
-  /* ---------- Scroll reveal ---------- */
+  /* ---------- Scroll reveal with stagger ---------- */
   var revealEls = [].slice.call(document.querySelectorAll(".reveal"));
   if ("IntersectionObserver" in window) {
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (entry.isIntersecting) {
+          // stagger siblings that enter together
+          var parent = entry.target.parentElement;
+          var siblings = parent ? [].slice.call(parent.children).filter(function(c){ return c.classList.contains("reveal"); }) : [];
+          var idx = siblings.indexOf(entry.target);
+          if (idx > 0) entry.target.style.setProperty("--reveal-delay", (idx * 60) + "ms");
           entry.target.classList.add("in");
           io.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    }, { threshold: 0.10, rootMargin: "0px 0px -30px 0px" });
     revealEls.forEach(function (el) { io.observe(el); });
   } else {
     revealEls.forEach(function (el) { el.classList.add("in"); });
@@ -91,10 +96,20 @@
       if (!t) return;
       [].slice.call(tabbar.querySelectorAll(".t")).forEach(function (x) { x.classList.remove("active"); });
       t.classList.add("active");
-      var panels = document.querySelectorAll("#tabsDemo .panel");
-      [].slice.call(panels).forEach(function (p) { p.classList.add("hidden"); });
-      var target = document.getElementById(t.getAttribute("data-p"));
-      if (target) target.classList.remove("hidden");
+      var targetId = t.getAttribute("data-p");
+      var panels = [].slice.call(document.querySelectorAll("#tabsDemo .panel"));
+      panels.forEach(function (p) {
+        if (p.id === targetId) return;
+        p.classList.add("hidden");
+      });
+      var target = document.getElementById(targetId);
+      if (target) {
+        target.classList.remove("hidden");
+        target.style.opacity = "0";
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () { target.style.opacity = ""; });
+        });
+      }
     });
   }
 
