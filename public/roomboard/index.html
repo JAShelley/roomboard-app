@@ -111,6 +111,7 @@
 <option value="tabLayout">Display</option>
 <option value="tabAlerts">Timers &amp; Actions</option>
 <option value="tabAppearance">Branding &amp; Theme</option>
+<option value="tabStats">Stats</option>
 <option value="tabUtilities">Tools</option>
 </select>
 </div>
@@ -121,6 +122,7 @@
 <button class="tabBtn" data-tab="tabLayout" type="button"><span>Display</span><small>Layout and cards</small></button>
 <button class="tabBtn" data-tab="tabAlerts" type="button"><span>Timers &amp; Actions</span><small>Timers</small></button>
 <button class="tabBtn" data-tab="tabAppearance" type="button"><span>Branding &amp; Theme</span><small>Logo and colors</small></button>
+<button class="tabBtn" data-tab="tabStats" type="button"><span>Stats</span><small>Room analytics</small></button>
 <button class="tabBtn" data-tab="tabUtilities" type="button"><span>Tools</span><small>Downloads</small></button>
 </div>
 <div class="tabPanel active" id="tabAccount">
@@ -192,7 +194,8 @@
 <button class="btn sm" id="signupBtn" type="button">Create clinic</button>
 <button class="btn sm" id="logoutBtn" style="display:none;" type="button">Logout</button>
 </div>
-<div style="margin-top:10px; font-size:12px; color:var(--muted);">
+<div style="margin-top:8px; font-size:12px; color:var(--muted); display:flex; gap:14px; flex-wrap:wrap;">
+<a href="#" id="forgotPasswordLink" style="color:var(--muted); text-decoration:underline; text-underline-offset:2px;">Forgot password?</a>
 <a href="/" style="color:var(--muted); text-decoration:underline; text-underline-offset:2px;">← Back to theroomboard.com</a>
 </div>
 <div class="field" hidden id="loggedInSummary">
@@ -213,6 +216,53 @@
 </div>
 </div>
 <div class="muted" id="clinicContextLine">Not connected to a clinic yet.</div>
+<details class="settingsCollapsible" id="clinicProfileEditPanel" hidden>
+<summary>
+<span class="settingsCollapsibleCopy">
+<strong>Edit clinic profile</strong>
+<small>Update your clinic name, contact info, and specialty.</small>
+</span>
+<span aria-hidden="true" class="settingsCollapsibleHint"></span>
+</summary>
+<div class="settingsCollapsibleBody">
+<div class="miniRow">
+<div class="field">
+<label>Clinic name</label>
+<input id="editPracticeName" placeholder="Clinic name" type="text">
+</div>
+<div class="field">
+<label>Phone</label>
+<input autocomplete="tel" id="editPracticePhone" placeholder="(555) 000-0000" type="tel">
+</div>
+</div>
+<div class="miniRow">
+<div class="field">
+<label>City &amp; State</label>
+<input id="editPracticeLocation" placeholder="e.g. Austin, TX" type="text">
+</div>
+<div class="field">
+<label>Specialty</label>
+<select id="editPracticeSpecialty">
+<option value="General Practice">General Practice</option>
+<option value="Dental">Dental</option>
+<option value="Dermatology">Dermatology</option>
+<option value="Cardiology">Cardiology</option>
+<option value="Pediatrics">Pediatrics</option>
+<option value="Orthopedics">Orthopedics</option>
+<option value="Ophthalmology">Ophthalmology</option>
+<option value="Obstetrics &amp; Gynecology">Obstetrics &amp; Gynecology</option>
+<option value="ENT">ENT</option>
+<option value="Urgent Care">Urgent Care</option>
+<option value="Other">Other</option>
+</select>
+</div>
+</div>
+<div class="actions">
+<button class="btn sm primary" id="saveClinicProfileBtn" type="button">Save changes</button>
+<span id="clinicProfileSaveStatus" style="font-size:13px; color:var(--settingsMuted);"></span>
+</div>
+</div>
+</details>
 </div>
 <div class="card billingCard" id="billingCard" hidden>
 <div class="billingCardHeader">
@@ -730,6 +780,27 @@
 </div>
 </details>
 </div>
+<div class="tabPanel" id="tabStats">
+<div class="card">
+<div class="statsHeader">
+<div>
+<h3>Room &amp; Cleaning Analytics</h3>
+<div class="muted">Session data collected automatically while RoomBoard is in use.</div>
+</div>
+<div class="statsControls">
+<select class="statsRangeSelect" id="statsRangeSelect">
+<option value="7">Last 7 days</option>
+<option value="30" selected>Last 30 days</option>
+<option value="90">Last 90 days</option>
+</select>
+<button class="btn sm primary" id="loadStatsBtn" type="button">Load stats</button>
+</div>
+</div>
+<div class="statsSummaryRow" hidden id="statsSummaryRow"></div>
+<div hidden id="statsRoomChart"></div>
+<div class="muted" id="statsStatusLine">Click "Load stats" to pull your clinic's session data.</div>
+</div>
+</div>
 <div class="tabPanel" id="tabUtilities">
 <div class="card">
 <h3>Browser add-ons</h3>
@@ -875,6 +946,7 @@ Make sure you unzipped the file, selected the folder instead of the zip, and rel
 <script src="./js/ux.js?v=20260606a"></script>
 <script src="./js/theme.js?v=20260517d"></script>
 <script src="./js/desktop-capture-panel.js?v=20260606a"></script>
+<script src="./js/stats.js?v=20260621a"></script>
 <script src="./js/standalone-flow.js?v=20260617a"></script>
 <script src="./js/init.js?v=20260517c"></script>
 </body>

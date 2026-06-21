@@ -217,7 +217,71 @@
         clinicHeaderArea.hidden = !currentPracticeName;
         if(clinicHeaderName) clinicHeaderName.textContent = currentPracticeName || "";
       }
+      // Show clinic profile editor only when logged in
+      var profilePanel = $("clinicProfileEditPanel");
+      if(profilePanel) profilePanel.hidden = !currentPracticeId;
     }
+
+    // ===== Clinic profile editor =====
+    function populateClinicProfileEdit(){
+      if(!currentPracticeId) return;
+      supabase.from("practices").select("name,phone,location,specialty").eq("id", currentPracticeId).single()
+        .then(function(res){
+          if(res.error || !res.data) return;
+          var d = res.data;
+          var n = $("editPracticeName"); if(n) n.value = d.name || "";
+          var p = $("editPracticePhone"); if(p) p.value = d.phone || "";
+          var l = $("editPracticeLocation"); if(l) l.value = d.location || "";
+          var s = $("editPracticeSpecialty"); if(s) s.value = d.specialty || "General Practice";
+        });
+    }
+    window.roomboardPopulateClinicProfileEdit = populateClinicProfileEdit;
+
+    function saveClinicProfile(){
+      if(!supabase || !currentPracticeId) return;
+      var nameEl = $("editPracticeName");
+      var phoneEl = $("editPracticePhone");
+      var locEl = $("editPracticeLocation");
+      var specEl = $("editPracticeSpecialty");
+      var saveBtn = $("saveClinicProfileBtn");
+      var statusEl = $("clinicProfileSaveStatus");
+      var name = nameEl ? nameEl.value.trim() : "";
+      if(!name){ if(statusEl) statusEl.textContent = "Clinic name is required."; return; }
+      if(saveBtn) saveBtn.disabled = true;
+      if(statusEl) statusEl.textContent = "Saving…";
+      supabase.from("practices").update({
+        name: name,
+        phone: phoneEl ? phoneEl.value.trim() : "",
+        location: locEl ? locEl.value.trim() : "",
+        specialty: specEl ? specEl.value : "General Practice"
+      }).eq("id", currentPracticeId).then(function(res){
+        if(saveBtn) saveBtn.disabled = false;
+        if(res.error){
+          if(statusEl) statusEl.textContent = "Error: " + res.error.message;
+        } else {
+          currentPracticeName = name;
+          updateClinicContextUi();
+          if(statusEl) statusEl.textContent = "Saved!";
+          setTimeout(function(){ if(statusEl) statusEl.textContent = ""; }, 2500);
+        }
+      });
+    }
+
+    document.addEventListener("click", function(e){
+      if(e.target && e.target.id === "saveClinicProfileBtn") saveClinicProfile();
+      if(e.target && e.target.id === "forgotPasswordLink"){
+        e.preventDefault();
+        var emailEl = $("email");
+        var email = emailEl ? emailEl.value.trim() : "";
+        if(!email){ setStatus("Enter your email above first."); return; }
+        if(!supabase){ setStatus("Not initialized."); return; }
+        supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + "/roomboard/" })
+          .then(function(res){
+            if(res.error) setStatus("Error: " + res.error.message);
+            else setStatus("Password reset email sent — check your inbox.");
+          });
+      }
+    });
 
     function normalizeInviteCode(value){
       return String(value == null ? "" : value).toUpperCase().replace(/[^A-Z0-9]/g, "").trim();
@@ -503,6 +567,7 @@
       lastPracticeConfigSignature = "";
       updateAuthUI(true);
       updateClinicContextUi();
+      populateClinicProfileEdit();
       if(typeof window.refreshAccountSettingsForSession === "function") window.refreshAccountSettingsForSession();
       if(typeof window.refreshThemePrefsForSession === "function") window.refreshThemePrefsForSession();
       if(typeof window.refreshFeedbackChecklistForSession === "function") window.refreshFeedbackChecklistForSession();
@@ -3697,6 +3762,7 @@
 	            storageKey: AUTH_STORAGE_KEY
 	          }
 		        });
+		        window.__roomboardSupabase = supabase;
 		        startSessionKeepAlive();
             startStaleDisplayWatchdog();
 		        // React to login/logout in this tab so clinic-scoped data stays current
