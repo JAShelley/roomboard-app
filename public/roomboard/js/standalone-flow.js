@@ -543,7 +543,7 @@
     if(standaloneClickBound) return;
     standaloneClickBound = true;
     document.addEventListener("click", function(event){
-      var target = event.target && event.target.closest ? event.target.closest(".standaloneOpenBoardBtn") : null;
+      var target = event.target && event.target.closest ? event.target.closest(".standaloneOpenBoardBtn, #headerBoardBtn") : null;
       if(!target) return;
       event.preventDefault();
       openBoard();

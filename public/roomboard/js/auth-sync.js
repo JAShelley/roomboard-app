@@ -103,19 +103,12 @@
     }
 
     function getPreferredAuthStorage(){
-      try{
-        return getRememberMePreference() ? window.localStorage : window.sessionStorage;
-      }catch(e){
-        return window.localStorage;
-      }
+      // Always use localStorage — keeps users logged in across browser sessions
+      return window.localStorage;
     }
 
     function getFallbackAuthStorage(){
-      try{
-        return getRememberMePreference() ? window.sessionStorage : window.localStorage;
-      }catch(e){
-        return window.sessionStorage;
-      }
+      return window.sessionStorage;
     }
 
     function createAuthStorageAdapter(){
@@ -216,6 +209,13 @@
       }
       if(statusLine && currentPracticeName && statusLine.textContent === "Loading…"){
         statusLine.textContent = currentPracticeName + " ready.";
+      }
+      // Clinic name + BOARD button in top-right header
+      var clinicHeaderArea = $("clinicHeaderArea");
+      var clinicHeaderName = $("clinicHeaderName");
+      if(clinicHeaderArea){
+        clinicHeaderArea.hidden = !currentPracticeName;
+        if(clinicHeaderName) clinicHeaderName.textContent = currentPracticeName || "";
       }
     }
 

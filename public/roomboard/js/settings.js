@@ -1,7 +1,7 @@
     // ===== Drawer controls =====
 	    function openDrawer(){
 	      closeQuickAdd();
-	      document.body.className = (document.body.className + " drawerOpen").replace(/\s+/g," ").trim();
+	      document.body.className = (document.body.className + " drawerOpen settingsPageMode").replace(/\s+/g," ").trim();
       if(saving || pendingConfigSave || pendingAppointmentTypesSave || pendingBoardSave || pendingUserSettingsSave || Object.keys(settingsAutosaveJobs).length){
         setSettingsSaveState("saving", "Saving changes…");
       } else {
@@ -16,12 +16,20 @@
 	      }
 	    }
     function closeDrawer(){
-      document.body.className = document.body.className.replace(/\bdrawerOpen\b/g,"").replace(/\s+/g," ").trim();
+      document.body.className = document.body.className.replace(/\bdrawerOpen\b|\bsettingsPageMode\b/g,"").replace(/\s+/g," ").trim();
       flushPendingSettingsSaves();
       flushPendingRemoteRefresh();
     }
     window.openRoomBoardSettingsDrawer = openDrawer;
     window.closeRoomBoardSettingsDrawer = closeDrawer;
+
+    // Wire the "← Board" back button (full-page settings mode)
+    var settingsBackBtn = $("settingsBackBtn");
+    if(settingsBackBtn){
+      settingsBackBtn.addEventListener("click", function(){
+        if(typeof window.closeRoomBoardSettingsDrawer === "function") window.closeRoomBoardSettingsDrawer();
+      });
+    }
     document.addEventListener("visibilitychange", function(){
       if(document.visibilityState === "hidden") flushPendingSettingsSaves();
     });

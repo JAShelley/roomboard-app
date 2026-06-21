@@ -4697,3 +4697,84 @@ body.mobileQuickViewPopupOpen{
     padding:8px 9px;
   }
 }
+
+/* ===== Clinic header area (top-right when logged in) ===== */
+#clinicHeaderArea{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-right:4px;
+}
+#clinicHeaderName{
+  font-size:13px;
+  font-weight:600;
+  letter-spacing:.02em;
+  opacity:.85;
+  max-width:180px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+#headerBoardBtn{
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.06em;
+  padding:5px 12px;
+  border-radius:8px;
+}
+
+/* ===== Settings full-page mode ===== */
+body.settingsPageMode .drawerBackdrop{ display:none !important; }
+body.settingsPageMode .drawer{
+  position:fixed;
+  inset:0 !important;
+  width:100% !important;
+  max-width:none !important;
+  height:100% !important;
+  transform:translateX(0) !important;
+  transition:none !important;
+  border-left:0 !important;
+  box-shadow:none !important;
+  z-index:150;
+  overflow-y:auto;
+  background: linear-gradient(150deg, #07101f 0%, #101827 48%, #10231e 100%) !important;
+}
+body.settingsPageMode .drawerBody{
+  max-width:1100px;
+  margin:0 auto;
+  padding:28px max(20px, 4vw) 60px;
+}
+body.settingsPageMode .drawerHeader{
+  padding:20px max(20px, 4vw) 16px;
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:rgba(7,16,31,.95);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+body.settingsPageMode #closeSettingsBtn{ display:none !important; }
+/* Back-to-board button shown only in full-page mode */
+#settingsBackBtn{ display:none; }
+body.settingsPageMode #settingsBackBtn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:13px;
+  font-weight:600;
+  color:rgba(201,216,255,.7);
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:8px;
+  padding:6px 12px;
+  cursor:pointer;
+  transition:background .15s, color .15s;
+}
+body.settingsPageMode #settingsBackBtn:hover{
+  background:rgba(255,255,255,.12);
+  color:#fff;
+}
+@media(max-width:640px){
+  body.settingsPageMode .drawerHeader{ padding:14px 16px 12px; }
+  body.settingsPageMode .drawerBody{ padding:18px 16px 48px; }
+}

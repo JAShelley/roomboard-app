@@ -28,6 +28,10 @@
 <small id="statusLine">Loading…</small>
 </div>
 <div class="right">
+<div id="clinicHeaderArea" hidden>
+  <span id="clinicHeaderName"></span>
+  <button class="btn sm primary" id="headerBoardBtn" type="button">BOARD</button>
+</div>
 <div class="headerToggleWrap" id="displayOnlyActiveWrap">
 <span class="headerToggleLabel">Only active</span>
 <div class="switch" id="displayOnlyActiveSwitch"><div class="knob"></div></div>
@@ -80,6 +84,7 @@
 <div class="drawerHeaderActions">
 <div class="drawerSaveState" data-state="idle" id="settingsSaveState"><span class="drawerSaveDot"></span><span id="settingsSaveText">Autosave on</span></div>
 <button class="btn sm primary standaloneOpenBoardBtn" id="standaloneOpenBoardBtn" type="button">Open board</button>
+<button id="settingsBackBtn" type="button">← Board</button>
 <button class="btn sm" id="closeSettingsBtn" type="button">Close</button>
 </div>
 </div>
