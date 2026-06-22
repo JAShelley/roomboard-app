@@ -222,19 +222,25 @@
       if(profilePanel) profilePanel.hidden = !currentPracticeId;
     }
 
-    // ===== Clinic profile editor =====
+    // ===== Clinic profile editor (lazy load on open) =====
     function populateClinicProfileEdit(){
       if(!currentPracticeId) return;
+      var n = $("editPracticeName");
+      if(n && n.value) return; // Already loaded
       supabase.from("practices").select("name,phone,location,specialty").eq("id", currentPracticeId).single()
         .then(function(res){
           if(res.error || !res.data) return;
           var d = res.data;
-          var n = $("editPracticeName"); if(n) n.value = d.name || "";
+          if(n) n.value = d.name || "";
           var p = $("editPracticePhone"); if(p) p.value = d.phone || "";
           var l = $("editPracticeLocation"); if(l) l.value = d.location || "";
           var s = $("editPracticeSpecialty"); if(s) s.value = d.specialty || "General Practice";
         });
     }
+    // Load clinic profile when the collapsible opens
+    document.addEventListener("toggle", function(e){
+      if(e.target && e.target.id === "clinicProfileEditPanel") populateClinicProfileEdit();
+    }, true);
     window.roomboardPopulateClinicProfileEdit = populateClinicProfileEdit;
 
     function saveClinicProfile(){
@@ -567,7 +573,6 @@
       lastPracticeConfigSignature = "";
       updateAuthUI(true);
       updateClinicContextUi();
-      populateClinicProfileEdit();
       if(typeof window.refreshAccountSettingsForSession === "function") window.refreshAccountSettingsForSession();
       if(typeof window.refreshThemePrefsForSession === "function") window.refreshThemePrefsForSession();
       if(typeof window.refreshFeedbackChecklistForSession === "function") window.refreshFeedbackChecklistForSession();
