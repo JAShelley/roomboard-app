@@ -1771,6 +1771,11 @@
       if($("displayFontColor")) $("displayFontColor").value = state.settings.displayFontColor || "#e8eefc";
       if($("displayMutedColor")) $("displayMutedColor").value = state.settings.displayMutedColor || "#a9b6d3";
       if($("cardTextMode")) $("cardTextMode").value = state.settings.cardTextMode || "auto";
+      if($("fontBase")) $("fontBase").value = state.settings.fontBase || 14;
+      if($("fontCard")) $("fontCard").value = state.settings.fontCard || 14;
+      if($("fontDisplay")) $("fontDisplay").value = state.settings.fontDisplay || 14;
+      if($("fontTimer")) $("fontTimer").value = state.settings.fontTimer || 18;
+      if($("fontInput")) $("fontInput").value = state.settings.fontInput || 14;
       [
         "showRoomCardPatient",
         "showRoomCardType",
