@@ -660,6 +660,10 @@
       /* rows control: if rows > 0, constrain height so it becomes a TV-friendly grid */
       max-height: calc( (var(--rows) * 220px) + ((var(--rows) - 1) * 14px) );
       overflow:auto;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 0 14px;
     }
     .gridWrap.unlimited{
       max-height: var(--fullscreenDisplayHeight, calc(100vh - 120px));
