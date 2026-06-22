@@ -195,13 +195,15 @@
         .eq("practice_id", practiceId)
         .gte("started_at", since)
         .not("duration_ms", "is", null)
-        .order("started_at", { ascending: false }),
+        .order("started_at", { ascending: false })
+        .limit(1000),  // Cap at 1000 to avoid massive data transfers
       sb.from("cleaning_sessions")
         .select("room_name,started_at,ended_at,duration_ms")
         .eq("practice_id", practiceId)
         .gte("started_at", since)
         .not("duration_ms", "is", null)
         .order("started_at", { ascending: false })
+        .limit(1000)   // Cap at 1000 to avoid massive data transfers
     ]).then(function(results){
       if(btn) btn.disabled = false;
       var roomData = results[0].data || [];
