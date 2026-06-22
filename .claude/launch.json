@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "static-site",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8099"],
-      "port": 8099
+      "name": "roomboard-dev",
+      "runtimeExecutable": "/Applications/Codex.app/Contents/Resources/cua_node/bin/node",
+      "runtimeArgs": ["node_modules/.bin/next", "dev"],
+      "port": 3000
     }
   ]
 }

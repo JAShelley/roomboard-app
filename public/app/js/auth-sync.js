@@ -281,7 +281,7 @@
         var email = emailEl ? emailEl.value.trim() : "";
         if(!email){ setStatus("Enter your email above first."); return; }
         if(!supabase){ setStatus("Not initialized."); return; }
-        supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + "/roomboard/" })
+        supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + "/app/" })
           .then(function(res){
             if(res.error) setStatus("Error: " + res.error.message);
             else setStatus("Password reset email sent — check your inbox.");
@@ -719,7 +719,7 @@
         url.hash = "";
         return url.toString();
       }catch(e){
-        return window.location.origin + "/roomboard/index.html?mode=setup";
+        return window.location.origin + "/app/index.html?mode=setup";
       }
     }
 

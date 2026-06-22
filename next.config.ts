@@ -4,19 +4,21 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   // Serve the static marketing landing page at the root URL without
-  // showing /site/index.html in the browser's address bar.
+  // showing /landing/index.html in the browser's address bar.
   async rewrites() {
     return [
-      { source: "/", destination: "/site/index.html" },
-      { source: "/site", destination: "/site/index.html" },
+      { source: "/", destination: "/landing/index.html" },
+      { source: "/landing", destination: "/landing/index.html" },
+      // Legacy /site redirect for backward compatibility
+      { source: "/site", destination: "/landing/index.html" },
     ];
   },
 
-  // Allow the marketing page's Google Fonts and badge images to load.
+  // Allow the landing page's Google Fonts and badge images to load.
   async headers() {
     return [
       {
-        source: "/site/:path*",
+        source: "/landing/:path*",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "SAMEORIGIN" },

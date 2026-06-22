@@ -459,7 +459,7 @@
     var tokens = getStoredTokens();
     if(!tokens){ enterAuth(); return; }
     if(btn){ btn.disabled = true; btn.querySelector("span") && (btn.querySelector("span").textContent = "Loading…"); }
-    var returnUrl = (window.location.origin || "") + "/roomboard/index.html?mode=startup&next=board";
+    var returnUrl = (window.location.origin || "") + "/app/index.html?mode=startup&next=board";
     fetch("/api/billing/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -486,7 +486,7 @@
   function billingSignOut(){
     try{ window.localStorage.removeItem(AUTH_STORAGE_KEY); }catch(e){}
     try{ window.sessionStorage.removeItem(AUTH_STORAGE_KEY); }catch(e){}
-    window.location.href = "/roomboard/index.html?mode=startup&auth=login";
+    window.location.href = "/app/index.html?mode=startup&auth=login";
   }
 
   // Check /api/billing/status and call onAccess() if the practice has access;
