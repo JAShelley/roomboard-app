@@ -284,7 +284,7 @@ img { max-width: 100%; display: block; }
 /* ---------- Stat strip ---------- */
 .stats { border-top: 2px solid var(--teal-500); border-bottom: 2px solid var(--teal-500); background: linear-gradient(135deg, var(--surface) 0%, color-mix(in srgb, var(--teal-50) 40%, var(--surface)) 100%); position: relative; }
 .stats::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(17, 163, 155, .08), transparent 60%); pointer-events: none; }
-.stats .wrap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; padding: 48px 24px; position: relative; z-index: 1; }
+.stats .wrap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; padding: 48px 24px; position: relative; z-index: 1; }
 .stat { text-align: center; padding: 0 24px; }
 .stat .n { font-family: var(--font-display); font-weight: 900; font-size: clamp(42px, 5vw, 56px); background: linear-gradient(120deg, var(--teal-600), var(--coral)); -webkit-background-clip: text; background-clip: text; color: transparent; display: block; }
 .stat .l { color: var(--ink-2); font-size: 16px; font-weight: 700; margin-top: 8px; letter-spacing: .03em; }
