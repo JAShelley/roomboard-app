@@ -2396,13 +2396,7 @@
 	      if($("dischargeIconStyle")) $("dischargeIconStyle").value = state.settings.dischargeIconStyle || "paw";
 		      syncOptionalUi();
 
-	      // Font inputs
-      $("fontBase").value = state.settings.fontBase;
-      $("fontCard").value = state.settings.fontCard;
-      $("fontTimer").value = state.settings.fontTimer;
-      if($("fontInput")) $("fontInput").value = state.settings.fontInput || 14;
-      if($("fontDisplay")) $("fontDisplay").value = state.settings.fontDisplay || 14;
-      if($("timerAlert1AtSec")) $("timerAlert1AtSec").value = state.settings.timerAlert1AtSec || 0;
+	      if($("timerAlert1AtSec")) $("timerAlert1AtSec").value = state.settings.timerAlert1AtSec || 0;
       if($("timerAlert2AtSec")) $("timerAlert2AtSec").value = state.settings.timerAlert2AtSec || 0;
       if($("timerAlert1Color")) $("timerAlert1Color").value = state.settings.timerAlert1Color || "#fbbf24";
       if($("timerAlert2Color")) $("timerAlert2Color").value = state.settings.timerAlert2Color || "#fb7185";
