@@ -741,7 +741,7 @@
 	      border-bottom:1px solid var(--border);
 	      gap:6px;
 	    }
-    .roomName{display:flex; align-items:center; gap:6px; font-weight:700; font-size:var(--fontCard); text-transform:uppercase; letter-spacing:.07em; opacity:.85;}
+    .roomName{display:flex; align-items:center; gap:6px; font-weight:700; font-size:var(--fontCard); letter-spacing:.02em; opacity:.85;}
     #displayView .roomName,
     #displayView .wbRoomName,
     #displayView .wbPatientName,
