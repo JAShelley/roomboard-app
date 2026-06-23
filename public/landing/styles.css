@@ -146,8 +146,8 @@ img { max-width: 100%; display: block; }
   box-shadow: 0 6px 16px rgba(12, 134, 127, .4); flex: none;
 }
 .brand .mark svg { width: 18px; height: 18px; }
-.nav-links { display: flex; align-items: center; gap: 4px; margin-left: 14px; }
-.nav-links a { padding: 9px 13px; border-radius: 9px; color: var(--ink-2); font-weight: 500; font-size: 15px; transition: background .15s, color .15s; }
+.nav-links { display: flex; align-items: center; gap: 2px; margin-left: 10px; }
+.nav-links a { padding: 9px 10px; border-radius: 9px; color: var(--ink-2); font-weight: 500; font-size: 14px; transition: background .15s, color .15s; }
 .nav-links a:hover { background: var(--surface-2); color: var(--ink); }
 .nav-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 .icon-btn {
@@ -167,6 +167,7 @@ img { max-width: 100%; display: block; }
 [data-theme="dark"] .nav-signin { color: var(--teal-300); }
 .nav-signin:hover { color: var(--teal-700); }
 .menu-btn { display: none; }
+.mobile-menu { display: none; }
 
 /* ---------- Hero ---------- */
 .hero { padding: 80px 0 60px; }
