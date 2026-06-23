@@ -382,10 +382,13 @@
     function notifyStandaloneAuthState(loggedIn){
       var flow = window.roomboardStandaloneFlow;
       if(!flow || typeof flow.onAuthState !== "function") return;
+      var isNew = !!window.__roomboardNewAccount;
+      window.__roomboardNewAccount = false;
       flow.onAuthState({
         loggedIn: !!loggedIn,
         hasPractice: !!currentPracticeId,
-        practiceName: currentPracticeName || ""
+        practiceName: currentPracticeName || "",
+        newAccount: isNew
       });
     }
 
@@ -994,13 +997,13 @@
       }
       if(typeof window.refreshAccountSettingsForSession === "function") window.refreshAccountSettingsForSession();
       if(typeof window.refreshThemePrefsForSession === "function") window.refreshThemePrefsForSession();
-      var billingStatus = await refreshBillingStatus();
+      var billingPromise = refreshBillingStatus().catch(function(){ return null; });
+      await loadPracticeData();
+      var billingStatus = await billingPromise;
       if(billingStatus && billingStatus.hasAccess === false){
         setStatus("Subscribe or renew billing to open the live board.");
         setSyncUI("err", "Billing required");
-        return true;
       }
-      await loadPracticeData();
       return true;
     }
 
@@ -3976,6 +3979,7 @@
         currentPracticeId = newPracticeId;
         currentPracticeName = practiceName;
         window.__roomboardPracticeId = currentPracticeId;
+        window.__roomboardNewAccount = true;
         updateClinicContextUi();
         state = ensureStateShape(loadLocal() || null);
         applyAccountSettingsToState(state);

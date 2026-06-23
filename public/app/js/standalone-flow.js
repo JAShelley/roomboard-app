@@ -495,26 +495,32 @@
   function checkBillingThenOpen(onAccess){
     var tokens = getStoredTokens();
     if(!tokens){ onAccess(); return; }
+    var controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timer = setTimeout(function(){ if(controller) controller.abort(); onAccess(); }, 8000);
+    var done = false;
+    function finish(fn){ if(done) return; done = true; clearTimeout(timer); fn(); }
     fetch("/api/billing/status", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken })
+      body: JSON.stringify({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }),
+      signal: controller ? controller.signal : undefined
     })
     .then(function(r){ return r.json(); })
     .then(function(data){
       if(data.hasAccess){
-        hidePaywall();
-        onAccess();
+        finish(function(){ hidePaywall(); onAccess(); });
       } else {
-        showPaywall({
-          trialing: !!data.trialing,
-          trialDaysLeft: data.trialDaysLeft || 0,
-          subscribed: !!data.subscribed,
-          hasCustomer: !!data.hasCustomer
+        finish(function(){
+          showPaywall({
+            trialing: !!data.trialing,
+            trialDaysLeft: data.trialDaysLeft || 0,
+            subscribed: !!data.subscribed,
+            hasCustomer: !!data.hasCustomer
+          });
         });
       }
     })
-    .catch(function(){ onAccess(); });
+    .catch(function(){ finish(onAccess); });
   }
 
   /* ── Board open ────────────────────────────────────────────────────── */
@@ -569,8 +575,8 @@
       var route = getRoute();
       if(!route.standalone) return;
       if(state && state.loggedIn && state.hasPractice){
-        if(wantsBoard()) openBoard();
-        else enterSetup();
+        if(state.newAccount) enterSetup();
+        else openBoard();
       } else {
         enterAuth();
       }
