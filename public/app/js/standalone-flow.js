@@ -233,7 +233,21 @@
     }
     function showErr(msg){ errorDiv.textContent = msg; errorDiv.style.display = ""; }
     function hideErr(){ errorDiv.style.display = "none"; }
-    function setBusy(b){ submitBtn.disabled = !!b; submitBtn.textContent = b ? (curMode === "create" ? "Creating clinic…" : "Signing in…") : (curMode === "create" ? "Create clinic" : "Sign in"); }
+    var busyWatchdog = null;
+    function setBusy(b){
+      submitBtn.disabled = !!b;
+      submitBtn.textContent = b ? (curMode === "create" ? "Creating clinic…" : "Signing in…") : (curMode === "create" ? "Create clinic" : "Sign in");
+      // Safety net: never let the button hang on "Signing in…" forever. If the
+      // overlay is still up after 18s, reset and surface a clear message.
+      if(busyWatchdog){ clearTimeout(busyWatchdog); busyWatchdog = null; }
+      if(b){
+        busyWatchdog = setTimeout(function(){
+          if(!document.getElementById("rbAuthOverlay")) return; // already advanced to board
+          setBusy(false);
+          showErr("That took longer than expected. Check your connection and try again.");
+        }, 18000);
+      }
+    }
 
     window.roomboardShowAuthError = function(msg){ showErr(msg); setBusy(false); };
     window.setOverlayMode = applyMode;
