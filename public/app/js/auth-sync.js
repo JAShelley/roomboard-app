@@ -2559,11 +2559,11 @@
 		      if(sharedUi.fontDisplay != null) targetState.settings.fontDisplay = Math.max(10, Number(sharedUi.fontDisplay || 14));
 		      if(sharedUi.fontTimer != null) targetState.settings.fontTimer = Math.max(12, Number(sharedUi.fontTimer || 18));
 		      if(sharedUi.fontInput != null) targetState.settings.fontInput = Math.max(10, Number(sharedUi.fontInput || 14));
-		      if(sharedUi.stopwatchStyle != null) targetState.settings.stopwatchStyle = String(sharedUi.stopwatchStyle || classic);
-		      if(sharedUi.dischargeIconStyle != null) targetState.settings.dischargeIconStyle = String(sharedUi.dischargeIconStyle || paw);
-		      if(sharedUi.displayFontColor != null) targetState.settings.displayFontColor = String(sharedUi.displayFontColor || #e8eefc);
-		      if(sharedUi.displayMutedColor != null) targetState.settings.displayMutedColor = String(sharedUi.displayMutedColor || #a9b6d3);
-		      if(sharedUi.cardTextMode != null) targetState.settings.cardTextMode = String(sharedUi.cardTextMode || auto);
+		      if(sharedUi.stopwatchStyle != null) targetState.settings.stopwatchStyle = String(sharedUi.stopwatchStyle || "classic");
+		      if(sharedUi.dischargeIconStyle != null) targetState.settings.dischargeIconStyle = String(sharedUi.dischargeIconStyle || "paw");
+		      if(sharedUi.displayFontColor != null) targetState.settings.displayFontColor = String(sharedUi.displayFontColor || "#e8eefc");
+		      if(sharedUi.displayMutedColor != null) targetState.settings.displayMutedColor = String(sharedUi.displayMutedColor || "#a9b6d3");
+		      if(sharedUi.cardTextMode != null) targetState.settings.cardTextMode = String(sharedUi.cardTextMode || "auto");
 		    }
 
 	    function buildBoardStatePayload(){
