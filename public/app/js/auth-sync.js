@@ -297,6 +297,8 @@
 	    var currentPracticeInviteAdmin = false;
 	    var currentBillingAccess = null;
 	    var billingRefreshInFlight = null;
+	    var billingLastFetchedAt = 0;
+	    var BILLING_CACHE_MS = 5 * 60 * 1000;
 
     function syncLoggedInSummary(){
       var wrap = $("loggedInSummary");
@@ -839,17 +841,23 @@
       return data || {};
     }
 
-    async function refreshBillingStatus(){
+    async function refreshBillingStatus(opts){
       if(!supabase || !currentPracticeId){
         currentBillingAccess = null;
+        billingLastFetchedAt = 0;
         setBillingCardVisible(false);
         updateStandaloneOpenBoardAccess();
         return null;
+      }
+      var force = opts && opts.force;
+      if(!force && billingLastFetchedAt && (Date.now() - billingLastFetchedAt) < BILLING_CACHE_MS){
+        return currentBillingAccess || null;
       }
       if(billingRefreshInFlight) return await billingRefreshInFlight;
       billingRefreshInFlight = (async function(){
         try{
           var data = await billingRequest("/api/billing/status", {});
+          billingLastFetchedAt = Date.now();
           renderBillingStatus(data);
           return data;
         }catch(e){
@@ -2111,6 +2119,7 @@
 		        activeThemePrefsScope = "guest";
             lastPracticeConfigSignature = "";
             setPracticeInviteUi(null);
+            billingLastFetchedAt = 0;
 		      }
 	      updateClinicContextUi();
 	          syncStopwatchDiagnosticsUi();
@@ -4110,7 +4119,7 @@
     if($("billingRefreshBtn")){
       $("billingRefreshBtn").addEventListener("click", function(){
         setBillingBusy(true);
-        refreshBillingStatus().finally(function(){ setBillingBusy(false); });
+        refreshBillingStatus({ force: true }).finally(function(){ setBillingBusy(false); });
       });
     }
     if($("billingMonthlyBtn")){
