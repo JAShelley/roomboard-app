@@ -392,7 +392,6 @@
       if(typeof isMobileQuickViewEnabled === "function" && isMobileQuickViewEnabled()) return;
       state.settings.displayOnlyActive = !state.settings.displayOnlyActive;
       persistWindowUiSettings();
-      persistAccountUiSettings();
       scheduleUiRefresh({
         displayChrome: true,
         display: true,
@@ -415,7 +414,6 @@
 	    $("displaySortSelect").addEventListener("change", function(){
 	      state.settings.displaySortMode = (this.value === "time") ? "time" : "room";
 	      persistWindowUiSettings();
-	      persistAccountUiSettings();
 	      scheduleUiRefresh({
 	        displayChrome: true,
 	        display: true,
@@ -427,7 +425,6 @@
 	    $("doctorHighlightSelect").addEventListener("change", function(){
 	      state.settings.highlightDoctor = String(this.value || "").trim();
 	      persistWindowUiSettings();
-	      persistAccountUiSettings();
 	      scheduleUiRefresh({
 	        displayChrome: true,
 	        display: true,
@@ -637,7 +634,6 @@
       }
       state.settings.displayLayout = (state.settings.displayLayout === "list") ? "grid" : "list";
       persistWindowUiSettings();
-      persistAccountUiSettings();
       scheduleUiRefresh({
         globalChrome: true,
         displayChrome: true,
@@ -982,7 +978,6 @@
       state.settings.displayRows = Math.max(0, Number($("displayRows").value || 0));
       state.settings.displayCardScale = Math.max(0.8, Math.min(1.6, Number($("displayCardScale").value || 1)));
       persistWindowUiSettings();
-      persistAccountUiSettings();
       scheduleUiRefresh({
         globalChrome: true,
         displayChrome: true,
@@ -1050,6 +1045,7 @@
       if($("dischargeIconStyle")) state.settings.dischargeIconStyle = $("dischargeIconStyle").value || "paw";
 	      persistWindowUiSettings();
       persistAccountUiSettings();
+      if(supabase && currentPracticeId) scheduleRemoteSave("board", { immediate: !!options.flush });
       scheduleUiRefresh({
         globalChrome: true,
         display: true,
@@ -1071,6 +1067,7 @@
       if($("cardTextMode")) state.settings.cardTextMode = $("cardTextMode").value || "auto";
       persistWindowUiSettings();
       persistAccountUiSettings();
+      if(supabase && currentPracticeId) scheduleRemoteSave("board", { immediate: !!options.flush });
       scheduleUiRefresh({
         globalChrome: true,
         display: true,

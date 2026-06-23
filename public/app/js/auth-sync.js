@@ -2505,7 +2505,17 @@
 		        doctorBadgeStyles: typeof normalizeDoctorBadgeStylesMap === "function"
 		          ? normalizeDoctorBadgeStylesMap(sourceSettings.doctorBadgeStyles)
 		          : (sourceSettings.doctorBadgeStyles || {}),
-		        roomCardFields: buildSharedRoomCardFieldsPayload(sourceSettings)
+		        roomCardFields: buildSharedRoomCardFieldsPayload(sourceSettings),
+		        fontBase: Math.max(10, Number(sourceSettings.fontBase || 14)),
+		        fontCard: Math.max(10, Number(sourceSettings.fontCard || 14)),
+		        fontDisplay: Math.max(10, Number(sourceSettings.fontDisplay || 14)),
+		        fontTimer: Math.max(12, Number(sourceSettings.fontTimer || 18)),
+		        fontInput: Math.max(10, Number(sourceSettings.fontInput || 14)),
+		        stopwatchStyle: String(sourceSettings.stopwatchStyle || "classic"),
+		        dischargeIconStyle: String(sourceSettings.dischargeIconStyle || "paw"),
+		        displayFontColor: String(sourceSettings.displayFontColor || "#e8eefc"),
+		        displayMutedColor: String(sourceSettings.displayMutedColor || "#a9b6d3"),
+		        cardTextMode: String(sourceSettings.cardTextMode || "auto")
 		      };
 		    }
 
@@ -2532,6 +2542,16 @@
 		        : (sharedUi.doctorBadgeStyles || {});
 		      if(sharedUi.roomCardFields != null) applySharedRoomCardFieldsPayload(targetState.settings, sharedUi.roomCardFields);
 		      else applySharedRoomCardFieldsPayload(targetState.settings, sharedUi);
+		      if(sharedUi.fontBase != null) targetState.settings.fontBase = Math.max(10, Number(sharedUi.fontBase || 14));
+		      if(sharedUi.fontCard != null) targetState.settings.fontCard = Math.max(10, Number(sharedUi.fontCard || 14));
+		      if(sharedUi.fontDisplay != null) targetState.settings.fontDisplay = Math.max(10, Number(sharedUi.fontDisplay || 14));
+		      if(sharedUi.fontTimer != null) targetState.settings.fontTimer = Math.max(12, Number(sharedUi.fontTimer || 18));
+		      if(sharedUi.fontInput != null) targetState.settings.fontInput = Math.max(10, Number(sharedUi.fontInput || 14));
+		      if(sharedUi.stopwatchStyle != null) targetState.settings.stopwatchStyle = String(sharedUi.stopwatchStyle || classic);
+		      if(sharedUi.dischargeIconStyle != null) targetState.settings.dischargeIconStyle = String(sharedUi.dischargeIconStyle || paw);
+		      if(sharedUi.displayFontColor != null) targetState.settings.displayFontColor = String(sharedUi.displayFontColor || #e8eefc);
+		      if(sharedUi.displayMutedColor != null) targetState.settings.displayMutedColor = String(sharedUi.displayMutedColor || #a9b6d3);
+		      if(sharedUi.cardTextMode != null) targetState.settings.cardTextMode = String(sharedUi.cardTextMode || auto);
 		    }
 
 	    function buildBoardStatePayload(){
