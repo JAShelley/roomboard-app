@@ -113,6 +113,37 @@
     });
   }
 
+  /* ---------- Pricing billing toggle ---------- */
+  var billingSwitch = document.getElementById("billingSwitch");
+  var btMonthly = document.getElementById("btMonthly");
+  var btAnnual = document.getElementById("btAnnual");
+  var pricingGrid = document.getElementById("pricingGrid");
+  var isAnnual = false;
+
+  function updatePricing() {
+    var key = isAnnual ? "annual" : "monthly";
+    if (billingSwitch) {
+      billingSwitch.classList.toggle("billing-annual", isAnnual);
+      billingSwitch.classList.toggle("billing-monthly", !isAnnual);
+    }
+    if (btMonthly) btMonthly.classList.toggle("active", !isAnnual);
+    if (btAnnual) btAnnual.classList.toggle("active", isAnnual);
+    if (pricingGrid) {
+      [].slice.call(pricingGrid.querySelectorAll(".price-num")).forEach(function (el) {
+        el.textContent = el.getAttribute("data-" + key);
+      });
+      [].slice.call(pricingGrid.querySelectorAll(".plan-billing")).forEach(function (el) {
+        el.textContent = el.getAttribute("data-" + key);
+      });
+    }
+  }
+
+  if (billingSwitch) {
+    billingSwitch.addEventListener("click", function () { isAnnual = !isAnnual; updatePricing(); });
+  }
+  if (btMonthly) btMonthly.addEventListener("click", function () { isAnnual = false; updatePricing(); });
+  if (btAnnual) btAnnual.addEventListener("click", function () { isAnnual = true; updatePricing(); });
+
   /* ---------- Footer year ---------- */
   var yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = String(new Date().getFullYear());
