@@ -821,12 +821,17 @@
 
     function scheduleActiveDisplayFitAfterReturn(){
       if(document && document.hidden) return;
-      markActiveDisplayFitPendingReturn();
+      // Re-fit silently on tab return: re-measure the existing cards and
+      // adjust the scale transform without hiding the grid. The opacity:0
+      // hide (displayReturnFitPending) is only needed while renderDisplay()
+      // rebuilds the cards; toggling it on a plain focus/visibility return
+      // just makes the already-correct, populated board flash. If a render
+      // happened while the tab was hidden the grid may still be pending —
+      // applyActiveDisplayFit clears that and reveals it at the end of the fit.
       scheduleActiveDisplayFit();
       if(activeDisplayFitRetryTimer) clearTimeout(activeDisplayFitRetryTimer);
       activeDisplayFitRetryTimer = setTimeout(function(){
         activeDisplayFitRetryTimer = 0;
-        if(!document.hidden) markActiveDisplayFitPendingReturn();
         scheduleActiveDisplayFit();
       }, 160);
     }
