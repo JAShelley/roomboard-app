@@ -335,6 +335,46 @@ img { max-width: 100%; display: block; }
 .tag { font-size: 13px; font-weight: 600; color: var(--ink-2); background: var(--surface); border: 1.5px solid var(--line-strong); padding: 10px 16px; border-radius: 999px; display: inline-flex; gap: 8px; align-items: center; transition: all .25s; }
 .tag svg { width: 15px; height: 15px; color: var(--teal-600); }
 
+/* ---------- Chrome extension callout ---------- */
+.ext-callout {
+  max-width: 1000px; margin: 56px auto 0; display: grid; grid-template-columns: 1.05fr 1fr; gap: 44px; align-items: center;
+  background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: 22px; padding: 38px 42px;
+  box-shadow: 0 24px 60px rgba(12, 134, 127, .12);
+}
+.ext-copy h3 { font-size: 25px; font-weight: 800; letter-spacing: -.02em; margin: 12px 0 12px; }
+.ext-copy p { color: var(--muted); font-size: 15.5px; line-height: 1.65; margin: 0 0 24px; }
+.ext-actions { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.ext-actions .btn.primary { display: inline-flex; align-items: center; gap: 10px; }
+.ext-actions .btn.primary svg { width: 19px; height: 19px; }
+.ext-meta { font-size: 13px; color: var(--muted); font-weight: 600; }
+
+/* mini browser demo */
+.ext-browser { background: var(--surface-2); border: 1.5px solid var(--line-strong); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow-sm); }
+.ext-bar { display: flex; align-items: center; gap: 7px; padding: 10px 14px; background: color-mix(in srgb, var(--line) 60%, var(--surface)); border-bottom: 1px solid var(--line); }
+.ext-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--line-strong); }
+.ext-dot:nth-child(1) { background: #ef6a5e; } .ext-dot:nth-child(2) { background: #f4bf4f; } .ext-dot:nth-child(3) { background: #5bc466; }
+.ext-url { flex: 1; margin-left: 8px; font-size: 12px; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 7px; padding: 4px 10px; }
+.ext-puzzle { display: inline-flex; color: var(--teal-600); }
+.ext-puzzle svg { width: 17px; height: 17px; }
+.ext-body { display: flex; align-items: center; gap: 12px; padding: 22px 18px; }
+.ext-appt { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 14px; border-radius: 11px; background: var(--surface); border: 1.5px solid var(--teal-500); box-shadow: 0 8px 22px rgba(12, 134, 127, .18); position: relative; }
+.ext-appt-time { font-size: 11px; font-weight: 700; color: var(--teal-600); text-transform: uppercase; letter-spacing: .04em; }
+.ext-appt-name { font-size: 15px; font-weight: 700; color: var(--ink); }
+.ext-appt-doc { font-size: 13px; color: var(--muted); }
+.ext-appt-hint { margin-top: 6px; font-size: 11px; font-weight: 700; color: #fff; background: linear-gradient(180deg, var(--teal-500), var(--teal-600)); padding: 4px 9px; border-radius: 999px; align-self: flex-start; }
+.ext-arrow { flex: none; color: var(--teal-500); }
+.ext-arrow svg { width: 26px; height: 26px; }
+.ext-quick { flex: 1; padding: 14px; border-radius: 11px; background: var(--surface); border: 1.5px solid var(--line-strong); }
+.ext-quick-head { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 9px; }
+.ext-field { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 5px 0; border-bottom: 1px solid var(--line); }
+.ext-field:last-child { border-bottom: 0; }
+.ext-field span { color: var(--muted); }
+.ext-field b { color: var(--ink); font-weight: 700; }
+
+@media (max-width: 760px) {
+  .ext-callout { grid-template-columns: 1fr; gap: 30px; padding: 30px 24px; }
+}
+
 /* ---------- Devices ---------- */
 .devices-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; max-width: 1000px; margin: 0 auto; }
 .device {
