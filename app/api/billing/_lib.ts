@@ -96,11 +96,22 @@ export async function getPracticeBilling(practiceId: string): Promise<PracticeBi
 }
 
 // Mirror the SQL practice_has_access() logic on the server.
+//
+// Card-up-front model: a free trial only grants access once it is backed by a
+// real Stripe subscription — i.e. the practice went through Checkout and a
+// payment method is on file. A practice that merely has the DB default
+// `trialing` status with no Stripe subscription has NOT entered a card yet and
+// must complete Checkout before the board opens.
 export function computeAccess(billing: PracticeBilling) {
   const status = billing.subscriptionStatus;
   const now = Date.now();
   const trialMs = billing.trialEndsAt ? Date.parse(billing.trialEndsAt) : 0;
-  const trialing = status === "trialing" && Number.isFinite(trialMs) && trialMs > now;
+  const hasStripeSubscription = !!billing.stripeSubscriptionId;
+  const trialing =
+    status === "trialing" &&
+    hasStripeSubscription &&
+    Number.isFinite(trialMs) &&
+    trialMs > now;
   const subscribed = status === "active" || status === "past_due";
   const hasAccess = subscribed || trialing;
   const trialDaysLeft = trialing ? Math.max(0, Math.ceil((trialMs - now) / 86_400_000)) : 0;

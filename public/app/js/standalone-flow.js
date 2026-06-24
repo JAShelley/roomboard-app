@@ -384,17 +384,23 @@
     overlay.setAttribute("aria-modal", "true");
     overlay.setAttribute("aria-label", "Subscription required");
 
-    var heading, sub;
-    if(info.trialing && info.trialDaysLeft > 0){
-      heading = "Choose a plan to continue.";
-      sub = info.trialDaysLeft + " day" + (info.trialDaysLeft === 1 ? "" : "s") + " left in your free trial.";
+    // A practice that has never had a Stripe subscription is starting its
+    // card-up-front free trial. One that had a subscription (now lapsed) is
+    // resubscribing after the trial ended or a cancellation.
+    var startingTrial = !info.hasSubscription;
+    var heading, sub, ctaLabel;
+    if(startingTrial){
+      heading = "Start your 14-day free trial";
+      sub = "Pick a plan and add a card to begin. You won't be charged until your trial ends in 14 days — we'll remind you before then, and you can cancel anytime.";
+      ctaLabel = "Start free trial";
     } else {
-      heading = "Your free trial has ended.";
-      sub = "Subscribe to restore access to your clinic board.";
+      heading = "Your free trial has ended";
+      sub = "Resubscribe to restore access to your clinic board.";
+      ctaLabel = "Subscribe";
     }
 
     var manageHtml = info.hasCustomer
-      ? '<button class="rbPaywallLink" data-action="portal">Manage billing</button>'
+      ? '<button class="rbPaywallLink" data-action="portal">Manage or cancel billing</button>'
       : "";
 
     overlay.innerHTML = [
@@ -416,7 +422,7 @@
       '        <li>Doctor badges</li>',
       '        <li>Quick notes</li>',
       '      </ul>',
-      '      <button class="rbPaywallBtn rbPaywallBtnSecondary" data-plan="base-monthly">Get Base</button>',
+      '      <button class="rbPaywallBtn rbPaywallBtnSecondary" data-plan="base-monthly">' + ctaLabel + '</button>',
       '    </div>',
       '    <div class="rbPaywallTier rbPaywallTierFeatured">',
       '      <div class="rbPaywallTierBadge">Most popular</div>',
@@ -428,7 +434,7 @@
       '        <li>Stats &amp; history</li>',
       '        <li>Priority support</li>',
       '      </ul>',
-      '      <button class="rbPaywallBtn rbPaywallBtnPrimary" data-plan="advanced-monthly">Get Advanced</button>',
+      '      <button class="rbPaywallBtn rbPaywallBtnPrimary" data-plan="advanced-monthly">' + ctaLabel + '</button>',
       '    </div>',
       '  </div>',
       '  <div class="rbPaywallFooter">',
@@ -529,7 +535,8 @@
             trialing: !!data.trialing,
             trialDaysLeft: data.trialDaysLeft || 0,
             subscribed: !!data.subscribed,
-            hasCustomer: !!data.hasCustomer
+            hasCustomer: !!data.hasCustomer,
+            hasSubscription: !!data.hasSubscription
           });
         });
       }
@@ -589,8 +596,10 @@
       var route = getRoute();
       if(!route.standalone) return;
       if(state && state.loggedIn && state.hasPractice){
-        if(state.newAccount) enterSetup();
-        else openBoard();
+        // Always run the billing gate. A brand-new clinic has no card on file
+        // yet, so openBoard() surfaces the "Start your free trial" paywall;
+        // once the trial is active it opens straight to the board.
+        openBoard();
       } else {
         enterAuth();
       }

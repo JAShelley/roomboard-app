@@ -48,11 +48,15 @@ export async function syncSubscriptionToPractice(subscription: Stripe.Subscripti
   const customerId =
     typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id;
   const periodEndUnix = (subscription as unknown as { current_period_end?: number }).current_period_end;
+  const trialEndUnix = (subscription as unknown as { trial_end?: number | null }).trial_end;
   const update: Record<string, unknown> = {
     stripe_subscription_id: subscription.id,
     subscription_status: subscription.status,
     plan: planForPriceId(priceId),
     current_period_end: periodEndUnix ? new Date(periodEndUnix * 1000).toISOString() : null,
+    // Keep the practice's trial_ends_at aligned with Stripe so the in-app trial
+    // countdown and charge-date warning match what Stripe will actually do.
+    trial_ends_at: trialEndUnix ? new Date(trialEndUnix * 1000).toISOString() : null,
   };
 
   // Prefer matching by customer id; fall back to the practice_id we stamp

@@ -773,6 +773,24 @@
       return true;
     };
 
+    function billingPlanAmount(plan){
+      switch(String(plan || "").toLowerCase()){
+        case "base-monthly": return "$4.99/mo";
+        case "base-annual": return "$49.99/yr";
+        case "advanced-monthly": return "$9.99/mo";
+        case "advanced-annual": return "$99.99/yr";
+        default: return "";
+      }
+    }
+    function formatTrialEndDate(iso){
+      if(!iso) return "";
+      try{
+        var d = new Date(iso);
+        if(isNaN(d.getTime())) return "";
+        return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+      }catch(e){ return ""; }
+    }
+
     function renderBillingStatus(data){
       var summary = $("billingSummary");
       var badge = $("billingBadge");
@@ -803,12 +821,23 @@
         if(subscribed){
           summary.textContent = "Your clinic has an active " + (plan || "subscription") + " plan.";
         } else if(trialing) {
-          summary.textContent = "Your clinic is in the free trial. " + trialDaysLeft + " day" + (trialDaysLeft === 1 ? "" : "s") + " left before subscription is required.";
+          var amt = billingPlanAmount(plan);
+          var dateStr = formatTrialEndDate(data && data.trialEndsAt);
+          var charge = "Your card will be charged" + (amt ? (" " + amt) : "")
+            + (dateStr ? (" on " + dateStr) : " when the trial ends") + " unless you cancel.";
+          summary.innerHTML = "<strong>Free trial — " + trialDaysLeft + " day"
+            + (trialDaysLeft === 1 ? "" : "s") + " left.</strong> " + charge
+            + " You can cancel anytime using the button below.";
         } else {
-          summary.textContent = "Your trial has ended. Subscribe with Stripe to keep the live board available.";
+          summary.textContent = "Your trial has ended. Resubscribe with Stripe to keep the live board available.";
         }
       }
-      if(portalBtn) portalBtn.style.display = data && data.hasCustomer ? "inline-flex" : "none";
+      // During a card-up-front trial the customer always exists, so the
+      // manage/cancel button is available the whole time.
+      if(portalBtn){
+        portalBtn.style.display = data && data.hasCustomer ? "inline-flex" : "none";
+        portalBtn.textContent = trialing ? "Manage or cancel" : "Manage billing";
+      }
       if(monthlyBtn) monthlyBtn.classList.toggle("isCurrent", subscribed && plan === "monthly");
       if(annualBtn) annualBtn.classList.toggle("isCurrent", subscribed && plan === "annual");
     }

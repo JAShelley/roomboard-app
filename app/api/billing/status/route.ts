@@ -40,6 +40,7 @@ async function fastBillingCheck(accessToken: string) {
   return {
     practiceId: String(row.practice_id || ""),
     stripeCustomerId: (pr.stripe_customer_id as string) || null,
+    stripeSubscriptionId: (pr.stripe_subscription_id as string) || null,
     subscriptionStatus: String(pr.subscription_status || "trialing"),
     plan: (pr.plan as string) || null,
     trialEndsAt: pr.trial_ends_at ? new Date(String(pr.trial_ends_at)).toISOString() : null,
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
       billing = {
         practiceId: full.practiceId,
         stripeCustomerId: full.stripeCustomerId,
+        stripeSubscriptionId: full.stripeSubscriptionId,
         subscriptionStatus: full.subscriptionStatus,
         plan: full.plan,
         trialEndsAt: full.trialEndsAt,
@@ -76,7 +78,7 @@ export async function POST(request: Request) {
     const access = computeAccess({
       practiceId: billing.practiceId,
       stripeCustomerId: billing.stripeCustomerId,
-      stripeSubscriptionId: null,
+      stripeSubscriptionId: billing.stripeSubscriptionId,
       subscriptionStatus: billing.subscriptionStatus,
       plan: billing.plan,
       trialEndsAt: billing.trialEndsAt,
@@ -94,6 +96,7 @@ export async function POST(request: Request) {
       trialEndsAt: billing.trialEndsAt,
       currentPeriodEnd: billing.currentPeriodEnd,
       hasCustomer: !!billing.stripeCustomerId,
+      hasSubscription: !!billing.stripeSubscriptionId,
     });
   } catch (error) {
     const message = String(error instanceof Error ? error.message : error || "Could not load billing status.");

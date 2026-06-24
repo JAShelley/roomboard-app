@@ -2,6 +2,7 @@ import {
   priceIdForPlan,
   resolveSessionContext,
   getPracticeBilling,
+  TRIAL_DAYS,
 } from "../_lib";
 import { ensureStripeCustomer, getStripe } from "../_stripe";
 import { optionsResponse, pulseJson, pulseError } from "../../pulse/_lib";
@@ -22,13 +23,12 @@ export async function POST(request: Request) {
     const customerId = await ensureStripeCustomer(ctx.practiceId, ctx.email);
     const billing = await getPracticeBilling(ctx.practiceId);
 
-    // If they still have free-trial days left, carry them into Stripe so an
-    // early upgrade doesn't charge before the trial would have ended.
-    const trialEndMs = billing.trialEndsAt ? Date.parse(billing.trialEndsAt) : 0;
-    const trialEndUnix = Math.floor(trialEndMs / 1000);
-    const nowUnix = Math.floor(Date.now() / 1000);
-    const hasRemainingTrial =
-      billing.subscriptionStatus === "trialing" && trialEndUnix > nowUnix + 60;
+    // Card-up-front trial: the first time a practice subscribes we grant a fresh
+    // 14-day trial. A card is still collected at Checkout (payment_method_collection
+    // "always"), Stripe holds it through the trial, then auto-charges the chosen
+    // plan when the trial ends. Practices that have subscribed before (e.g. they
+    // cancelled and are resubscribing) do not get a second free trial.
+    const isFirstSubscription = !billing.stripeSubscriptionId;
 
     const origin = originFromRequest(request, body?.returnUrl);
 
@@ -38,9 +38,19 @@ export async function POST(request: Request) {
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
       allow_promotion_codes: true,
+      // Require a payment method even though the trial is free, so the card is on
+      // file before the trial starts and the auto-charge can succeed.
+      payment_method_collection: "always",
       subscription_data: {
         metadata: { practice_id: ctx.practiceId },
-        ...(hasRemainingTrial ? { trial_end: trialEndUnix } : {}),
+        ...(isFirstSubscription
+          ? {
+              trial_period_days: TRIAL_DAYS,
+              trial_settings: {
+                end_behavior: { missing_payment_method: "cancel" },
+              },
+            }
+          : {}),
       },
       success_url: `${origin}?billing=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}?billing=cancel`,
