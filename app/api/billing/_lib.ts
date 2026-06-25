@@ -102,7 +102,7 @@ export function computeAccess(billing: PracticeBilling) {
   const trialMs = billing.trialEndsAt ? Date.parse(billing.trialEndsAt) : 0;
   const trialing = status === "trialing" && Number.isFinite(trialMs) && trialMs > now;
   const subscribed = status === "active" || status === "past_due";
-  const hasAccess = subscribed || (trialing && !!billing.stripeCustomerId);
+  const hasAccess = subscribed || (trialing && !!billing.stripeCustomerId && !!billing.stripeSubscriptionId);
   const trialDaysLeft = trialing ? Math.max(0, Math.ceil((trialMs - now) / 86_400_000)) : 0;
   return { hasAccess, trialing, subscribed, trialDaysLeft };
 }

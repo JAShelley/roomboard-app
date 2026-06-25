@@ -573,7 +573,7 @@
     var tokens = getStoredTokens();
     if(!tokens){ enterAuth(); return; }
     if(btn){ btn.disabled = true; btn.querySelector("span") && (btn.querySelector("span").textContent = "Loading…"); }
-    var returnUrl = (window.location.origin || "") + "/app/index.html?mode=startup";
+    var returnUrl = window.location.origin || "";
     fetch("/api/billing/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -609,6 +609,44 @@
   function checkBillingThenOpen(onAccess){
     var tokens = getStoredTokens();
     if(!tokens){ onAccess(); return; }
+
+    // If returning from a completed Stripe checkout, confirm via the session ID
+    // rather than the status endpoint — avoids webhook latency leaving the user
+    // blocked immediately after paying.
+    var params = new URLSearchParams(window.location.search);
+    var sessionId = params.get("session_id");
+    if(params.get("billing") === "success" && sessionId){
+      // Clean the billing params out of the URL so a refresh doesn't re-confirm.
+      try{ history.replaceState(null, "", window.location.pathname + "?mode=startup"); }catch(e){}
+      var controller2 = typeof AbortController !== "undefined" ? new AbortController() : null;
+      var timer2 = setTimeout(function(){ if(controller2) controller2.abort(); onAccess(); }, 12000);
+      var done2 = false;
+      function finish2(fn){ if(done2) return; done2 = true; clearTimeout(timer2); fn(); }
+      fetch("/api/billing/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: sessionId, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }),
+        signal: controller2 ? controller2.signal : undefined
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if(data.hasAccess){
+          finish2(function(){ hidePaywall(); onAccess(); });
+        } else {
+          finish2(function(){
+            showPaywall({
+              trialing: !!data.trialing,
+              trialDaysLeft: data.trialDaysLeft || 0,
+              subscribed: !!data.subscribed,
+              hasCustomer: !!data.hasCustomer
+            });
+          });
+        }
+      })
+      .catch(function(){ finish2(onAccess); });
+      return;
+    }
+
     var controller = typeof AbortController !== "undefined" ? new AbortController() : null;
     var timer = setTimeout(function(){ if(controller) controller.abort(); onAccess(); }, 8000);
     var done = false;

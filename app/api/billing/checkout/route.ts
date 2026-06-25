@@ -31,6 +31,7 @@ export async function POST(request: Request) {
       billing.subscriptionStatus === "trialing" && trialEndUnix > nowUnix + 60;
 
     const origin = originFromRequest(request, body?.returnUrl);
+    const appBase = `${origin}/app/index.html?mode=startup`;
 
     const stripe = getStripe();
     const checkout = await stripe.checkout.sessions.create({
@@ -42,8 +43,8 @@ export async function POST(request: Request) {
         metadata: { practice_id: ctx.practiceId },
         ...(hasRemainingTrial ? { trial_end: trialEndUnix } : {}),
       },
-      success_url: `${origin}?billing=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}?billing=cancel`,
+      success_url: `${appBase}&billing=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appBase}&billing=cancel`,
     });
 
     return pulseJson({ url: checkout.url });
@@ -56,10 +57,9 @@ export async function POST(request: Request) {
 
 function originFromRequest(request: Request, returnUrl?: string): string {
   const candidate = String(returnUrl || "").trim();
-  if (candidate) return candidate.replace(/\/+$/, "");
-  try {
-    return new URL(request.url).origin;
-  } catch {
-    return "https://app.roomboard.local";
+  if (candidate) {
+    try { return new URL(candidate).origin; } catch {}
   }
+  try { return new URL(request.url).origin; } catch {}
+  return "https://theroomboard.com";
 }

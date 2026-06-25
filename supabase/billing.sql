@@ -50,7 +50,10 @@ as $$
      where p.id = p_practice_id
        and (
             p.subscription_status in ('active', 'past_due')
-         or (p.subscription_status = 'trialing' and p.trial_ends_at > now() and p.stripe_customer_id is not null)
+         or (p.subscription_status = 'trialing'
+             and p.trial_ends_at > now()
+             and p.stripe_customer_id is not null
+             and p.stripe_subscription_id is not null)
        )
   );
 $$;
