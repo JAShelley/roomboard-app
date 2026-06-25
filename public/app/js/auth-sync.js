@@ -996,10 +996,15 @@
     var BOARD_LOAD_OVERLAY_MIN_MS = 700;
 
     function showBoardLoadOverlay(clinicName){
-      boardLoadOverlayShownAt = Date.now();
       var el = document.getElementById("boardLoadOverlay");
       if(!el) return;
       var label = document.getElementById("boardLoadClinic");
+      if(!el.hidden){
+        // Already visible — just update the clinic label, preserve original shown time
+        if(label && clinicName) label.textContent = clinicName;
+        return;
+      }
+      boardLoadOverlayShownAt = Date.now();
       if(label) label.textContent = clinicName || "";
       el.classList.remove("isHiding");
       el.removeAttribute("hidden");
@@ -4123,11 +4128,14 @@
         var res = await signInWithPasswordRobust(email, password);
         if(res.error) throw res.error;
         updateAuthUI(true);
+        showBoardLoadOverlay("");
         var loaded = await withTimeout(finishAuthenticatedFlow({ attempts: 8, waitMs: 250 }), 15000, "Clinic login");
         if(!loaded){
+          hideBoardLoadOverlay();
           alert("This login worked, but no clinic is linked to the account yet.");
         }
       }catch(e){
+        hideBoardLoadOverlay();
         console.error("login failed:", e);
         var loginErrMsg = humanizeAuthError(getErrorMessage(e));
         showAuthFeedback(loginErrMsg);
