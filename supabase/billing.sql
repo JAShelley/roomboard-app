@@ -33,7 +33,8 @@ update public.practices
 
 -- 3. Access helper --------------------------------------------------------
 -- A practice has board access if it is actively subscribed (or in a
--- short past_due grace handled by Stripe) OR still inside its free trial.
+-- short past_due grace handled by Stripe) OR still inside its free trial
+-- WITH a Stripe customer on file (card required to start trial).
 create or replace function public.practice_has_access(p_practice_id uuid)
 returns boolean
 language sql
@@ -45,7 +46,7 @@ as $$
      where p.id = p_practice_id
        and (
             p.subscription_status in ('active', 'past_due')
-         or (p.subscription_status = 'trialing' and p.trial_ends_at > now())
+         or (p.subscription_status = 'trialing' and p.trial_ends_at > now() and p.stripe_customer_id is not null)
        )
   );
 $$;
@@ -143,5 +144,74 @@ create policy "Practice members can update cleaning sessions in their practice"
   on public.cleaning_sessions
   for update
   to authenticated
+  using (practice_id = public.get_my_practice_id() and public.my_practice_has_access())
+  with check (practice_id = public.get_my_practice_id() and public.practice_has_access(practice_id));
+
+-- Gate per-room board data (runtime, not setup).
+drop policy if exists "Practice members can view room board entries in their practice" on public.room_board_entries;
+create policy "Practice members can view room board entries in their practice"
+  on public.room_board_entries
+  for select
+  to authenticated
+  using (practice_id = public.get_my_practice_id() and public.my_practice_has_access());
+
+drop policy if exists "Practice admins can insert room board entries in their practice" on public.room_board_entries;
+create policy "Practice admins can insert room board entries in their practice"
+  on public.room_board_entries
+  for insert
+  to authenticated
+  with check (practice_id = public.get_my_practice_id() and public.practice_has_access(practice_id));
+
+drop policy if exists "Practice admins can update room board entries in their practice" on public.room_board_entries;
+create policy "Practice admins can update room board entries in their practice"
+  on public.room_board_entries
+  for update
+  to authenticated
+  using (practice_id = public.get_my_practice_id() and public.my_practice_has_access())
+  with check (practice_id = public.get_my_practice_id() and public.practice_has_access(practice_id));
+
+drop policy if exists "Practice admins can delete room board entries in their practice" on public.room_board_entries;
+create policy "Practice admins can delete room board entries in their practice"
+  on public.room_board_entries
+  for delete
+  to authenticated
+  using (practice_id = public.get_my_practice_id() and public.my_practice_has_access());
+
+-- Gate quick notes (runtime board notes, not setup data).
+drop policy if exists "Practice members can view quick notes in their practice" on public.quick_notes;
+create policy "Practice members can view quick notes in their practice"
+  on public.quick_notes for select to authenticated
+  using (practice_id = public.get_my_practice_id() and public.my_practice_has_access());
+
+drop policy if exists "Practice admins can insert quick notes in their practice" on public.quick_notes;
+create policy "Practice admins can insert quick notes in their practice"
+  on public.quick_notes for insert to authenticated
+  with check (practice_id = public.get_my_practice_id() and public.practice_has_access(practice_id));
+
+drop policy if exists "Practice admins can update quick notes in their practice" on public.quick_notes;
+create policy "Practice admins can update quick notes in their practice"
+  on public.quick_notes for update to authenticated
+  using (practice_id = public.get_my_practice_id() and public.my_practice_has_access())
+  with check (practice_id = public.get_my_practice_id() and public.practice_has_access(practice_id));
+
+drop policy if exists "Practice admins can delete quick notes in their practice" on public.quick_notes;
+create policy "Practice admins can delete quick notes in their practice"
+  on public.quick_notes for delete to authenticated
+  using (practice_id = public.get_my_practice_id() and public.my_practice_has_access());
+
+-- Gate practice_checklist (runtime, not setup data).
+drop policy if exists "Practice members can read checklist" on public.practice_checklist;
+create policy "Practice members can read checklist"
+  on public.practice_checklist for select to authenticated
+  using (practice_id = public.get_my_practice_id() and public.my_practice_has_access());
+
+drop policy if exists "Practice members can insert checklist" on public.practice_checklist;
+create policy "Practice members can insert checklist"
+  on public.practice_checklist for insert to authenticated
+  with check (practice_id = public.get_my_practice_id() and public.practice_has_access(practice_id));
+
+drop policy if exists "Practice members can update checklist" on public.practice_checklist;
+create policy "Practice members can update checklist"
+  on public.practice_checklist for update to authenticated
   using (practice_id = public.get_my_practice_id() and public.my_practice_has_access())
   with check (practice_id = public.get_my_practice_id() and public.practice_has_access(practice_id));

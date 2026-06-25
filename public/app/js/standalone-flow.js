@@ -482,7 +482,10 @@
     overlay.setAttribute("aria-label", "Subscription required");
 
     var heading, sub;
-    if(info.trialing && info.trialDaysLeft > 0){
+    if(info.trialing && !info.hasCustomer){
+      heading = "Start your " + info.trialDaysLeft + "-day free trial.";
+      sub = "Enter a card now — you won’t be charged until your trial ends.";
+    } else if(info.trialing && info.trialDaysLeft > 0){
       heading = "Choose a plan to continue.";
       sub = info.trialDaysLeft + " day" + (info.trialDaysLeft === 1 ? "" : "s") + " left in your free trial.";
     } else {
@@ -663,16 +666,32 @@
       var target = event.target && event.target.closest ? event.target.closest(".standaloneOpenBoardBtn, #headerBoardBtn") : null;
       if(!target) return;
       event.preventDefault();
+      var span = target.querySelector("span") || target;
+      var orig = span.textContent;
+      target.disabled = true;
+      span.textContent = "Checking access…";
       openBoard();
+      // Restore button if billing check leads to paywall (not board open).
+      window.setTimeout(function(){
+        target.disabled = false;
+        span.textContent = orig;
+      }, 3000);
     });
   }
 
   function syncInitialRoute(){
     var route = getRoute();
     if(!route.standalone) return;
-    if((route.mode === "setup" || route.mode === "startup") && hasStoredAuthSession()){
-      if(wantsBoard()){ openBoard(); return; }
-      enterSetup({ keepUrl: route.mode === "setup" });
+    if(hasStoredAuthSession()){
+      // mode=setup means the user is mid-wizard (URL set by enterSetup/replaceMode).
+      // mode=startup means a fresh app open — go straight to openBoard() so billing
+      // decides: board if access, paywall if not. Only stay in setup when the URL
+      // explicitly says so.
+      if(route.mode === "setup" && !wantsBoard()){
+        enterSetup({ keepUrl: true });
+      } else {
+        openBoard();
+      }
       return;
     }
     enterAuth();
@@ -698,8 +717,7 @@
   (function primeVisualStage(){
     var route = getRoute();
     if(!route.standalone) return;
-    if((route.mode === "setup" || route.mode === "startup") && hasStoredAuthSession()){
-      if(wantsBoard()) return; // avoid flashing Setup before openBoard runs
+    if(hasStoredAuthSession() && route.mode === "setup" && !wantsBoard()){
       setVisualStage("setup");
     } else {
       setVisualStage("auth");

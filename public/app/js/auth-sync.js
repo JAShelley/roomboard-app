@@ -4086,7 +4086,6 @@
         applyAccountSettingsToState(state);
         applySessionUiPrefs(state);
         saveLocal();
-        savePracticeData().catch(function(e){ console.warn("Initial clinic save failed:", e); });
       }catch(e){
         console.error("signup failed:", e);
         var signupErrMsg = humanizeAuthError(getErrorMessage(e));
