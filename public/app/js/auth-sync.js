@@ -2827,7 +2827,8 @@
         "doctors",
         "practice_settings",
         "appointment_types",
-        "quick_notes"
+        "quick_notes",
+        "practice_checklist"
       ];
       var channel = supabase.channel("board-" + practiceId);
       for(var i=0;i<tables.length;i++){
@@ -2996,13 +2997,15 @@
         var appointmentTypesReq = supabase.from("appointment_types").select("id, title, color_hex, sort_order, active").eq("practice_id", currentPracticeId).order("sort_order", { ascending: true });
         var quickNotesReq = supabase.from("quick_notes").select("id, label, sort_order, active").eq("practice_id", currentPracticeId).order("sort_order", { ascending: true });
         var roomBoardReq = supabase.from("practice_board_state").select("board_state, updated_at").eq("practice_id", currentPracticeId).maybeSingle();
-        var results = await Promise.all([roomsReq, doctorsReq, settingsReq, appointmentTypesReq, quickNotesReq, roomBoardReq]);
+        var checklistReq = supabase.from("practice_checklist").select("items").eq("practice_id", currentPracticeId).maybeSingle();
+        var results = await Promise.all([roomsReq, doctorsReq, settingsReq, appointmentTypesReq, quickNotesReq, roomBoardReq, checklistReq]);
         if(results[0].error) throw results[0].error;
         if(results[1].error) throw results[1].error;
         if(results[2].error) throw results[2].error;
         if(results[3].error) throw results[3].error;
         if(results[4].error) throw results[4].error;
         if(results[5].error) throw results[5].error;
+        if(results[6] && results[6].error) console.warn("Checklist load failed (non-fatal):", results[6].error);
         var persistedSettings = await persistedSettingsPromise;
         var userSettingsRecord = persistedSettings.userSettingsRecord;
         var practiceDefaultSettingsRecord = persistedSettings.practiceDefaultSettingsRecord;
@@ -3047,6 +3050,7 @@
         if(!(results[5].data && results[5].data.board_state)){
           lastRoomBoardSignature = getRoomBoardSignature();
         }
+        if(typeof window.applyChecklistData === "function") window.applyChecklistData(results[6] && results[6].data ? results[6].data : null);
         setStatus((currentPracticeName || "Clinic") + " ready.");
         setSyncUI("ok", "Clinic loaded");
         return true;
@@ -3734,6 +3738,10 @@
       }
       if(tableName === "practice_feedback_items"){
         if(typeof window.refreshFeedbackChecklistForSession === "function") window.refreshFeedbackChecklistForSession();
+        return;
+      }
+      if(tableName === "practice_checklist"){
+        if(typeof window.refreshChecklistFromRemote === "function") window.refreshChecklistFromRemote();
         return;
       }
       if(saving || isUiInteractionLocked()){

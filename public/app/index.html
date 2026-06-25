@@ -30,10 +30,6 @@
 <small id="statusLine">Loading…</small>
 </div>
 <div class="right">
-<div id="clinicHeaderArea" hidden>
-  <span id="clinicHeaderName"></span>
-  <button class="btn sm primary" id="headerBoardBtn" type="button">BOARD</button>
-</div>
 <div class="headerToggleWrap" id="displayOnlyActiveWrap">
 <span class="headerToggleLabel">Only active</span>
 <div class="switch" id="displayOnlyActiveSwitch"><div class="knob"></div></div>
@@ -48,6 +44,7 @@
 	<button aria-label="Add or edit a room from Display" class="iconBtn headerIconBtn addHeaderBtn" id="openQuickAddBtn" title="Add or edit a room from Display" type="button">+</button>
 	<button aria-label="Toggle mobile quick view" class="iconBtn headerIconBtn mobileQuickViewHeaderBtn" id="toggleMobileQuickViewBtn" title="Toggle mobile quick view" type="button"><span aria-hidden="true" class="headerPhoneIcon"></span></button>
 	<button aria-label="Enter full screen" class="iconBtn headerIconBtn" id="fullscreenBtn" title="Enter full screen" type="button">⤢</button>
+	<button aria-label="Open checklist" class="iconBtn headerIconBtn" id="checklistBtn" title="Open checklist" type="button">☑</button>
 	<button aria-label="Toggle grid/list" class="iconBtn headerIconBtn" id="viewToggleBtn" title="Toggle grid/list" type="button">▦</button>
 	<button aria-label="Open settings" class="iconBtn headerIconBtn" id="openSettingsBtn" title="Open settings" type="button">⚙</button>
 	</div>
@@ -62,6 +59,20 @@
 </main>
 <div aria-hidden="true" class="mobileQuickViewPopupBackdrop" hidden id="mobileQuickViewPopupBackdrop"></div>
 <section aria-hidden="true" aria-label="Quick room details" class="mobileQuickViewPopup" hidden id="mobileQuickViewPopup"></section>
+<div class="checklistBackdrop" id="checklistBackdrop"></div>
+<aside aria-label="Checklist" class="checklistPanel" id="checklistPanel">
+<div class="checklistPanelHeader">
+<h2>Checklist</h2>
+<button class="btn sm" id="closeChecklistBtn" type="button">Close</button>
+</div>
+<div class="checklistPanelBody" id="checklistPanelBody">
+<div class="checklistAddRow">
+<input class="checklistNewItemInput" id="checklistNewItemInput" placeholder="Add item…" type="text">
+<button class="btn sm primary" id="checklistAddBtn" type="button">Add</button>
+</div>
+<ul class="checklistList" id="checklistList"></ul>
+</div>
+</aside>
 <div class="quickAddBackdrop" id="quickAddBackdrop"></div>
 <section aria-label="Quick add" class="quickAddModal" id="quickAddModal">
 <div class="quickAddCard">
@@ -911,7 +922,8 @@
 <script src="./js/board-state.js?v=20260613b"></script>
 <script src="./js/rendering.js?v=20260624a"></script>
 <script src="./js/settings.js?v=20260617a"></script>
-<script src="./js/auth-sync.js?v=20260624c"></script>
+<script src="./js/checklist.js?v=20260625a"></script>
+<script src="./js/auth-sync.js?v=20260625a"></script>
 <script src="./js/ux.js?v=20260606a"></script>
 <script src="./js/theme.js?v=20260517d"></script>
 <script src="./js/desktop-capture-panel.js?v=20260606a"></script>
