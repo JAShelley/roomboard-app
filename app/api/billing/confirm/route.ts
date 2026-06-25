@@ -29,7 +29,13 @@ export async function POST(request: Request) {
     if (session.status !== "complete") {
       const billing = await getPracticeBilling(ctx.practiceId);
       const access = computeAccess(billing);
-      return pulseJson({ hasAccess: access.hasAccess, ...access });
+      return pulseJson({
+        hasAccess: access.hasAccess,
+        trialing: access.trialing,
+        subscribed: access.subscribed,
+        trialDaysLeft: access.trialDaysLeft,
+        hasCustomer: !!billing.stripeCustomerId,
+      });
     }
 
     const sub = session.subscription as Stripe.Subscription | null;
