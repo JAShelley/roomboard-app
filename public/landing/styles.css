@@ -182,7 +182,7 @@ img { max-width: 100%; display: block; }
 .hero > .wrap { display: flex; flex-direction: column; align-items: center; }
 .hero-col { text-align: center; max-width: 760px; width: 100%; }
 .hero h1 { font-size: clamp(48px, 7.5vw, 96px); margin: 16px 0 24px; line-height: 1.03; font-weight: 800; letter-spacing: -.03em; }
-.hero h1 .grad { background: linear-gradient(110deg, var(--teal-300) 5%, var(--coral) 75%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero h1 .grad { background: linear-gradient(110deg, var(--teal-300) 5%, var(--coral) 75%); -webkit-background-clip: text; background-clip: text; color: transparent; white-space: nowrap; }
 .hero-microtrust { font-size: 14px; color: var(--muted); margin: 8px 0 20px; text-align: center; }
 .hero .lede { font-size: 20px; color: var(--ink-2); max-width: 560px; line-height: 1.6; margin: 0 auto; }
 .hero-cta { display: flex; gap: 16px; margin: 38px 0 28px; flex-wrap: wrap; justify-content: center; }
