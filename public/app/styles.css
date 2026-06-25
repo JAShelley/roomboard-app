@@ -4745,12 +4745,10 @@ body.settingsPageMode .drawer{
   background: linear-gradient(150deg, #07101f 0%, #101827 48%, #10231e 100%) !important;
 }
 body.settingsPageMode .drawerBody{
-  max-width:1100px;
-  margin:0 auto;
-  padding:28px max(20px, 4vw) 60px;
+  padding:28px max(28px, 5vw) 60px;
 }
 body.settingsPageMode .drawerHeader{
-  padding:20px max(20px, 4vw) 16px;
+  padding:20px max(28px, 5vw) 16px;
   position:sticky;
   top:0;
   z-index:10;
@@ -4788,9 +4786,9 @@ body.settingsPageMode #settingsBackBtn:hover{
 @media(min-width:900px){
   body.settingsPageMode .drawerBody{
     display:grid;
-    grid-template-columns: 176px 1fr;
+    grid-template-columns: 210px 1fr;
     grid-template-rows: auto auto 1fr;
-    column-gap:28px;
+    column-gap:32px;
     align-items:start;
   }
   body.settingsPageMode .standaloneStartupIntro,
@@ -4847,9 +4845,16 @@ body.settingsPageMode #settingsBackBtn:hover{
     grid-row: 2 / 4;
   }
   body.settingsPageMode .drawer .tabPanel.active{
-    display:flex;
-    flex-direction:column;
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
     gap:16px;
+    align-items:start;
+  }
+  body.settingsPageMode .drawer .tabPanel.active > .card.fullWidth,
+  body.settingsPageMode .drawer .tabPanel.active > .statsHeader,
+  body.settingsPageMode .drawer #tabStats.active > *,
+  body.settingsPageMode .drawer #tabAccount.active > * {
+    grid-column: 1 / -1;
   }
 }
 
