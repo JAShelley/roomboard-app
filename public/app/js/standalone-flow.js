@@ -640,6 +640,8 @@
   /* ── Board open ────────────────────────────────────────────────────── */
 
   function openBoard(){
+    // If the plan picker is already visible, don't race past it.
+    if(document.getElementById("rbPaywall")) return;
     if(typeof window.roomboardCanOpenBoard === "function" && !window.roomboardCanOpenBoard()){
       return;
     }
