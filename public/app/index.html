@@ -219,21 +219,18 @@
 <a href="#" id="forgotPasswordLink" style="color:var(--muted); text-decoration:underline; text-underline-offset:2px;">Forgot password?</a>
 <a href="/" style="color:var(--muted); text-decoration:underline; text-underline-offset:2px;">← Back to theroomboard.com</a>
 </div>
-<div class="field" hidden id="loggedInSummary" style="padding-bottom:8px;">
-<label>Your clinic account</label>
-<div class="miniRow">
-<div class="field">
-<label>Practice name</label>
-<input id="loggedInPracticeName" readonly type="text">
+<div hidden id="loggedInSummary" style="border-top:1px solid rgba(255,255,255,.06);">
+<div class="sxRow">
+<span class="sxRowLabel">Clinic</span>
+<input class="sxRowReadonly" id="loggedInPracticeName" readonly type="text">
 </div>
-<div class="field">
-<label>Full name</label>
-<input id="loggedInFullName" readonly type="text">
+<div class="sxRow">
+<span class="sxRowLabel">Name</span>
+<input class="sxRowReadonly" id="loggedInFullName" readonly type="text">
 </div>
-</div>
-<div class="field">
-<label>Email</label>
-<input id="loggedInEmail" readonly type="text">
+<div class="sxRow" style="border-bottom:none;">
+<span class="sxRowLabel">Email</span>
+<input class="sxRowReadonly" id="loggedInEmail" readonly type="text">
 </div>
 </div>
 <div class="muted" id="clinicContextLine" style="padding-bottom:12px;">Not connected to a clinic yet.</div>
@@ -465,11 +462,11 @@
 <div class="sxSection">
 <div class="sxHead">Display layout</div>
 <div class="sxRow">
-<span class="sxLabel">Columns</span>
+<span class="sxLabel">Columns<span class="sxLabelNote">room cards per row</span></span>
 <input class="sxInputNum" id="displayCols" min="1" step="1" type="number">
 </div>
 <div class="sxRow">
-<span class="sxLabel">Rows <span style="font-size:11px; color:var(--settingsMuted);">(0 = unlimited)</span></span>
+<span class="sxLabel">Rows<span class="sxLabelNote">0 = unlimited</span></span>
 <input class="sxInputNum" id="displayRows" min="0" step="1" type="number">
 </div>
 <div class="sxRow">
@@ -620,16 +617,16 @@
 <div class="tabPanel" id="tabAlerts">
 <div class="sxSection">
 <div class="sxHead">Timer alerts</div>
-<div class="sxRow">
-<span class="sxLabel">Alert 1 after</span>
-<input class="sxInputNum" id="timerAlert1AtSec" min="0" step="10" type="number" style="width:72px;">
-<span style="font-size:12px; color:var(--settingsMuted); flex:none;">sec</span>
+<div class="sxRow sxAlertRow">
+<span class="sxLabel">Alert 1 after<span class="sxLabelNote">seconds elapsed → card color changes</span></span>
+<input class="sxInputNum" id="timerAlert1AtSec" min="0" step="10" type="number" style="width:70px;">
+<span class="sxAlertBadge">sec</span>
 <input id="timerAlert1Color" type="color">
 </div>
-<div class="sxRow">
-<span class="sxLabel">Alert 2 after</span>
-<input class="sxInputNum" id="timerAlert2AtSec" min="0" step="10" type="number" style="width:72px;">
-<span style="font-size:12px; color:var(--settingsMuted); flex:none;">sec</span>
+<div class="sxRow sxAlertRow">
+<span class="sxLabel">Alert 2 after<span class="sxLabelNote">overrides alert 1 color</span></span>
+<input class="sxInputNum" id="timerAlert2AtSec" min="0" step="10" type="number" style="width:70px;">
+<span class="sxAlertBadge">sec</span>
 <input id="timerAlert2Color" type="color">
 </div>
 </div>
@@ -675,10 +672,10 @@
 </div>
 <div class="tabPanel" id="tabStats">
 <div class="sxSection">
-<div class="sxHead" style="display:flex; align-items:center; justify-content:space-between;">
-<span>Room &amp; Cleaning Analytics</span>
-<div style="display:flex; gap:8px; align-items:center;">
-<select class="statsRangeSelect" id="statsRangeSelect" style="font-size:11px;">
+<div class="sxStatsHead">
+<span class="sxStatsHeadTitle">Room &amp; Cleaning Analytics</span>
+<div class="sxStatsHeadControls">
+<select class="statsRangeSelect" id="statsRangeSelect">
 <option value="7">Last 7 days</option>
 <option value="30" selected>Last 30 days</option>
 <option value="90">Last 90 days</option>
@@ -694,50 +691,60 @@
 <div class="tabPanel" id="tabUtilities">
 <div class="sxSection">
 <div class="sxHead">Browser extension</div>
-<div style="padding:10px 16px 4px;">
-<div class="muted" style="font-size:12px; margin-bottom:10px;">Install the RoomBoard Pulse Capture extension for Chrome to send appointments from your web scheduler straight into the board with one click — no zip files, no setup.</div>
-<a class="btn sm primary" href="https://chromewebstore.google.com/detail/injkdfclmcokpgjecophgaohdajfgdfj?utm_source=item-share-cb" rel="noopener" style="text-decoration:none; display:inline-block; margin-bottom:10px;" target="_blank">Get the Chrome extension</a>
-<div class="muted" style="font-size:12px; line-height:1.55; margin-bottom:4px;">After installing, open your scheduler and hover or click an appointment — RoomBoard reads the patient, doctor, and type and drops it into Quick Add.</div>
+<div class="sxToolBody">
+<p class="sxToolDesc">Send appointments from your web scheduler straight into the board with one click — no zip files, no setup.</p>
+<div class="sxToolActions">
+<a class="btn sm primary" href="https://chromewebstore.google.com/detail/injkdfclmcokpgjecophgaohdajfgdfj?utm_source=item-share-cb" rel="noopener" style="text-decoration:none;" target="_blank">Get the Chrome extension</a>
+</div>
+<p class="sxToolDesc" style="margin:0;">After installing, hover or click an appointment in your scheduler — RoomBoard reads the patient, doctor, and type and drops it into Quick Add.</p>
 </div>
 </div>
 <div class="sxSection" id="desktopDownloadCard" style="display:none;">
 <div class="sxHead">Windows desktop app</div>
-<div style="padding:10px 16px 12px;">
-<div class="muted" style="font-size:12px; margin-bottom:10px;">Install RoomBoard as a standalone Windows app with appointment capture built in.</div>
-<div style="display:flex; gap:8px; flex-wrap:wrap;">
+<div class="sxToolBody">
+<p class="sxToolDesc">Standalone Windows app with appointment capture built in.</p>
+<div class="sxToolActions">
 <a class="btn sm primary" href="#" id="desktopDownloadLink" rel="noopener" style="text-decoration:none;" target="_blank">Download Windows app</a>
 <a class="btn sm" hidden href="#" id="desktopReleaseLink" rel="noopener" style="text-decoration:none;" target="_blank">GitHub releases</a>
 </div>
-<div class="muted" id="desktopDownloadMeta" style="font-size:12px; margin-top:6px;"></div>
+<div class="sxToolDesc" id="desktopDownloadMeta" style="margin:0;"></div>
 </div>
 </div>
 <div class="sxSection" id="desktopMacDownloadCard" style="display:none;">
 <div class="sxHead">Mac app</div>
-<div style="padding:10px 16px 12px;">
-<div class="muted" style="font-size:12px; margin-bottom:10px;">Install RoomBoard as a signed Mac app with menu bar capture built in.</div>
+<div class="sxToolBody">
+<p class="sxToolDesc">Signed Mac app with menu bar capture built in.</p>
+<div class="sxToolActions">
 <a class="btn sm primary" href="#" id="desktopMacDownloadLink" rel="noopener" style="text-decoration:none;" target="_blank">Download RoomBoard for Mac</a>
-<div class="muted" id="desktopMacDownloadMeta" style="font-size:12px; margin-top:6px;"></div>
+</div>
+<div class="sxToolDesc" id="desktopMacDownloadMeta" style="margin:0;"></div>
 </div>
 </div>
 <div class="sxSection" id="captureDownloadCard" style="display:none;">
 <div class="sxHead">Capture app for Windows</div>
-<div style="padding:10px 16px 12px;">
-<div class="muted" style="font-size:12px; margin-bottom:10px;">Install the Windows capture app for sending appointments from browser, server-based, and desktop scheduler systems into RoomBoard.</div>
-<a class="btn sm primary" href="#" id="captureDownloadLink" rel="noopener" style="text-decoration:none;" target="_blank">Download RoomBoard Capture for Windows</a>
-<div class="muted" id="captureDownloadMeta" style="font-size:12px; margin-top:6px;"></div>
+<div class="sxToolBody">
+<p class="sxToolDesc">Sends appointments from browser, server-based, and desktop schedulers into RoomBoard.</p>
+<div class="sxToolActions">
+<a class="btn sm primary" href="#" id="captureDownloadLink" rel="noopener" style="text-decoration:none;" target="_blank">Download Capture for Windows</a>
+</div>
+<div class="sxToolDesc" id="captureDownloadMeta" style="margin:0;"></div>
 </div>
 </div>
 <div class="sxSection">
 <div class="sxHead">Practice defaults</div>
-<div style="padding:10px 16px 12px;">
-<button class="btn sm primary" id="savePracticeDefaultsBtn" type="button">Save as Default</button>
+<div class="sxToolBody" style="padding-bottom:12px;">
+<p class="sxToolDesc">Save your current board layout, fonts, and display settings as the clinic-wide default.</p>
+<button class="btn sm primary" id="savePracticeDefaultsBtn" type="button">Save as default</button>
 </div>
 </div>
 <div class="sxSection">
 <div class="sxHead">Backup &amp; restore</div>
-<div style="padding:10px 16px 12px; display:flex; gap:8px;">
+<div class="sxToolBody" style="padding-bottom:12px;">
+<p class="sxToolDesc">Export your full clinic config as JSON, or restore from a previous export.</p>
+<div class="sxToolActions" style="margin:0;">
 <button class="btn sm" id="exportClinicConfigBtn" type="button">Export config</button>
 <button class="btn sm" id="importClinicConfigBtn" type="button">Import config</button>
+</div>
 </div>
 <input accept=".json,application/json" hidden id="importClinicConfigFile" type="file">
 </div>
