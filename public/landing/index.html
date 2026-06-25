@@ -64,7 +64,7 @@
   <div class="wrap">
     <div class="hero-col">
       <span class="eyebrow">● Live room status, on every screen</span>
-      <h1>Never ask <span class="grad">"who's in room&nbsp;3?"</span> again</h1>
+      <h1>Never ask <span class="grad">"who's in room&nbsp;3?"</span>&nbsp;again</h1>
       <p class="lede">One live board your whole clinic watches — patients, providers, timers and room status, synced across every screen in under a second.</p>
       <div class="hero-cta">
         <a class="btn primary lg" href="/app/index.html?mode=startup&auth=signup">Start free trial</a>
@@ -406,44 +406,87 @@
       </div>
       <div class="panel" id="p-rooms">
         <h4>Rooms &amp; board setup</h4>
-        <p>Name your rooms, set the order, and build your own appointment types and reusable quick notes.</p>
+        <p>Name your rooms, set visit types with colors, and manage clinic-wide quick notes.</p>
         <div class="mini-rooms">
           <div class="mini-room" style="--c:var(--st-exam)"><span>Room 1</span><span class="mr-t">7:12</span></div>
           <div class="mini-room" style="--c:var(--st-surgery)"><span>Procedure</span><span class="mr-t">41:05</span></div>
-          <div class="mini-room" style="--c:var(--st-recheck);color:#0b1220"><span>Room 2</span><span class="mr-t">22:40</span></div>
+          <div class="mini-room" style="--c:var(--st-recheck)"><span>Room 2</span><span class="mr-t">22:40</span></div>
           <div class="mini-room" style="--c:var(--st-ready)"><span>Room 3</span><span class="mr-t">3:30</span></div>
+        </div>
+        <div class="mini-types">
+          <span class="mini-type" style="--tc:var(--st-exam)">Exam</span>
+          <span class="mini-type" style="--tc:var(--st-surgery)">Procedure</span>
+          <span class="mini-type" style="--tc:var(--st-recheck)">Recheck</span>
+          <span class="mini-type" style="--tc:var(--st-ready)">Discharge</span>
         </div>
       </div>
       <div class="panel hidden" id="p-staff">
-        <h4>Staff &amp; provider badges</h4>
-        <p>Add providers and staff with initials, or pick a fun badge for each.</p>
-        <div class="badges-row" id="badgesRow">
-          <span class="b"><img alt="Badge" src="/app/french-bulldog-badge.png" onerror="this.parentNode.textContent='🐶'"></span>
-          <span class="b"><img alt="Badge" src="/app/crab-badge.png" onerror="this.parentNode.textContent='🦀'"></span>
-          <span class="b"><img alt="Badge" src="/app/seaturtle-badge.png" onerror="this.parentNode.textContent='🐢'"></span>
-          <span class="b"><img alt="Badge" src="/app/strawberry-badge.png" onerror="this.parentNode.textContent='🍓'"></span>
-          <span class="b"><img alt="Badge" src="/app/flower-badge.png" onerror="this.parentNode.textContent='🌸'"></span>
-          <span class="b"><img alt="Badge" src="/app/golfball-badge.png" onerror="this.parentNode.textContent='⛳'"></span>
+        <h4>Staff &amp; provider roster</h4>
+        <p>Add doctors with initials, then pick a fun image badge for each provider.</p>
+        <div class="mini-staff-list">
+          <div class="mini-staff-row">
+            <div class="mini-initials" style="background:#4f7cf6">JS</div>
+            <span class="mini-staff-name">Dr. Johnson</span>
+            <span class="mini-staff-badge"><img alt="" src="/app/french-bulldog-badge.png" onerror="this.style.display='none';this.parentNode.textContent='🐶'"></span>
+          </div>
+          <div class="mini-staff-row">
+            <div class="mini-initials" style="background:#ef476f">MR</div>
+            <span class="mini-staff-name">Dr. Rivera</span>
+            <span class="mini-staff-badge"><img alt="" src="/app/crab-badge.png" onerror="this.style.display='none';this.parentNode.textContent='🦀'"></span>
+          </div>
+          <div class="mini-staff-row">
+            <div class="mini-initials" style="background:#18b06b">KP</div>
+            <span class="mini-staff-name">Dr. Park</span>
+            <span class="mini-staff-badge"><img alt="" src="/app/flower-badge.png" onerror="this.style.display='none';this.parentNode.textContent='🌸'"></span>
+          </div>
         </div>
       </div>
       <div class="panel hidden" id="p-display">
         <h4>Display &amp; layout</h4>
-        <p>Grid or list, column count, card scale, and a "show only active rooms" filter for busy days.</p>
-        <div class="toggle-row">Only active rooms <span class="sw"></span></div>
-        <div class="toggle-row">Grid layout <span class="sw"></span></div>
-        <div class="toggle-row">Compact cards <span class="sw off"></span></div>
+        <p>Grid or list, column count, card scale, and which fields show on every room card.</p>
+        <div class="mini-field-grid">
+          <label class="mini-field-toggle"><input type="checkbox" checked><span>Patient name</span></label>
+          <label class="mini-field-toggle"><input type="checkbox" checked><span>Doctor badge</span></label>
+          <label class="mini-field-toggle"><input type="checkbox" checked><span>Visit type</span></label>
+          <label class="mini-field-toggle"><input type="checkbox" checked><span>Ready badges</span></label>
+          <label class="mini-field-toggle"><input type="checkbox"><span>Tech name</span></label>
+          <label class="mini-field-toggle"><input type="checkbox" checked><span>Quick notes</span></label>
+        </div>
+        <div class="toggle-row" style="margin-top:10px">Only active rooms <span class="sw"></span></div>
       </div>
       <div class="panel hidden" id="p-timers">
         <h4>Timers &amp; actions</h4>
-        <p>Tune visit and cleaning timers and the thresholds that turn cards amber and red.</p>
-        <div class="toggle-row">Visit timer <span class="sw"></span></div>
+        <p>Set when timers turn amber then red, and choose your stopwatch style.</p>
+        <div class="mini-timer-thresholds">
+          <div class="mini-thresh-row">
+            <span class="mini-thresh-dot" style="background:#e2a017;box-shadow:0 0 6px rgba(226,160,23,.5)"></span>
+            <span class="mini-thresh-label">Amber at</span>
+            <span class="mini-thresh-val">15:00</span>
+          </div>
+          <div class="mini-thresh-row">
+            <span class="mini-thresh-dot" style="background:#e23b3b;box-shadow:0 0 6px rgba(226,59,59,.5)"></span>
+            <span class="mini-thresh-label">Red at</span>
+            <span class="mini-thresh-val">30:00</span>
+          </div>
+        </div>
+        <div class="toggle-row" style="margin-top:10px">Visit timer <span class="sw"></span></div>
         <div class="toggle-row">Cleaning timer <span class="sw"></span></div>
-        <div class="toggle-row">Auto-highlight overdue <span class="sw"></span></div>
       </div>
       <div class="panel hidden" id="p-brand">
         <h4>Branding &amp; theme</h4>
-        <p>Drop in your clinic logo and tune colors. Light or dark, your board, your brand.</p>
-        <div class="swatches">
+        <p>Pick a board theme, upload your clinic logo, and tune your accent colors.</p>
+        <div class="mini-themes">
+          <div class="mini-theme active" style="--th-bg:#0a1422;--th-card:#101e33">
+            <span class="mini-theme-swatch"></span>Dark
+          </div>
+          <div class="mini-theme" style="--th-bg:#0d1b2e;--th-card:#10243d">
+            <span class="mini-theme-swatch"></span>Navy
+          </div>
+          <div class="mini-theme" style="--th-bg:#f4f7fb;--th-card:#fff">
+            <span class="mini-theme-swatch" style="border:1px solid #e4ebf3"></span>Light
+          </div>
+        </div>
+        <div class="swatches" style="margin-top:14px">
           <span class="swatch" style="background:var(--st-exam)"></span>
           <span class="swatch" style="background:var(--st-recheck)"></span>
           <span class="swatch" style="background:var(--st-surgery)"></span>
@@ -454,9 +497,30 @@
       </div>
       <div class="panel hidden" id="p-tools">
         <h4>Tools &amp; downloads</h4>
-        <p>Grab the desktop apps, the capture helper, and the browser extension straight from setup.</p>
-        <div class="toggle-row">Desktop app <a class="btn ghost" style="padding:7px 14px" href="/app/index.html?mode=startup&auth=signup">Get started</a></div>
-        <div class="toggle-row">Capture helper <a class="btn ghost" style="padding:7px 14px" href="/app/index.html?mode=startup&auth=signup">Get started</a></div>
+        <p>Everything in one place — desktop app, Chrome extension, and capture helper.</p>
+        <div class="mini-tool-list">
+          <div class="mini-tool-row">
+            <span class="mini-tool-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4" stroke-linecap="round"/></svg>
+            </span>
+            <span class="mini-tool-name">Desktop app <small>macOS &amp; Windows</small></span>
+            <a class="btn ghost" style="padding:6px 12px;font-size:12px;flex:none" href="/app/index.html?mode=startup&auth=signup">Get</a>
+          </div>
+          <div class="mini-tool-row">
+            <span class="mini-tool-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h9M8 6 12 12l-4 6M8 6l4 6h9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="mini-tool-name">Chrome extension <small>Web schedulers</small></span>
+            <a class="btn ghost" style="padding:6px 12px;font-size:12px;flex:none" href="https://chromewebstore.google.com/detail/injkdfclmcokpgjecophgaohdajfgdfj" target="_blank" rel="noopener">Get</a>
+          </div>
+          <div class="mini-tool-row">
+            <span class="mini-tool-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+            </span>
+            <span class="mini-tool-name">Capture helper <small>Mac &amp; Windows</small></span>
+            <a class="btn ghost" style="padding:6px 12px;font-size:12px;flex:none" href="/app/index.html?mode=startup&auth=signup">Get</a>
+          </div>
+        </div>
       </div>
     </div>
 
