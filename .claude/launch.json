@@ -6,6 +6,12 @@
       "runtimeExecutable": "/Applications/Codex.app/Contents/Resources/cua_node/bin/node",
       "runtimeArgs": ["node_modules/.bin/next", "dev"],
       "port": 3000
+    },
+    {
+      "name": "landing",
+      "runtimeExecutable": "/Applications/Codex.app/Contents/Resources/cua_node/bin/npx",
+      "runtimeArgs": ["serve", "public", "-p", "4000", "--no-clipboard"],
+      "port": 4000
     }
   ]
 }
