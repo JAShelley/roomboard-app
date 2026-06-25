@@ -746,10 +746,18 @@
     }
 
     function setBillingBusy(isBusy){
-      ["billingMonthlyBtn", "billingAnnualBtn", "billingRefreshBtn", "billingPortalBtn"].forEach(function(id){
+      ["billingMonthlyBtn", "billingAnnualBtn", "billingRefreshBtn", "billingManageBtn", "billingChangeBillingBtn"].forEach(function(id){
         var el = $(id);
         if(el) el.disabled = !!isBusy;
       });
+    }
+
+    function formatBillingDate(isoStr){
+      if(!isoStr) return "—";
+      try{
+        var d = new Date(isoStr);
+        return d.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
+      }catch(e){ return String(isoStr); }
     }
 
     function setBillingCardVisible(visible){
@@ -785,15 +793,23 @@
     function renderBillingStatus(data){
       var summary = $("billingSummary");
       var badge = $("billingBadge");
-      var portalBtn = $("billingPortalBtn");
+      var manageBtn = $("billingManageBtn");
+      var changeBillingBtn = $("billingChangeBillingBtn");
       var monthlyBtn = $("billingMonthlyBtn");
       var annualBtn = $("billingAnnualBtn");
-      var status = String(data && data.status || "").toLowerCase();
+      var billingDetails = $("billingDetails");
+      var billingPlanGrid = $("billingPlanGrid");
+      var billingPlanLabel = $("billingPlanLabel");
+      var billingDateLabel = $("billingDateLabel");
+      var billingDateValue = $("billingDateValue");
       var plan = String(data && data.plan || "").toLowerCase();
       var trialDaysLeft = Number(data && data.trialDaysLeft || 0);
       var hasAccess = !!(data && data.hasAccess);
       var subscribed = !!(data && data.subscribed);
       var trialing = !!(data && data.trialing);
+      var hasCustomer = !!(data && data.hasCustomer);
+      var currentPeriodEnd = (data && data.currentPeriodEnd) || null;
+      var trialEndsAt = (data && data.trialEndsAt) || null;
       currentBillingAccess = hasAccess;
       currentBillingPlan = plan || null;
       if(typeof window.refreshAdvancedPlanGating === "function") window.refreshAdvancedPlanGating();
@@ -805,21 +821,36 @@
         if(hasAccess) badge.classList.add(subscribed ? "isActive" : "isTrial");
         else badge.classList.add("isBlocked");
         badge.textContent = subscribed
-          ? ("Active" + (plan ? " " + plan : ""))
+          ? ("Active" + (plan ? " · " + plan.charAt(0).toUpperCase() + plan.slice(1) : ""))
           : trialing
-            ? ("Trial " + trialDaysLeft + "d")
+            ? ("Trial · " + trialDaysLeft + "d left")
             : "Billing required";
       }
-      if(summary){
-        if(subscribed){
-          summary.textContent = "Your clinic has an active " + (plan || "subscription") + " plan.";
-        } else if(trialing) {
-          summary.textContent = "Your clinic is in the free trial. " + trialDaysLeft + " day" + (trialDaysLeft === 1 ? "" : "s") + " left before subscription is required.";
-        } else {
-          summary.textContent = "Your trial has ended. Subscribe with Stripe to keep the live board available.";
+
+      if(subscribed){
+        if(billingDetails) billingDetails.hidden = false;
+        if(billingPlanGrid) billingPlanGrid.hidden = true;
+        if(billingPlanLabel) billingPlanLabel.textContent = plan ? (plan.charAt(0).toUpperCase() + plan.slice(1)) : "—";
+        if(billingDateLabel) billingDateLabel.textContent = "Renews";
+        if(billingDateValue) billingDateValue.textContent = formatBillingDate(currentPeriodEnd);
+        if(summary) summary.hidden = true;
+      } else {
+        if(billingDetails) billingDetails.hidden = true;
+        if(billingPlanGrid) billingPlanGrid.hidden = false;
+        if(summary) summary.hidden = false;
+        if(billingDateLabel) billingDateLabel.textContent = trialing ? "Trial ends" : "Renews";
+        if(billingDateValue) billingDateValue.textContent = trialing ? formatBillingDate(trialEndsAt) : "—";
+        if(summary){
+          if(trialing){
+            summary.textContent = "Free trial · " + trialDaysLeft + " day" + (trialDaysLeft === 1 ? "" : "s") + " remaining. Subscribe to keep access.";
+          } else {
+            summary.textContent = "Trial ended. Subscribe with Stripe to continue using the live board.";
+          }
         }
       }
-      if(portalBtn) portalBtn.style.display = data && data.hasCustomer ? "inline-flex" : "none";
+
+      if(manageBtn) manageBtn.hidden = !hasCustomer;
+      if(changeBillingBtn) changeBillingBtn.hidden = !hasCustomer;
       if(monthlyBtn) monthlyBtn.classList.toggle("isCurrent", subscribed && plan === "monthly");
       if(annualBtn) annualBtn.classList.toggle("isCurrent", subscribed && plan === "annual");
     }
@@ -827,8 +858,12 @@
     function renderBillingError(message){
       var summary = $("billingSummary");
       var badge = $("billingBadge");
+      var billingDetails = $("billingDetails");
+      var billingPlanGrid = $("billingPlanGrid");
       setBillingCardVisible(!!currentPracticeId);
-      if(summary) summary.textContent = message || "Billing status could not be loaded.";
+      if(billingDetails) billingDetails.hidden = true;
+      if(billingPlanGrid) billingPlanGrid.hidden = false;
+      if(summary){ summary.hidden = false; summary.textContent = message || "Billing status could not be loaded."; }
       if(badge){
         badge.className = "billingBadge isBlocked";
         badge.textContent = "Check billing";
@@ -901,13 +936,13 @@
       }
     }
 
-    async function openBillingPortal(){
+    async function openBillingPortal(flow){
       setBillingBusy(true);
       setStatus("Opening billing portal…");
       try{
-        var data = await billingRequest("/api/billing/portal", {
-          returnUrl: getBillingReturnUrl()
-        });
+        var payload = { returnUrl: getBillingReturnUrl() };
+        if(flow) payload.flow = flow;
+        var data = await billingRequest("/api/billing/portal", payload);
         if(!data.url) throw new Error("Stripe did not return a billing portal URL.");
         window.location.href = data.url;
       }catch(e){
@@ -4223,8 +4258,11 @@
     if($("billingAnnualBtn")){
       $("billingAnnualBtn").addEventListener("click", function(){ startBillingCheckout("annual"); });
     }
-    if($("billingPortalBtn")){
-      $("billingPortalBtn").addEventListener("click", function(){ openBillingPortal(); });
+    if($("billingManageBtn")){
+      $("billingManageBtn").addEventListener("click", function(){ openBillingPortal(); });
+    }
+    if($("billingChangeBillingBtn")){
+      $("billingChangeBillingBtn").addEventListener("click", function(){ openBillingPortal("payment_method_update"); });
     }
     if($("authModeSwitch")){
       $("authModeSwitch").addEventListener("click", function(e){

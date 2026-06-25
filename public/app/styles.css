@@ -2385,6 +2385,31 @@
       background:rgba(239,68,68,.16);
       color:#fecaca;
     }
+    .drawer .billingDetails{
+      padding:10px 16px 2px;
+      display:flex;
+      flex-direction:column;
+      gap:0;
+    }
+    .drawer .billingDetailRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:7px 0;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      font-size:13px;
+    }
+    .drawer .billingDetailRow:last-child{
+      border-bottom:none;
+    }
+    .drawer .billingDetailLabel{
+      color:var(--settingsMuted);
+      font-weight:600;
+    }
+    .drawer .billingDetailValue{
+      color:var(--settingsText);
+      font-weight:700;
+    }
     .drawer .billingPlanGrid{
       display:grid;
       grid-template-columns:repeat(2, minmax(0, 1fr));

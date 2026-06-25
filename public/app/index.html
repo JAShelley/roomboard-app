@@ -289,8 +289,18 @@
 <span>Subscription</span>
 <span class="billingBadge" id="billingBadge">Not loaded</span>
 </div>
+<div class="billingDetails" id="billingDetails" hidden>
+<div class="billingDetailRow">
+<span class="billingDetailLabel">Plan</span>
+<span class="billingDetailValue" id="billingPlanLabel">—</span>
+</div>
+<div class="billingDetailRow">
+<span class="billingDetailLabel" id="billingDateLabel">Renews</span>
+<span class="billingDetailValue" id="billingDateValue">—</span>
+</div>
+</div>
 <div class="muted sxCardNote" id="billingSummary">Sign in to view subscription status.</div>
-<div class="billingPlanGrid" style="padding:8px 16px;">
+<div class="billingPlanGrid" id="billingPlanGrid" style="padding:8px 16px;">
 <button class="billingPlanBtn" data-billing-plan="monthly" id="billingMonthlyBtn" type="button">
 <strong>Monthly</strong>
 <span>Subscribe with Stripe</span>
@@ -301,8 +311,9 @@
 </button>
 </div>
 <div class="actions sxCardActions">
+<button class="btn sm primary" id="billingManageBtn" type="button" hidden>Manage subscription</button>
 <button class="btn sm" id="billingRefreshBtn" type="button">Refresh billing</button>
-<button class="btn sm" id="billingPortalBtn" type="button">Manage billing</button>
+<button class="btn sm" id="billingChangeBillingBtn" type="button" hidden>Change billing</button>
 </div>
 <div class="muted sxCardNote sxCardNoteBottom" id="billingHelp">Checkout and card management open through Stripe. No payment details are stored in RoomBoard.</div>
 </div>

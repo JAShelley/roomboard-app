@@ -20,10 +20,15 @@ export async function POST(request: Request) {
     const returnUrl = String(body?.returnUrl || "").trim() || new URL(request.url).origin;
 
     const stripe = getStripe();
-    const portal = await stripe.billingPortal.sessions.create({
+    const portalParams: Parameters<typeof stripe.billingPortal.sessions.create>[0] = {
       customer: customerId,
       return_url: returnUrl.replace(/\/+$/, ""),
-    });
+    };
+    const flow = String(body?.flow || "").trim();
+    if (flow === "payment_method_update") {
+      portalParams.flow_data = { type: "payment_method_update" };
+    }
+    const portal = await stripe.billingPortal.sessions.create(portalParams);
 
     return pulseJson({ url: portal.url });
   } catch (error) {
