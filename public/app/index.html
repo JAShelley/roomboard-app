@@ -207,8 +207,8 @@
 <input autocomplete="current-password" id="password" placeholder="password" type="password">
 </div>
 </div>
-<label style="display:flex; align-items:center; gap:8px; margin:8px 0 4px; font-size:13px; color:var(--muted); cursor:pointer;">
-<input checked id="rememberMe" style="width:16px; height:16px; margin:0;" type="checkbox">
+<label class="sxCheckboxRow">
+<input checked id="rememberMe" type="checkbox">
 <span>Keep me logged in</span>
 </label>
 <div class="actions">
@@ -220,7 +220,7 @@
 <button class="sxLinkBtn" id="forgotPasswordLink" type="button">Forgot password?</button>
 <button class="sxLinkBtn" onclick="window.location.href='/'" type="button">← theroomboard.com</button>
 </div>
-<div hidden id="loggedInSummary" style="border-top:1px solid rgba(255,255,255,.06);">
+<div hidden id="loggedInSummary">
 <div class="sxRow">
 <span class="sxRowLabel">Clinic</span>
 <input class="sxRowReadonly" id="loggedInPracticeName" readonly type="text">
@@ -234,7 +234,7 @@
 <input class="sxRowReadonly" id="loggedInEmail" readonly type="text">
 </div>
 </div>
-<div class="muted" id="clinicContextLine" style="padding-bottom:12px;">Not connected to a clinic yet.</div>
+<div class="sxContextLine" id="clinicContextLine">Not connected to a clinic yet.</div>
 </div>
 </div>
 <details class="sxSection settingsCollapsible" id="clinicProfileEditPanel" hidden>
@@ -363,9 +363,15 @@ Manage subscription
 <div class="muted" hidden id="practiceInviteCodeStatus">Only clinic admins can see and rotate the invite code.</div>
 </div>
 </details>
-<div class="sxSection">
-<div class="sxHead">Team feedback</div>
-<div class="sxCardBody">
+<details class="sxSection settingsCollapsible" id="feedbackPanel">
+<summary>
+<span class="settingsCollapsibleCopy">
+<strong>Team feedback</strong>
+<small>Notes and checklist items shared with your team.</small>
+</span>
+<span aria-hidden="true" class="settingsCollapsibleHint"></span>
+</summary>
+<div class="settingsCollapsibleBody">
 <textarea class="sxFeedbackTextarea" id="feedbackInput" placeholder="Example: Too many clicks to update a room. Or: We love the Quick Add workflow and want more tools like that."></textarea>
 <div class="actions">
 <button class="btn sm primary" id="addFeedbackBtn" type="button">Add item</button>
@@ -373,7 +379,7 @@ Manage subscription
 <div class="feedbackChecklist" id="feedbackChecklist"></div>
 <div class="muted sxFeedbackStatus" id="feedbackStatusLine">Checklist items are saved on this computer so the team can check them off and remove them later.</div>
 </div>
-</div>
+</details>
 </div>
 <div class="tabPanel" id="tabRooms">
 <details class="sxSection settingsCollapsible" open>
