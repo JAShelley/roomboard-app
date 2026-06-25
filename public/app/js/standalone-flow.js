@@ -127,46 +127,83 @@
     var s = document.createElement("style");
     s.id = "rbAuthOverlayStyles";
     s.textContent = [
-      "#rbAuthOverlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;",
-        "background:rgba(4,9,18,.93);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);",
-        "padding:20px;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;}",
-      ".rbACard{background:#0d1929;border:1px solid rgba(255,255,255,.11);border-radius:22px;",
-        "padding:36px 38px;max-width:460px;width:100%;box-shadow:0 48px 96px rgba(0,0,0,.75);",
-        "overflow-y:auto;max-height:90vh;}",
-      ".rbABrand{display:flex;align-items:center;gap:11px;justify-content:center;margin-bottom:28px;}",
-      ".rbAMark{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;flex:none;",
-        "background:linear-gradient(140deg,#11a39b,#0a5f5b);color:#fff;}",
-      ".rbAMark svg{width:21px;height:21px;}",
-      ".rbAWordmark{font-size:24px;font-weight:800;color:#eaf1ff;letter-spacing:-.04em;font-style:italic;}",
-      ".rbATabs{display:flex;background:rgba(255,255,255,.06);border-radius:12px;padding:3px;gap:3px;margin-bottom:24px;}",
-      ".rbATab{flex:1;background:none;border:none;color:rgba(220,232,255,.45);font-size:14px;font-weight:600;",
-        "padding:10px;border-radius:9px;cursor:pointer;transition:background .15s,color .15s;}",
-      ".rbATab.active{background:rgba(255,255,255,.11);color:#eaf1ff;}",
+      /* overlay shell */
+      "#rbAuthOverlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:stretch;",
+        "background:#06101e;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;}",
+      /* ── left branding panel ── */
+      ".rbALeft{flex:1;display:flex;flex-direction:column;padding:52px 56px;min-width:0;",
+        "background:linear-gradient(150deg,#081524 0%,#060f1c 55%,#0a1a2e 100%);",
+        "border-right:1px solid rgba(255,255,255,.06);position:relative;overflow:hidden;}",
+      ".rbALeft::before{content:'';position:absolute;top:-10%;right:-15%;width:480px;height:480px;",
+        "background:radial-gradient(circle,rgba(14,165,233,.10) 0%,transparent 65%);pointer-events:none;}",
+      ".rbALeft::after{content:'';position:absolute;bottom:-5%;left:10%;width:320px;height:320px;",
+        "background:radial-gradient(circle,rgba(251,146,60,.06) 0%,transparent 65%);pointer-events:none;}",
+      ".rbALeftBrand{display:flex;align-items:center;gap:10px;margin-bottom:0;}",
+      ".rbAMark{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex:none;",
+        "background:linear-gradient(135deg,#0ea5e9,#0369a1);color:#fff;}",
+      ".rbAMark svg{width:19px;height:19px;}",
+      ".rbAWordmark{font-size:19px;font-weight:800;color:#eaf1ff;letter-spacing:-.04em;font-style:italic;}",
+      ".rbALeftBody{flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 0 20px;}",
+      ".rbALeftTagline{font-size:36px;font-weight:800;line-height:1.13;color:#eaf1ff;",
+        "letter-spacing:-.03em;margin:0 0 16px;}",
+      ".rbALeftSub{font-size:15px;color:rgba(148,178,220,.7);line-height:1.65;margin:0 0 36px;max-width:340px;}",
+      ".rbAFeatures{display:flex;flex-direction:column;gap:14px;}",
+      ".rbAFeature{display:flex;align-items:flex-start;gap:12px;}",
+      ".rbAFeatureIcon{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex:none;",
+        "background:rgba(14,165,233,.12);border:1px solid rgba(14,165,233,.18);}",
+      ".rbAFeatureIcon svg{width:15px;height:15px;color:#38bdf8;}",
+      ".rbAFeatureCopy strong{display:block;font-size:13.5px;font-weight:600;color:rgba(224,238,255,.9);margin-bottom:2px;}",
+      ".rbAFeatureCopy span{font-size:12.5px;color:rgba(148,178,220,.6);line-height:1.45;}",
+      ".rbALeftFooter{font-size:12px;color:rgba(148,178,220,.4);}",
+      /* ── right form panel ── */
+      ".rbARight{display:flex;align-items:center;justify-content:center;",
+        "flex:none;width:460px;padding:40px 48px;overflow-y:auto;}",
+      ".rbAForm{width:100%;max-width:360px;}",
+      ".rbAFormHead{margin-bottom:28px;}",
+      ".rbAFormTitle{font-size:24px;font-weight:800;color:#eaf1ff;letter-spacing:-.03em;margin:0 0 6px;}",
+      ".rbAFormSub{font-size:14px;color:rgba(148,178,220,.65);margin:0;}",
+      /* tabs */
+      ".rbATabs{display:flex;background:rgba(255,255,255,.055);border-radius:11px;padding:3px;gap:3px;margin-bottom:24px;}",
+      ".rbATab{flex:1;background:none;border:none;color:rgba(200,218,255,.4);font-size:13.5px;font-weight:600;",
+        "padding:9px;border-radius:8px;cursor:pointer;transition:background .15s,color .15s;}",
+      ".rbATab.active{background:rgba(255,255,255,.10);color:#eaf1ff;}",
+      /* fields */
       ".rbAField{margin-bottom:14px;}",
-      ".rbAField label{display:block;font-size:11.5px;font-weight:700;color:rgba(160,178,218,.75);",
-        "text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}",
-      ".rbAField input,.rbAField select{width:100%;padding:11px 13px;",
-        "background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);",
+      ".rbAField label{display:block;font-size:11px;font-weight:700;color:rgba(148,178,220,.65);",
+        "text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;}",
+      ".rbAField input,.rbAField select{width:100%;padding:11px 14px;box-sizing:border-box;",
+        "background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);",
         "border-radius:10px;color:#eaf1ff;font-size:14px;outline:none;",
-        "transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;}",
-      ".rbAField input:focus,.rbAField select:focus{border-color:rgba(17,163,155,.65);",
-        "box-shadow:0 0 0 3px rgba(17,163,155,.14);}",
-      ".rbAField input::placeholder{color:rgba(160,178,218,.35);}",
+        "transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;appearance:none;}",
+      ".rbAField input:focus,.rbAField select:focus{border-color:rgba(14,165,233,.55);",
+        "box-shadow:0 0 0 3px rgba(14,165,233,.12);}",
+      ".rbAField input::placeholder{color:rgba(148,178,220,.3);}",
       ".rbAField select option{background:#0d1929;color:#eaf1ff;}",
       ".rbARow{display:grid;grid-template-columns:1fr 1fr;gap:12px;}",
       "@media(max-width:500px){.rbARow{grid-template-columns:1fr;}}",
-      ".rbAError{background:rgba(239,68,68,.11);border:1px solid rgba(239,68,68,.28);border-radius:10px;",
+      /* error */
+      ".rbAError{background:rgba(239,68,68,.10);border:1px solid rgba(239,68,68,.25);border-radius:10px;",
         "padding:10px 14px;font-size:13px;color:#fca5a5;margin-bottom:14px;display:none;}",
-      ".rbASubmit{width:100%;padding:14px;border-radius:12px;border:none;cursor:pointer;",
-        "font-size:15px;font-weight:700;letter-spacing:-.01em;",
-        "background:linear-gradient(135deg,#11a39b,#0a6060);color:#fff;",
-        "transition:opacity .15s,transform .2s cubic-bezier(.22,1,.36,1);margin-bottom:16px;}",
-      ".rbASubmit:hover:not(:disabled){opacity:.88;transform:translateY(-1px);}",
-      ".rbASubmit:disabled{opacity:.5;cursor:default;transform:none;}",
-      ".rbAFooter{text-align:center;}",
-      ".rbAFooter a{color:rgba(160,178,218,.5);font-size:13px;text-decoration:none;transition:color .15s;}",
-      ".rbAFooter a:hover{color:rgba(160,178,218,.85);}",
-      ".rbADivider{height:1px;background:rgba(255,255,255,.07);margin:18px 0;}"
+      /* submit */
+      ".rbASubmit{width:100%;padding:13px;border-radius:11px;border:none;cursor:pointer;",
+        "font-size:15px;font-weight:700;letter-spacing:-.01em;margin-bottom:18px;",
+        "background:linear-gradient(135deg,#0ea5e9 0%,#0369a1 100%);color:#fff;",
+        "box-shadow:0 4px 24px rgba(14,165,233,.30);",
+        "transition:opacity .15s,transform .18s cubic-bezier(.22,1,.36,1),box-shadow .15s;}",
+      ".rbASubmit:hover:not(:disabled){opacity:.92;transform:translateY(-1px);box-shadow:0 6px 28px rgba(14,165,233,.40);}",
+      ".rbASubmit:disabled{opacity:.45;cursor:default;transform:none;box-shadow:none;}",
+      /* footer */
+      ".rbAFooterLinks{display:flex;justify-content:center;gap:20px;}",
+      ".rbAFooterLinks a{color:rgba(148,178,220,.45);font-size:12.5px;text-decoration:none;transition:color .15s;}",
+      ".rbAFooterLinks a:hover{color:rgba(148,178,220,.8);}",
+      ".rbADivider{height:1px;background:rgba(255,255,255,.07);margin:16px 0;}",
+      /* mobile: hide left panel, stack form */
+      "@media(max-width:760px){",
+        ".rbALeft{display:none;}",
+        ".rbARight{width:100%;padding:32px 24px;align-items:flex-start;padding-top:48px;}",
+        ".rbAForm{max-width:100%;}",
+        ".rbAFormHead{text-align:center;}",
+      "}"
     ].join("");
     (document.head || document.documentElement).appendChild(s);
   }
@@ -182,37 +219,75 @@
     var overlay = document.createElement("div");
     overlay.id = "rbAuthOverlay";
     overlay.innerHTML = [
-      '<div class="rbACard">',
-        '<div class="rbABrand">',
+      /* ── left panel ── */
+      '<div class="rbALeft">',
+        '<div class="rbALeftBrand">',
           '<span class="rbAMark"><svg viewBox="0 0 24 24" fill="none">',
             '<rect x="3" y="4" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="2"/>',
             '<path d="M3 9h18M9 9v11" stroke="currentColor" stroke-width="2"/>',
           '</svg></span>',
           '<span class="rbAWordmark">RoomBoard</span>',
         '</div>',
-        '<div class="rbATabs" id="rbATabs">',
-          '<button class="rbATab" data-mode="login" type="button">Sign in</button>',
-          '<button class="rbATab" data-mode="create" type="button">Create clinic</button>',
-        '</div>',
-        '<div id="rbACreateFields" style="display:none">',
-          '<div class="rbARow">',
-            '<div class="rbAField"><label>Practice name</label><input id="rbaPracticeName" placeholder="Clinic name" type="text" autocomplete="organization"></div>',
-            '<div class="rbAField"><label>Admin name</label><input id="rbaFullName" placeholder="Your name" type="text" autocomplete="name"></div>',
+        '<div class="rbALeftBody">',
+          '<h2 class="rbALeftTagline">The board your<br>clinic deserves.</h2>',
+          '<p class="rbALeftSub">Real-time room tracking built for medical practices that move fast.</p>',
+          '<div class="rbAFeatures">',
+            '<div class="rbAFeature">',
+              '<span class="rbAFeatureIcon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75">',
+                '<circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/>',
+              '</svg></span>',
+              '<div class="rbAFeatureCopy"><strong>Live room status</strong><span>Everyone sees the same board, updated instantly.</span></div>',
+            '</div>',
+            '<div class="rbAFeature">',
+              '<span class="rbAFeatureIcon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75">',
+                '<path d="M3 8h10M8 3l5 5-5 5"/>',
+              '</svg></span>',
+              '<div class="rbAFeatureCopy"><strong>One-click capture</strong><span>Pull appointments from any scheduler into the board.</span></div>',
+            '</div>',
+            '<div class="rbAFeature">',
+              '<span class="rbAFeatureIcon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75">',
+                '<rect x="2" y="3" width="12" height="10" rx="2"/><path d="M5 13v2M11 13v2M3 13h10"/>',
+              '</svg></span>',
+              '<div class="rbAFeatureCopy"><strong>Any device</strong><span>Works on TV displays, tablets, and phones.</span></div>',
+            '</div>',
           '</div>',
-          '<div class="rbARow">',
-            '<div class="rbAField"><label>Phone</label><input id="rbaPhone" placeholder="(555) 000-0000" type="tel" autocomplete="tel"></div>',
-            '<div class="rbAField"><label>City &amp; State</label><input id="rbaLocation" placeholder="Austin, TX" type="text"></div>',
-          '</div>',
-          '<div class="rbAField"><label>Specialty</label><select id="rbaSpecialty">'+specOpts+'</select></div>',
-          '<div class="rbAField" id="rbaSpecialtyOtherWrap" style="display:none"><label>Describe specialty</label><input id="rbaSpecialtyOther" placeholder="e.g. Sports Medicine" type="text"></div>',
-          '<div class="rbADivider"></div>',
         '</div>',
-        '<div class="rbAField"><label>Email</label><input id="rbaEmail" placeholder="name@clinic.com" type="email" autocomplete="username"></div>',
-        '<div class="rbAField"><label>Password</label><input id="rbaPassword" placeholder="Password" type="password" autocomplete="current-password"></div>',
-        '<div class="rbAError" id="rbAError"></div>',
-        '<button class="rbASubmit" id="rbaSubmit" type="button">Sign in</button>',
-        '<div class="rbAFooter"><a href="/">← Back to theroomboard.com</a></div>',
-      '</div>'
+        '<div class="rbALeftFooter">© '+new Date().getFullYear()+' RoomBoard</div>',
+      '</div>',
+      /* ── right form panel ── */
+      '<div class="rbARight">',
+        '<div class="rbAForm">',
+          '<div class="rbAFormHead">',
+            '<h3 class="rbAFormTitle" id="rbAFormTitle">Welcome back</h3>',
+            '<p class="rbAFormSub" id="rbAFormSub">Sign in to your clinic account.</p>',
+          '</div>',
+          '<div class="rbATabs" id="rbATabs">',
+            '<button class="rbATab" data-mode="login" type="button">Sign in</button>',
+            '<button class="rbATab" data-mode="create" type="button">Create clinic</button>',
+          '</div>',
+          '<div id="rbACreateFields" style="display:none">',
+            '<div class="rbARow">',
+              '<div class="rbAField"><label>Practice name</label><input id="rbaPracticeName" placeholder="Clinic name" type="text" autocomplete="organization"></div>',
+              '<div class="rbAField"><label>Your name</label><input id="rbaFullName" placeholder="Full name" type="text" autocomplete="name"></div>',
+            '</div>',
+            '<div class="rbARow">',
+              '<div class="rbAField"><label>Phone</label><input id="rbaPhone" placeholder="(555) 000-0000" type="tel" autocomplete="tel"></div>',
+              '<div class="rbAField"><label>City &amp; State</label><input id="rbaLocation" placeholder="Austin, TX" type="text"></div>',
+            '</div>',
+            '<div class="rbAField"><label>Specialty</label><select id="rbaSpecialty">'+specOpts+'</select></div>',
+            '<div class="rbAField" id="rbaSpecialtyOtherWrap" style="display:none"><label>Describe specialty</label><input id="rbaSpecialtyOther" placeholder="e.g. Sports Medicine" type="text"></div>',
+            '<div class="rbADivider"></div>',
+          '</div>',
+          '<div class="rbAField"><label>Email</label><input id="rbaEmail" placeholder="name@clinic.com" type="email" autocomplete="username"></div>',
+          '<div class="rbAField"><label>Password</label><input id="rbaPassword" placeholder="Password" type="password" autocomplete="current-password"></div>',
+          '<div class="rbAError" id="rbAError"></div>',
+          '<button class="rbASubmit" id="rbaSubmit" type="button">Sign in</button>',
+          '<div class="rbAFooterLinks">',
+            '<a href="#" id="rbaForgotLink">Forgot password?</a>',
+            '<a href="/">← theroomboard.com</a>',
+          '</div>',
+        '</div>',
+      '</div>',
     ].join("");
     document.body.appendChild(overlay);
 
@@ -224,11 +299,18 @@
     var specOther  = document.getElementById("rbaSpecialtyOtherWrap");
     var curMode    = (initMode === "create") ? "create" : "login";
 
+    var formTitle = document.getElementById("rbAFormTitle");
+    var formSub   = document.getElementById("rbAFormSub");
+    var forgotLink = document.getElementById("rbaForgotLink");
+
     function applyMode(mode){
       curMode = mode;
       tabs.forEach(function(t){ t.classList.toggle("active", t.getAttribute("data-mode") === mode); });
       createWrap.style.display = mode === "create" ? "" : "none";
       submitBtn.textContent = mode === "create" ? "Create clinic" : "Sign in";
+      if(forgotLink) forgotLink.style.display = mode === "create" ? "none" : "";
+      if(formTitle) formTitle.textContent = mode === "create" ? "Set up your clinic" : "Welcome back";
+      if(formSub) formSub.textContent = mode === "create" ? "Create your RoomBoard account." : "Sign in to your clinic account.";
       hideErr();
     }
     function showErr(msg){ errorDiv.textContent = msg; errorDiv.style.display = ""; }
@@ -254,6 +336,13 @@
 
     tabs.forEach(function(t){ t.addEventListener("click", function(){ applyMode(t.getAttribute("data-mode")); }); });
     if(specSel) specSel.addEventListener("change", function(){ specOther.style.display = specSel.value === "Other" ? "" : "none"; });
+    if(forgotLink) forgotLink.addEventListener("click", function(e){
+      e.preventDefault();
+      var el = document.getElementById("rbaEmail");
+      var email = el ? (el.value || "").trim() : "";
+      if(typeof window.roomboardForgotPassword === "function"){ window.roomboardForgotPassword(email); }
+      else if(typeof window.forgotPasswordLink !== "undefined"){ var fpl = document.getElementById("forgotPasswordLink"); if(fpl) fpl.click(); }
+    });
 
     function gVal(id){ var el = document.getElementById(id); return el ? (el.value || "").trim() : ""; }
     function sVal(id, v){ var el = document.getElementById(id); if(el) el.value = v; }
