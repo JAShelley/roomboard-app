@@ -992,6 +992,35 @@
       return null;
     }
 
+    var boardLoadOverlayShownAt = 0;
+    var BOARD_LOAD_OVERLAY_MIN_MS = 700;
+
+    function showBoardLoadOverlay(clinicName){
+      boardLoadOverlayShownAt = Date.now();
+      var el = document.getElementById("boardLoadOverlay");
+      if(!el) return;
+      var label = document.getElementById("boardLoadClinic");
+      if(label) label.textContent = clinicName || "";
+      el.classList.remove("isHiding");
+      el.removeAttribute("hidden");
+      el.removeAttribute("aria-hidden");
+    }
+
+    function hideBoardLoadOverlay(){
+      var el = document.getElementById("boardLoadOverlay");
+      if(!el || el.hidden) return;
+      var elapsed = Date.now() - boardLoadOverlayShownAt;
+      var remaining = Math.max(0, BOARD_LOAD_OVERLAY_MIN_MS - elapsed);
+      setTimeout(function(){
+        el.classList.add("isHiding");
+        setTimeout(function(){
+          el.setAttribute("hidden","");
+          el.setAttribute("aria-hidden","true");
+          el.classList.remove("isHiding");
+        }, 520);
+      }, remaining);
+    }
+
     async function finishAuthenticatedFlow(options){
       options = options || {};
       var context = await resolveClinicContextWithRetry(options.attempts || 6, options.waitMs || 250);
@@ -1003,6 +1032,7 @@
       if(typeof window.refreshAccountSettingsForSession === "function") window.refreshAccountSettingsForSession();
       if(typeof window.refreshThemePrefsForSession === "function") window.refreshThemePrefsForSession();
       var billingPromise = refreshBillingStatus().catch(function(){ return null; });
+      showBoardLoadOverlay(currentPracticeName);
       await loadPracticeData();
       var billingStatus = await billingPromise;
       if(billingStatus && billingStatus.hasAccess === false){
@@ -3051,11 +3081,13 @@
           lastRoomBoardSignature = getRoomBoardSignature();
         }
         if(typeof window.applyChecklistData === "function") window.applyChecklistData(results[6] && results[6].data ? results[6].data : null);
+        hideBoardLoadOverlay();
         setStatus((currentPracticeName || "Clinic") + " ready.");
         setSyncUI("ok", "Clinic loaded");
         return true;
       }catch(e){
         console.error("loadPracticeData failed:", e);
+        hideBoardLoadOverlay();
         if(isRateLimitError(e)) noteRateLimit();
         setStatus("Clinic load failed: " + getErrorMessage(e));
         setSyncUI("err", "Load failed");
