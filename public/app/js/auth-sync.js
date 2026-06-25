@@ -816,7 +816,7 @@
         if(hasAccess) badge.classList.add(subscribed ? "isActive" : "isTrial");
         else badge.classList.add("isBlocked");
         badge.textContent = subscribed
-          ? (isAdvanced ? "Advanced" : "Active") + " · " + (isMonthly ? "Monthly" : "Annual")
+          ? (isAdvanced ? "Advanced" : "Base") + " · " + (isMonthly ? "Monthly" : "Annual")
           : trialing ? "Trial · " + trialDaysLeft + "d left"
           : "Billing required";
       }
@@ -825,7 +825,7 @@
         if(trialing) currentValue.textContent = "Free trial";
         else if(subscribed) currentValue.textContent = isAdvanced
           ? "Advanced · " + (isMonthly ? "Monthly" : "Annual")
-          : (isMonthly ? "Monthly" : "Annual");
+          : "Base · " + (isMonthly ? "Monthly" : "Annual");
         else currentValue.textContent = "No active plan";
       }
 
