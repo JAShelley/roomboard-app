@@ -35,10 +35,14 @@ update public.practices
 -- A practice has board access if it is actively subscribed (or in a
 -- short past_due grace handled by Stripe) OR still inside its free trial
 -- WITH a Stripe customer on file (card required to start trial).
+-- SECURITY DEFINER so the function runs as its owner (postgres) and can read
+-- stripe_customer_id even though the authenticated role has no SELECT on that column.
 create or replace function public.practice_has_access(p_practice_id uuid)
 returns boolean
 language sql
 stable
+security definer
+set search_path = public
 as $$
   select exists (
     select 1
@@ -56,6 +60,8 @@ create or replace function public.my_practice_has_access()
 returns boolean
 language sql
 stable
+security definer
+set search_path = public
 as $$
   select public.practice_has_access(public.get_my_practice_id());
 $$;
@@ -76,7 +82,10 @@ grant select (
   subscription_status,
   plan,
   trial_ends_at,
-  current_period_end
+  current_period_end,
+  phone,
+  location,
+  specialty
 ) on public.practices to authenticated;
 
 -- Gate live board data behind trial/subscription access. Clinic setup, login,
