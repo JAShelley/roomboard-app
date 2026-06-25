@@ -365,41 +365,33 @@
 <div class="sxHead">Rooms</div>
 <div class="sxAddRow">
 <input id="newRoomName" placeholder="e.g., Room 10" type="text" style="flex:1;">
-<button class="btn sm primary" id="addRoomBtn" type="button">Add room</button>
+<button class="btn sm primary" id="addRoomBtn" type="button">Add</button>
 </div>
-<div id="roomsList" style="padding:0 16px 8px;"></div>
-</div>
-<div class="sxSection">
-<div class="sxHead">Types &amp; color labels</div>
+<div id="roomsList" style="padding:0 16px 4px;"></div>
+<div class="sxSubHead">Types &amp; color labels</div>
 <div class="sxAddRow">
 <input id="newColorTitle" placeholder="e.g., Waiting" type="text" style="flex:1;">
 <input id="newColorValue" type="color">
-<button class="btn sm primary" id="addColorBtn" type="button">Add label</button>
+<button class="btn sm primary" id="addColorBtn" type="button">Add</button>
 </div>
 <div class="sxRow">
-<span class="sxLabel">Default color label</span>
+<span class="sxLabel">Default label</span>
 <select id="defaultColorLabelSelect" style="flex:1;"></select>
 </div>
-<div id="colorsList" style="padding:0 16px 8px;"></div>
-</div>
-<div class="sxSection">
-<div class="sxHead">Quick notes</div>
+<div id="colorsList" style="padding:0 16px 4px;"></div>
+<div class="sxSubHead">Quick notes</div>
 <div class="sxAddRow">
 <input id="newQuickNoteLabel" placeholder="e.g., Needs translator" type="text" style="flex:1;">
 <button class="btn sm primary" id="addQuickNoteBtn" type="button">Add</button>
 </div>
-<div id="quickNotesList" style="padding:0 16px 8px;"></div>
-</div>
-<div class="sxSection">
-<div class="sxHead">Doctors</div>
+<div id="quickNotesList" style="padding:0 16px 4px;"></div>
+<div class="sxSubHead">Doctors</div>
 <div class="sxAddRow">
 <input id="newDoctorName" placeholder="e.g., Dr. Smith" type="text" style="flex:1;">
-<button class="btn sm primary" id="addDoctorBtn" type="button">Add doctor</button>
+<button class="btn sm primary" id="addDoctorBtn" type="button">Add</button>
 </div>
-<div id="doctorsList" style="padding:0 16px 8px;"></div>
-</div>
-<div class="sxSection">
-<div class="sxHead">Doctor initials</div>
+<div id="doctorsList" style="padding:0 16px 4px;"></div>
+<div class="sxSubHead">Doctor initials</div>
 <div id="doctorInitialsList" style="padding:0 16px 8px;"></div>
 </div>
 <details class="sxSection settingsCollapsible" id="doctorBadgeStylesPanel">
@@ -536,9 +528,6 @@
 <option value="dark">Always dark</option>
 </select>
 </div>
-</div>
-<div class="sxSection">
-<div class="sxHead">Doctor highlight</div>
 <div class="sxRow" id="doctorHighlightWrap">
 <span class="sxLabel">Highlight doctor</span>
 <select id="doctorHighlightSelect" style="flex:1;">
@@ -629,9 +618,7 @@
 <span class="sxAlertBadge">sec</span>
 <input id="timerAlert2Color" type="color">
 </div>
-</div>
-<div class="sxSection">
-<div class="sxHead">Timer &amp; discharge actions</div>
+<div class="sxSubHead">Actions</div>
 <div class="sxRow">
 <span class="sxLabel">Stopwatch style</span>
 <select id="stopwatchStyle" style="flex:1;">
@@ -731,14 +718,12 @@
 </div>
 </div>
 <div class="sxSection">
-<div class="sxHead">Practice defaults</div>
-<div class="sxToolBody" style="padding-bottom:12px;">
+<div class="sxHead">Defaults &amp; backup</div>
+<div class="sxToolBody" style="padding-bottom:4px;">
 <p class="sxToolDesc">Save your current board layout, fonts, and display settings as the clinic-wide default.</p>
 <button class="btn sm primary" id="savePracticeDefaultsBtn" type="button">Save as default</button>
 </div>
-</div>
-<div class="sxSection">
-<div class="sxHead">Backup &amp; restore</div>
+<div class="sxSubHead">Backup &amp; restore</div>
 <div class="sxToolBody" style="padding-bottom:12px;">
 <p class="sxToolDesc">Export your full clinic config as JSON, or restore from a previous export.</p>
 <div class="sxToolActions" style="margin:0;">
