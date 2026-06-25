@@ -993,7 +993,7 @@
     }
 
     var boardLoadOverlayShownAt = 0;
-    var BOARD_LOAD_OVERLAY_MIN_MS = 700;
+    var BOARD_LOAD_OVERLAY_MIN_MS = 300;
 
     function showBoardLoadOverlay(clinicName){
       var el = document.getElementById("boardLoadOverlay");
