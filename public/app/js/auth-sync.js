@@ -746,7 +746,7 @@
     }
 
     function setBillingBusy(isBusy){
-      ["billingMonthlyBtn", "billingAnnualBtn", "billingRefreshBtn", "billingManageBtn", "billingChangeBillingBtn"].forEach(function(id){
+      ["billingMonthlyBtn", "billingAnnualBtn", "billingRefreshBtn", "billingManageBtn"].forEach(function(id){
         var el = $(id);
         if(el) el.disabled = !!isBusy;
       });
@@ -932,7 +932,8 @@
         if(flow) payload.flow = flow;
         var data = await billingRequest("/api/billing/portal", payload);
         if(!data.url) throw new Error("Stripe did not return a billing portal URL.");
-        window.location.href = data.url;
+        window.open(data.url, "_blank", "noopener,noreferrer");
+        setStatus("");
       }catch(e){
         alert(getErrorMessage(e));
         setStatus("Billing portal failed: " + getErrorMessage(e));
@@ -4248,9 +4249,6 @@
     }
     if($("billingManageBtn")){
       $("billingManageBtn").addEventListener("click", function(){ openBillingPortal(); });
-    }
-    if($("billingChangeBillingBtn")){
-      $("billingChangeBillingBtn").addEventListener("click", function(){ openBillingPortal("payment_method_update"); });
     }
     if($("authModeSwitch")){
       $("authModeSwitch").addEventListener("click", function(e){

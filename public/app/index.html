@@ -285,21 +285,19 @@
 </div>
 </details>
 <div class="sxSection billingCard" id="billingCard" hidden>
-<div class="sxHead sxHeadFlex">
-<span>Subscription</span>
-<span class="billingBadge" id="billingBadge">Not loaded</span>
+<div class="sxHead">Subscription</div>
+<div class="billingStatus">
+<div class="billingStatusInfo">
+<div class="billingStatusPlan" id="billingCurrentValue">—</div>
+<div class="billingStatusMeta" id="billingCurrentMeta"></div>
 </div>
-<div class="billingCurrentPlan">
-<div class="billingCurrentLabel">My current plan</div>
-<div class="billingCurrentValue" id="billingCurrentValue">—</div>
-<div class="billingCurrentMeta" id="billingCurrentMeta"></div>
+<span class="billingBadge" id="billingBadge">—</span>
 </div>
-<div class="billingActions">
-<button class="btn billingManageBtn" id="billingManageBtn" type="button">Manage subscription</button>
-<div class="billingUtilBtns">
-<button class="btn sm" id="billingRefreshBtn" type="button">Refresh billing</button>
-<button class="btn sm" id="billingChangeBillingBtn" type="button">Change billing</button>
-</div>
+<div class="billingCta">
+<button class="btn primary billingManageBtn" id="billingManageBtn" type="button">
+Manage subscription
+<svg class="billingManageIcon" width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M11 7.5V11H2V2H5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.5 2H11V5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 2L6.5 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+</button>
 </div>
 <div class="billingUpgrade" id="billingUpgradeSection" hidden>
 <div class="billingUpgradeHead">
@@ -317,7 +315,10 @@
 </button>
 </div>
 </div>
-<div class="muted sxCardNote sxCardNoteBottom">Billing managed through Stripe. No payment details stored in RoomBoard.</div>
+<div class="billingFooter">
+<span class="billingFooterNote">Managed through Stripe · No payment details stored in RoomBoard.</span>
+<button class="billingRefreshBtn" id="billingRefreshBtn" type="button">Refresh</button>
+</div>
 </div>
 <details class="sxSection settingsCollapsible" id="joinPracticePanel">
 <summary>

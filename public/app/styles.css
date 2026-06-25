@@ -2346,29 +2346,46 @@
       border-color: rgba(125,211,252,.42);
       box-shadow: inset 0 0 0 1px rgba(125,211,252,.12);
     }
-    .drawer .billingCard{
-      display:none;
-    }
-    .drawer .billingCardHeader{
+    .drawer .billingCard{ display:none; }
+    .drawer .billingStatus{
       display:flex;
       align-items:flex-start;
       justify-content:space-between;
-      gap:14px;
-      margin-bottom:14px;
+      gap:12px;
+      padding:16px 16px 12px;
+    }
+    .drawer .billingStatusInfo{
+      display:flex;
+      flex-direction:column;
+      gap:5px;
+      min-width:0;
+    }
+    .drawer .billingStatusPlan{
+      font-size:20px;
+      font-weight:700;
+      color:var(--settingsText);
+      line-height:1.15;
+    }
+    .drawer .billingStatusMeta{
+      font-size:12px;
+      color:var(--settingsMuted);
+      line-height:1.45;
     }
     .drawer .billingBadge{
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      min-height:28px;
-      padding:5px 10px;
+      flex-shrink:0;
+      padding:5px 11px;
       border:1px solid var(--settingsBorder);
       border-radius:999px;
       background:rgba(255,255,255,.06);
       color:var(--settingsText);
-      font-size:12px;
+      font-size:11px;
       font-weight:800;
+      letter-spacing:.04em;
       white-space:nowrap;
+      margin-top:3px;
     }
     .drawer .billingBadge.isActive{
       border-color:rgba(74,222,128,.34);
@@ -2385,55 +2402,24 @@
       background:rgba(239,68,68,.16);
       color:#fecaca;
     }
-    .drawer .billingCurrentPlan{
-      padding:12px 16px 10px;
-      display:flex;
-      flex-direction:column;
-      gap:3px;
-    }
-    .drawer .billingCurrentLabel{
-      font-size:10px;
-      font-weight:700;
-      text-transform:uppercase;
-      letter-spacing:.08em;
-      color:var(--settingsMuted);
-    }
-    .drawer .billingCurrentValue{
-      font-size:18px;
-      font-weight:700;
-      color:var(--settingsText);
-      line-height:1.2;
-    }
-    .drawer .billingCurrentMeta{
-      font-size:12px;
-      color:var(--settingsMuted);
-      margin-top:1px;
-    }
-    .drawer .billingActions{
-      display:flex;
-      flex-direction:column;
-      gap:7px;
-      padding:4px 16px 14px;
+    .drawer .billingCta{
+      padding:0 16px 16px;
     }
     .drawer .billingManageBtn{
       width:100% !important;
-      justify-content:center;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:space-between !important;
       font-size:14px !important;
+      min-height:46px;
     }
-    .drawer .billingUtilBtns{
-      display:flex;
-      gap:8px;
-    }
-    .drawer .billingUtilBtns .btn{
-      flex:1;
-      justify-content:center;
-      font-size:12px !important;
-      min-height:36px;
-      padding:6px 10px !important;
+    .drawer .billingManageIcon{
+      opacity:.6;
+      flex-shrink:0;
     }
     .drawer .billingUpgrade{
       border-top:1px solid rgba(255,255,255,.07);
-      padding:14px 16px 6px;
+      padding:14px 16px 8px;
       display:flex;
       flex-direction:column;
       gap:10px;
@@ -2477,6 +2463,40 @@
       background:rgba(59,130,246,.18) !important;
     }
     .drawer .billingPlanBtn.isCurrent strong{ color:#bae6fd; }
+    .drawer .billingFooter{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 16px 12px;
+      border-top:1px solid rgba(255,255,255,.06);
+    }
+    .drawer .billingFooterNote{
+      font-size:11px;
+      color:var(--settingsMuted);
+      line-height:1.4;
+    }
+    .drawer .billingRefreshBtn{
+      background:none !important;
+      border:none !important;
+      box-shadow:none !important;
+      color:var(--settingsMuted) !important;
+      font-size:11px !important;
+      font-weight:600 !important;
+      padding:0 !important;
+      min-height:0 !important;
+      cursor:pointer;
+      white-space:nowrap;
+      flex-shrink:0;
+      text-decoration:underline;
+      text-underline-offset:2px;
+    }
+    .drawer .billingRefreshBtn:hover{
+      color:var(--settingsText) !important;
+      background:none !important;
+      transform:none !important;
+      box-shadow:none !important;
+    }
     body.billingAccessBlocked .standaloneOpenBoardBtn{
       opacity:.55;
       cursor:not-allowed;
