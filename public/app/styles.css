@@ -5214,3 +5214,94 @@ body.checklistOpen .checklistPanel {
   from { transform: translateX(-200%); }
   to   { transform: translateX(400%); }
 }
+
+/* ── sxSection design system ───────────────────────────────────────── */
+.sxSection {
+  background: rgba(10,18,36,.65);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.sxHead {
+  padding: 11px 16px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(160,185,230,.65);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.sxRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  min-height: 42px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.sxRow:last-child {
+  border-bottom: none;
+}
+.sxLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(198,215,255,.82);
+  flex: 1;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.sxSlider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.sxSlider input[type="range"] {
+  flex: 1;
+}
+.sxVal {
+  width: 52px !important;
+  text-align: center;
+  font-size: 12px;
+}
+.sxAddRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.sxAddRow input[type="text"] {
+  flex: 1;
+}
+.sxInputNum {
+  width: 70px !important;
+}
+
+/* Override old drawer card label styles inside sxRow */
+.drawer .sxRow label,
+.drawer .sxRow .sxLabel {
+  font-size: 13px !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+}
+
+/* details.sxSection collapsible behaviour */
+details.sxSection > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 16px;
+  cursor: pointer;
+  list-style: none;
+  border-bottom: 0;
+}
+details.sxSection > summary::-webkit-details-marker { display: none; }
+details.sxSection[open] > summary { border-bottom: 1px solid rgba(255,255,255,.06); }
+details.sxSection .settingsCollapsibleBody .sxRow:last-child { border-bottom: none; }
+
+/* Tab buttons: remove small subtitle now that tabs have no <small> */
+.tabs .tabBtn small { display: none; }
+
