@@ -120,6 +120,39 @@
     });
   }
 
+  /* ---------- Branding panel — theme picker + clinic name ---------- */
+  var btpRow = document.getElementById("btpRow");
+  var bbp = document.getElementById("brandBoardPreview");
+  var bbpName = document.getElementById("bbpClinicName");
+
+  if (btpRow && bbp) {
+    btpRow.addEventListener("click", function (e) {
+      var btn = e.target.closest(".btp");
+      if (!btn) return;
+      [].slice.call(btpRow.querySelectorAll(".btp")).forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      var bg = btn.getAttribute("data-bg");
+      var panel = btn.getAttribute("data-panel");
+      var text = btn.getAttribute("data-text");
+      var border = btn.getAttribute("data-border");
+      bbp.style.background = bg;
+      bbp.style.borderColor = border;
+      bbp.querySelector(".bbp-bar").style.borderBottomColor = border;
+      bbp.querySelector(".bbp-name").style.color = text;
+    });
+  }
+
+  var clinicPills = document.querySelectorAll(".bbp-clinic-pill");
+  if (clinicPills.length && bbpName) {
+    clinicPills.forEach(function (pill) {
+      pill.addEventListener("click", function () {
+        clinicPills.forEach(function (p) { p.classList.remove("active"); });
+        pill.classList.add("active");
+        bbpName.textContent = pill.getAttribute("data-name");
+      });
+    });
+  }
+
   /* ---------- Pricing billing toggle ---------- */
   var billingSwitch = document.getElementById("billingSwitch");
   var btMonthly = document.getElementById("btMonthly");
@@ -179,12 +212,12 @@
     var TIMER_ALERT = 45 * 60;  // red border + red timer
 
     var rooms = [
-      { name: "Room 1", patient: "R. Patel",  doc: "Dr. Maro",   type: "exam",      secs: 72 * 60 + 14, state: "active", note: "BP 140/90 — refill ready" },
-      { name: "Room 2", patient: "J. Nguyen", doc: "Dr. Reyes",  type: "followup",  secs: 24 * 60 + 8,  state: "active", note: "" },
-      { name: "Room 3", patient: "M. Ortiz",  doc: "Dr. Reyes",  type: "procedure", secs: 8 * 60 + 33,  state: "active", note: "Allergic to penicillin" },
+      { name: "Room 1", patient: "R. Patel",  doc: "Dr. Maro",   type: "exam",      secs: 72 * 60 + 14, state: "active", note: "BP 140/90 — refill Lisinopril ready at front desk" },
+      { name: "Room 2", patient: "J. Nguyen", doc: "Dr. Reyes",  type: "followup",  secs: 24 * 60 + 8,  state: "active", note: "Follow-up: knee MRI results. Patient anxious — take extra time." },
+      { name: "Room 3", patient: "M. Ortiz",  doc: "Dr. Reyes",  type: "procedure", secs: 8 * 60 + 33,  state: "active", note: "Allergic to penicillin. Consent signed. Pre-procedure vitals done." },
       { name: "Room 4", patient: "",          doc: "",           type: "exam",      secs: 0,            state: "empty",  note: "" },
-      { name: "Room 5", patient: "C. Wells",  doc: "Dr. Park",   type: "consult",   secs: 31 * 60 + 47, state: "active", note: "Interpreter requested" },
-      { name: "Room 6", patient: "D. Flynn",  doc: "Dr. Park",   type: "workin",    secs: 7 * 60 + 19,  state: "active", note: "" }
+      { name: "Room 5", patient: "C. Wells",  doc: "Dr. Park",   type: "consult",   secs: 31 * 60 + 47, state: "active", note: "Spanish interpreter requested. Family member present." },
+      { name: "Room 6", patient: "D. Flynn",  doc: "Dr. Park",   type: "workin",    secs: 7 * 60 + 19,  state: "active", note: "Walk-in: chest tightness. Vitals taken, EKG ordered." }
     ];
 
     function fmt(secs) {
@@ -248,7 +281,7 @@
           + '<span class="docBadgeInit">' + d.init + '</span></span>';
         var notePop = '<div class="notePopover">'
           + '<div class="notePopoverLabel">Notes</div>'
-          + '<textarea class="notePopoverInput" placeholder="Add a note…">' + esc(r.note) + '</textarea>'
+          + '<div class="notePopoverInput">' + esc(r.note) + '</div>'
           + '</div>';
         body = '<div class="roomBody">'
           + '<span class="noteDock' + (r.note ? ' has-note' : '') + '">📝' + notePop + '</span>'
@@ -407,7 +440,7 @@
           pop.classList.toggle("open", opening);
           dock.classList.toggle("pop-open", opening);
           if (card) card.classList.toggle("noteOpen", opening);
-          if (opening) { var ta = pop.querySelector(".notePopoverInput"); if (ta) setTimeout(function () { ta.focus(); }, 30); }
+          if (opening) { /* display only */ }
         }
         return;
       }
@@ -438,20 +471,9 @@
       hideTryHint();
     });
 
-    /* Note textarea: save text, update dot indicator and list-view cell */
+    /* Note input handler removed — notes are display-only in the demo */
     grid.addEventListener("input", function (e) {
       if (!e.target.classList.contains("notePopoverInput")) return;
-      var card = e.target.closest(".room");
-      if (!card) return;
-      var roomName = card.getAttribute("data-room");
-      var room = rooms.find(function (r) { return r.name === roomName; });
-      if (room) {
-        room.note = e.target.value;
-        var dock = card.querySelector(".noteDock");
-        if (dock) dock.classList.toggle("has-note", !!room.note);
-        var noteCell = card.querySelector(".wbCellNote");
-        if (noteCell) { noteCell.textContent = room.note || "—"; noteCell.classList.toggle("empty", !room.note); }
-      }
     });
 
     /* "+" button: add patient to first empty room, shake if none available */

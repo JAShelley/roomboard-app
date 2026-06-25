@@ -364,19 +364,19 @@
   <div class="wrap">
     <div class="section-head">
       <span class="eyebrow">One board everywhere</span>
-      <h2>Desktop, web, phone, watch</h2>
-      <p>Wall display, front desk, your pocket, your wrist. All seeing the same board, all synced.</p>
+      <h2>Live on web. Everywhere soon.</h2>
+      <p>The web board is ready today — open it in any browser, on any screen. Native apps for desktop, phone, and watch are on the way.</p>
     </div>
     <div class="devices-grid">
       <article class="device reveal reveal-left">
+        <div class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></div>
+        <h3>Web <span class="live-badge">Live now</span></h3>
+        <p>Open the board in any browser — no install needed for the front desk, a wall display, or a quick check.</p>
+      </article>
+      <article class="device reveal">
         <div class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4" stroke-linecap="round"/></svg></div>
         <h3>Desktop app <span class="cs-badge">Coming soon</span></h3>
         <p>Native RoomBoard for macOS and Windows, with a tray icon and full-screen wall display.</p>
-      </article>
-      <article class="device reveal">
-        <div class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/></svg></div>
-        <h3>Web</h3>
-        <p>Open the board in any browser — no install needed for the front desk or a quick check.</p>
       </article>
       <article class="device reveal">
         <div class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2" stroke-linecap="round"/></svg></div>
@@ -421,24 +421,19 @@
         </div>
       </div>
       <div class="panel hidden" id="p-staff">
-        <h4>Staff &amp; provider roster</h4>
-        <p>Add doctors with initials, then pick a fun image badge for each provider.</p>
-        <div class="mini-staff-list">
-          <div class="mini-staff-row">
-            <div class="mini-initials" style="background:#4f7cf6">JS</div>
-            <span class="mini-staff-name">Dr. Johnson</span>
-            <span class="mini-staff-badge"><img alt="" src="/app/french-bulldog-badge.png" onerror="this.style.display='none';this.parentNode.textContent='🐶'"></span>
-          </div>
-          <div class="mini-staff-row">
-            <div class="mini-initials" style="background:#ef476f">MR</div>
-            <span class="mini-staff-name">Dr. Rivera</span>
-            <span class="mini-staff-badge"><img alt="" src="/app/crab-badge.png" onerror="this.style.display='none';this.parentNode.textContent='🦀'"></span>
-          </div>
-          <div class="mini-staff-row">
-            <div class="mini-initials" style="background:#18b06b">KP</div>
-            <span class="mini-staff-name">Dr. Park</span>
-            <span class="mini-staff-badge"><img alt="" src="/app/flower-badge.png" onerror="this.style.display='none';this.parentNode.textContent='🌸'"></span>
-          </div>
+        <h4>Staff &amp; provider badges</h4>
+        <p>Every doctor or tech gets their own badge — shown on every room card they're assigned to.</p>
+        <div class="staff-badges-grid">
+          <span class="staff-badge-item"><img alt="French Bulldog" src="/app/french-bulldog-badge.png" onerror="this.style.display='none';this.parentNode.textContent='🐶'"></span>
+          <span class="staff-badge-item"><img alt="Crab" src="/app/crab-badge.png" onerror="this.style.display='none';this.parentNode.textContent='🦀'"></span>
+          <span class="staff-badge-item"><img alt="Sea Turtle" src="/app/seaturtle-badge.png" onerror="this.style.display='none';this.parentNode.textContent='🐢'"></span>
+          <span class="staff-badge-item"><img alt="Strawberry" src="/app/strawberry-badge.png" onerror="this.style.display='none';this.parentNode.textContent='🍓'"></span>
+          <span class="staff-badge-item"><img alt="Flower" src="/app/flower-badge.png" onerror="this.style.display='none';this.parentNode.textContent='🌸'"></span>
+          <span class="staff-badge-item"><img alt="Golf Ball" src="/app/golfball-badge.png" onerror="this.style.display='none';this.parentNode.textContent='⛳'"></span>
+        </div>
+        <div class="staff-unlimited-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6" stroke-linecap="round"/><path d="M19 12c0-3.87-3.13-7-7-7s-7 3.13-7 7 3.13 7 7 7" stroke-linecap="round"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/></svg>
+          Unlimited staff members — add as many doctors and techs as your practice needs
         </div>
       </div>
       <div class="panel hidden" id="p-display">
@@ -474,25 +469,43 @@
       </div>
       <div class="panel hidden" id="p-brand">
         <h4>Branding &amp; theme</h4>
-        <p>Pick a board theme, upload your clinic logo, and tune your accent colors.</p>
-        <div class="mini-themes">
-          <div class="mini-theme active" style="--th-bg:#0a1422;--th-card:#101e33">
-            <span class="mini-theme-swatch"></span>Dark
+        <p>Pick from 10 board themes, then add your clinic name or logo.</p>
+        <!-- Theme picker row -->
+        <div class="btp-row" id="btpRow">
+          <button class="btp active" data-bg="#081120" data-panel="rgba(28,52,96,.78)" data-text="#f6f9ff" data-accent="#7dd3fc" data-border="rgba(214,227,255,.14)" style="--dot:#081120">Midnight</button>
+          <button class="btp" data-bg="#071a2f" data-panel="rgba(18,58,110,.78)" data-text="#f5fbff" data-accent="#60a5fa" data-border="rgba(194,225,255,.14)" style="--dot:#1a3a6b">Cobalt</button>
+          <button class="btp" data-bg="#07161e" data-panel="rgba(15,58,73,.78)" data-text="#f4fcff" data-accent="#22d3ee" data-border="rgba(198,222,231,.14)" style="--dot:#0d3849">Oceanic</button>
+          <button class="btp" data-bg="#081712" data-panel="rgba(13,47,34,.78)" data-text="#f5fff9" data-accent="#34d399" data-border="rgba(201,226,213,.14)" style="--dot:#0d2f22">Evergreen</button>
+          <button class="btp" data-bg="#1d120d" data-panel="rgba(66,34,20,.78)" data-text="#fff8f3" data-accent="#fb923c" data-border="rgba(234,213,199,.14)" style="--dot:#3d1e0e">Ember</button>
+          <button class="btp" data-bg="#f5f7fb" data-panel="rgba(255,255,255,.92)" data-text="#111827" data-accent="#2563eb" data-border="rgba(15,23,42,.10)" style="--dot:#dce3ef">Daylight</button>
+        </div>
+        <!-- Live mini board preview -->
+        <div class="bbp" id="brandBoardPreview" style="background:#081120;border-color:rgba(214,227,255,.14)">
+          <div class="bbp-bar" style="border-color:rgba(214,227,255,.10)">
+            <span class="bbp-name" style="color:#f6f9ff">
+              <svg class="bbp-cross" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" width="12" height="12"><rect x="7" y="0" width="6" height="20" rx="2" fill="#ef4444"/><rect x="0" y="7" width="20" height="6" rx="2" fill="#ef4444"/></svg>
+              <span id="bbpClinicName">Riverside Family Medicine</span>
+            </span>
+            <span class="bbp-live">● Live</span>
           </div>
-          <div class="mini-theme" style="--th-bg:#0d1b2e;--th-card:#10243d">
-            <span class="mini-theme-swatch"></span>Navy
-          </div>
-          <div class="mini-theme" style="--th-bg:#f4f7fb;--th-card:#fff">
-            <span class="mini-theme-swatch" style="border:1px solid #e4ebf3"></span>Light
+          <div class="bbp-rooms">
+            <div class="bbp-room" style="background:#3b82f6">Room 1 <span>7:12</span></div>
+            <div class="bbp-room" style="background:#ef476f">Procedure <span>41:05</span></div>
+            <div class="bbp-room" style="background:#f59e0b;color:#0b1220">Room 2 <span>22:40</span></div>
+            <div class="bbp-room" style="background:#18b06b">Room 3 <span>3:30</span></div>
           </div>
         </div>
-        <div class="swatches" style="margin-top:14px">
-          <span class="swatch" style="background:var(--st-exam)"></span>
-          <span class="swatch" style="background:var(--st-recheck)"></span>
-          <span class="swatch" style="background:var(--st-surgery)"></span>
-          <span class="swatch" style="background:var(--st-ready)"></span>
-          <span class="swatch" style="background:var(--st-derm)"></span>
-          <span class="swatch" style="background:var(--teal-500)"></span>
+        <!-- Logo / clinic branding -->
+        <div class="bbp-branding-row">
+          <button class="bbp-logo-add">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8" stroke-linecap="round"/></svg>
+            Upload logo
+          </button>
+          <div class="bbp-clinic-pills">
+            <button class="bbp-clinic-pill active" data-name="Riverside Family Medicine">🏥 Riverside</button>
+            <button class="bbp-clinic-pill" data-name="Valley Dental Group">🦷 Valley Dental</button>
+            <button class="bbp-clinic-pill" data-name="Paws &amp; Care Vet">🐾 Paws &amp; Care</button>
+          </div>
         </div>
       </div>
       <div class="panel hidden" id="p-tools">
