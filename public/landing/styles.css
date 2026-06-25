@@ -625,6 +625,10 @@ img { max-width: 100%; display: block; }
   -webkit-mask-image: radial-gradient(ellipse 80% 84% at 50% 50%, black 48%, transparent 100%);
   mask-image: radial-gradient(ellipse 80% 84% at 50% 50%, black 48%, transparent 100%);
 }
+.device-img-phone .device-img-frame img {
+  object-fit: cover;
+  object-position: center top;
+}
 .device-img-card h3 { padding: 16px 20px 0; }
 .device-img-card p { padding: 4px 20px 20px; }
 
