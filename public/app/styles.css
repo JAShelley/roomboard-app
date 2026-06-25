@@ -755,10 +755,10 @@
       line-height:var(--roomCardLineHeight);
     }
     .roomNotesDock{
-      position:absolute;
-      top:46px;
-      right:10px;
+      position:relative;
       z-index:12;
+      display:inline-flex;
+      align-items:center;
     }
     #displayGrid .room.hasOpenNotes,
     #displayGrid .room:has(.roomNotesDock[open]){
@@ -839,7 +839,7 @@
       flex: 0 0 auto;
     }
 	    .roomBody{padding:12px; display:flex; flex-direction:column; gap:6px;}
-    .room.hasNotesDock .roomBody{ padding-right:58px; }
+    .room.hasNotesDock .roomBody{ padding-right:12px; }
     #intakeGrid.techViewGrid{align-items:start;}
     .room.techViewCard{
       min-height:auto;

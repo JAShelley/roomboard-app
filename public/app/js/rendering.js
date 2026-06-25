@@ -583,6 +583,7 @@
       el.innerHTML =
         '<div class="roomTop">'
           + '<div class="roomName"><span class="wbRoomNameWrap"><span class="wbRoomName">'+escapeHtml(room.name)+'</span></span></div>'
+          + (notesDock || '')
           + '<button class="iconBtn" data-action="displayDischarge" data-room-id="'+room.id+'" title="'+(room.needsCleaning ? 'Mark clean' : 'Discharge')+'">'+getDischargeButtonIcon(room.needsCleaning)+'</button>'
         + '</div>'
         + '<div class="roomBody">'
@@ -593,7 +594,6 @@
             + '</div>'
           + '</div>'
         + '</div>'
-        + notesDock
         + (hasRedoDischarge(room) ? '<button class="roomRedoBtn" data-action="displayRedo" data-room-id="'+room.id+'" title="Redo discharge">↺</button>' : '')
 	        + (displayDoctorInitials ? '<div class="docInitCorner">' + buildDoctorBadgeMarkup(room.doctor, displayDoctorInitials) + '</div>' : '');
 	      return el;
