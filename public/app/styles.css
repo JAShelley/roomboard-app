@@ -1813,92 +1813,19 @@
 	    }
 	    body.standaloneSetupMode .standaloneSetupIntro{
 	      display:flex !important;
-	      flex-direction:column;
-	      gap:0;
-	      padding:0;
-	      border:1px solid rgba(125,211,252,.18);
-	      border-radius:14px;
-	      background:linear-gradient(160deg,rgba(30,58,95,.55) 0%,rgba(15,26,42,.7) 100%);
-	      overflow:hidden;
-	      margin-bottom:8px;
-	    }
-	    .setupWelcome{
-	      padding:24px 26px 20px;
-	      border-bottom:1px solid rgba(255,255,255,.07);
-	    }
-	    .setupWelcome h1{
-	      margin:6px 0 6px !important;
-	      font-size:26px !important;
-	    }
-	    .setupWelcome p{
-	      margin:0 !important;
-	      font-size:14px !important;
-	    }
-	    .setupSteps{
-	      display:flex;
-	      flex-direction:column;
-	    }
-	    .setupStep{
-	      display:flex;
-	      align-items:center;
+	      align-items:flex-end;
 	      justify-content:space-between;
-	      gap:16px;
-	      padding:16px 26px;
-	      border-bottom:1px solid rgba(255,255,255,.06);
-	    }
-	    .setupStep:last-child{
-	      border-bottom:none;
-	    }
-	    .setupStepOpen{
-	      background:rgba(59,130,246,.07);
-	    }
-	    .setupStepLeft{
-	      display:flex;
-	      align-items:center;
-	      gap:14px;
-	      min-width:0;
-	    }
-	    .setupStepNum{
-	      width:28px;
-	      height:28px;
-	      border-radius:50%;
-	      background:rgba(59,130,246,.22);
-	      border:1px solid rgba(59,130,246,.4);
-	      color:#7ab8f5;
-	      font-size:12px;
-	      font-weight:800;
-	      display:flex;
-	      align-items:center;
-	      justify-content:center;
-	      flex-shrink:0;
-	    }
-	    .setupStepOpen .setupStepNum{
-	      background:rgba(59,130,246,.35);
-	      border-color:rgba(59,130,246,.6);
-	      color:#bdd9f8;
-	    }
-	    .setupStepTitle{
-	      font-size:14px;
-	      font-weight:700;
-	      color:var(--settingsText);
-	      line-height:1.2;
-	    }
-	    .setupStepDesc{
-	      font-size:13px;
-	      color:var(--settingsMuted);
-	      line-height:1.4;
-	      margin-top:2px;
-	    }
-	    .setupGoBtn{
-	      flex-shrink:0;
-	      white-space:nowrap;
+	      gap:18px;
+	      padding:18px;
+	      border:1px solid var(--settingsBorder);
+	      border-radius:8px;
+	      background:rgba(255,255,255,.06);
 	    }
 	    body.standaloneSetupMode .standaloneOpenBoardBtn{
 	      display:inline-flex !important;
 	      align-items:center;
 	      justify-content:center;
 	      white-space:nowrap;
-	      flex-shrink:0;
 	    }
 	    .standaloneEyebrow{
 	      font-size:12px;
@@ -1931,22 +1858,16 @@
 	      body.roomboardStandaloneMode .drawerBody{
 	        padding:20px 16px 32px;
 	      }
-	      .setupStep{
-	        flex-wrap:wrap;
-	        gap:10px;
-	        padding:14px 18px;
+	      body.standaloneSetupMode .standaloneSetupIntro{
+	        align-items:stretch;
+	        flex-direction:column;
 	      }
-	      .setupWelcome{
-	        padding:18px 18px 16px;
-	      }
-	      .setupGoBtn,
 	      body.standaloneSetupMode .standaloneOpenBoardBtn{
 	        width:100%;
-	        justify-content:center;
 	      }
 	      .standaloneStartupIntro h1,
 	      .standaloneSetupIntro h1{
-	        font-size:24px;
+	        font-size:28px;
 	      }
 	    }
 	    .drawer .tabBtn{

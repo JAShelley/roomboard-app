@@ -573,7 +573,7 @@
     var tokens = getStoredTokens();
     if(!tokens){ enterAuth(); return; }
     if(btn){ btn.disabled = true; btn.querySelector("span") && (btn.querySelector("span").textContent = "Loading…"); }
-    var returnUrl = (window.location.origin || "") + "/app/index.html?mode=setup";
+    var returnUrl = (window.location.origin || "") + "/app/index.html?mode=startup";
     fetch("/api/billing/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -713,8 +713,15 @@
       var route = getRoute();
       if(!route.standalone) return;
       if(state && state.loggedIn && state.hasPractice){
-        if(state.newAccount) enterSetup();
-        else openBoard();
+        if(state.newAccount){
+          // New clinic: hide the signup overlay and immediately show the plan
+          // picker. Card is required upfront — the user never reaches the board
+          // without going through Stripe checkout first.
+          hideAuthOverlay();
+          showPaywall({ trialing: true, trialDaysLeft: 14, hasCustomer: false });
+        } else {
+          openBoard();
+        }
       } else {
         enterAuth();
       }
