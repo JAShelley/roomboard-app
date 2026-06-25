@@ -216,36 +216,42 @@ img { max-width: 100%; display: block; }
   filter: blur(40px);
 }
 
-/* Floating feature callout badges — shown only on wide screens */
+/* Feature callout badges — row below the board */
+.board-badges-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding: 0 8px;
+}
 .board-badge {
-  position: absolute;
-  display: none; /* hidden by default; shown at ≥1100px */
+  display: flex;
   align-items: center;
   gap: 10px;
-  width: 190px;
   padding: 12px 14px;
   border-radius: 16px;
   background: rgba(16, 30, 51, 0.82);
   border: 1px solid rgba(255, 255, 255, .12);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, .40), 0 2px 8px rgba(0, 0, 0, .25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .30), 0 2px 6px rgba(0, 0, 0, .18);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  z-index: 20;
   animation: badgeFadeIn .7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  flex: 0 0 auto;
 }
 [data-theme="light"] .board-badge {
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.90);
   border-color: rgba(0, 0, 0, .09);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, .14), 0 2px 6px rgba(0, 0, 0, .08);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .12), 0 2px 6px rgba(0, 0, 0, .07);
 }
 @keyframes badgeFadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.badge-tl { top: 76px;    left: 18px;   animation-delay: .35s; }
-.badge-tr { top: 76px;    right: 18px;  animation-delay: .45s; }
-.badge-bl { bottom: 72px; left: 18px;   animation-delay: .55s; }
-.badge-br { bottom: 72px; right: 18px;  animation-delay: .65s; }
+.badge-tl { animation-delay: .55s; }
+.badge-tr { animation-delay: .65s; }
+.badge-bl { animation-delay: .75s; }
+.badge-br { animation-delay: .85s; }
 
 .bb-icon {
   font-size: 18px;
@@ -268,7 +274,28 @@ img { max-width: 100%; display: block; }
 [data-theme="light"] .bb-body strong { color: #0f1b2d; }
 [data-theme="light"] .bb-body small  { color: #65748c; }
 
-@media (min-width: 900px) { .board-badge { display: flex; } }
+/* bd-try-hint — subtle "click any room" prompt inside the board */
+.bd-try-hint {
+  text-align: center;
+  font-size: 11px;
+  color: rgba(140, 165, 210, 0.55);
+  margin: 12px 0 2px;
+  font-style: italic;
+  letter-spacing: .02em;
+  transition: opacity .5s ease;
+  pointer-events: none;
+}
+.bd-try-hint.hidden { opacity: 0; }
+
+/* Interactive room cards */
+.room { cursor: pointer; }
+.bd-ico { cursor: pointer; transition: background .15s; }
+.bd-ico:hover { background: rgba(255,255,255,.12); border-radius: 6px; }
+.room.click-flash { animation: roomFlash .35s ease-out; }
+@keyframes roomFlash {
+  0%   { filter: brightness(1.55); }
+  100% { filter: brightness(1); }
+}
 
 /* ---------- Board demo (faithful to the real RoomBoard display) ---------- */
 /* Dark near-black screen of color-filled room tiles, clinic header on top. */

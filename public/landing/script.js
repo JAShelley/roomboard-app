@@ -291,7 +291,63 @@
         } else { return; } // no state change, skip redraw
         // Only redraw the single card that changed
         renderOne(r);
+        updateActiveCount();
       }, 2800);
+    }
+
+    /* ---------- Board interactivity ---------- */
+    function updateActiveCount() {
+      var el = document.getElementById("bdActiveCount");
+      if (el) el.textContent = rooms.filter(function (r) { return r.state === "active"; }).length;
+    }
+
+    function hideTryHint() {
+      var hint = document.getElementById("bdTryHint");
+      if (hint) hint.classList.add("hidden");
+    }
+
+    var clickNames = ["S. Rivera", "K. Adams", "T. Brooks", "L. Hayes", "D. Flynn", "C. Wells", "P. Shah", "B. Carter"];
+    var clickDocs  = Object.keys(DOCS);
+    var clickTypes = Object.keys(TYPES);
+
+    function randomPatient(r) {
+      r.state   = "active";
+      r.patient = clickNames[Math.floor(Math.random() * clickNames.length)];
+      r.doc     = clickDocs[Math.floor(Math.random() * clickDocs.length)];
+      r.type    = clickTypes[Math.floor(Math.random() * clickTypes.length)];
+      r.secs    = Math.floor(Math.random() * 4 * 60) + 60;
+    }
+
+    /* Click a room to cycle its state */
+    grid.addEventListener("click", function (e) {
+      var card = e.target.closest(".room");
+      if (!card) return;
+      var roomName = card.getAttribute("data-room");
+      var room = rooms.find(function (r) { return r.name === roomName; });
+      if (!room) return;
+
+      if (room.state === "active")        { room.state = "cleaning"; room.secs = 0; }
+      else if (room.state === "cleaning") { room.state = "empty";    room.secs = 0; }
+      else                                { randomPatient(room); }
+
+      renderOne(room);
+      /* Flash the new card (renderOne already replaced the DOM node) */
+      var newCard = grid.querySelector('[data-room="' + roomName + '"]');
+      if (newCard) {
+        newCard.classList.add("click-flash");
+        setTimeout(function () { newCard.classList.remove("click-flash"); }, 380);
+      }
+      updateActiveCount();
+      hideTryHint();
+    });
+
+    /* "+" button adds a patient to the first empty room */
+    var addBtn = document.getElementById("bdAddBtn");
+    if (addBtn) {
+      addBtn.addEventListener("click", function () {
+        var empty = rooms.find(function (r) { return r.state === "empty"; });
+        if (empty) { randomPatient(empty); renderOne(empty); updateActiveCount(); hideTryHint(); }
+      });
     }
   }
 
