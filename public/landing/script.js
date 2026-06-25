@@ -179,11 +179,11 @@
     var TIMER_ALERT = 45 * 60;  // red border + red timer
 
     var rooms = [
-      { name: "Room 1", patient: "R. Patel",  doc: "Dr. Maro",   type: "exam",      secs: 72 * 60 + 14, state: "active", note: "" },
+      { name: "Room 1", patient: "R. Patel",  doc: "Dr. Maro",   type: "exam",      secs: 72 * 60 + 14, state: "active", note: "BP 140/90 — refill ready" },
       { name: "Room 2", patient: "J. Nguyen", doc: "Dr. Reyes",  type: "followup",  secs: 24 * 60 + 8,  state: "active", note: "" },
-      { name: "Room 3", patient: "M. Ortiz",  doc: "Dr. Okafor", type: "procedure", secs: 8 * 60 + 33,  state: "active", note: "" },
+      { name: "Room 3", patient: "M. Ortiz",  doc: "Dr. Okafor", type: "procedure", secs: 8 * 60 + 33,  state: "active", note: "Allergic to penicillin" },
       { name: "Room 4", patient: "",          doc: "",           type: "exam",      secs: 0,            state: "empty",  note: "" },
-      { name: "Room 5", patient: "C. Wells",  doc: "Dr. Park",   type: "consult",   secs: 31 * 60 + 47, state: "active", note: "" },
+      { name: "Room 5", patient: "C. Wells",  doc: "Dr. Park",   type: "consult",   secs: 31 * 60 + 47, state: "active", note: "Interpreter requested" },
       { name: "Room 6", patient: "D. Flynn",  doc: "Dr. Hahn",   type: "workin",    secs: 7 * 60 + 19,  state: "active", note: "" }
     ];
 
@@ -211,17 +211,35 @@
       var warn = r.state === "active" && r.secs > TIMER_WARN && !alert;
       el.className = "room" + (r.state === "empty" ? " empty" : "") + (r.state === "cleaning" ? " cleaning" : "") + (alert ? " alert" : "");
       el.setAttribute("data-room", r.name);
+      el.setAttribute("data-type", r.type || "");
       if (r.state === "active") { el.style.setProperty("--c", ty.c); el.style.color = readableText(ty.c); }
       var icons = '<span class="roomIcons">🐾 ↪ ▤</span>';
       var top = '<div class="roomTop"><span class="roomName">' + esc(r.name) + '</span>' + icons + '</div>';
       var body;
       var noteRow = "";
+      var wbRow = "";
       if (r.state === "empty") {
         body = '<div class="roomBody"><span class="roomEmptyText">Empty</span>'
           + '<div class="roomFoot"><span class="timer" data-timer>' + fmt(0) + '</span></div></div>';
+        wbRow = '<div class="wbRow">'
+          + '<div class="wbCell wbCellRoom">' + esc(r.name) + '</div>'
+          + '<div class="wbCell" style="opacity:.3">Empty</div>'
+          + '<div class="wbCell"></div>'
+          + '<div class="wbCell"></div>'
+          + '<div class="wbCell wbTm" data-wb-timer>' + fmt(0) + '</div>'
+          + '<div class="wbCell"></div>'
+          + '</div>';
       } else if (r.state === "cleaning") {
         body = '<div class="roomBody"><span class="roomCleanPill">NEEDS TO BE CLEANED</span>'
           + '<div class="roomFoot"><span class="timer warn" data-timer>' + fmt(r.secs) + '</span></div></div>';
+        wbRow = '<div class="wbRow">'
+          + '<div class="wbCell wbCellRoom">' + esc(r.name) + '</div>'
+          + '<div class="wbCell wbCellTy" style="color:#fbbf24">Cleaning</div>'
+          + '<div class="wbCell"></div>'
+          + '<div class="wbCell"></div>'
+          + '<div class="wbCell wbTm warn" data-wb-timer>' + fmt(r.secs) + '</div>'
+          + '<div class="wbCell"></div>'
+          + '</div>';
       } else {
         var d = DOCS[r.doc] || { img: BASE + "seaturtle-badge.png", init: "DR" };
         var info = esc(r.patient) + '<span class="sep">•</span>' + esc(ty.label) + '<span class="sep">•</span>' + esc(r.doc);
@@ -236,8 +254,16 @@
         noteRow = '<div class="noteRow' + (r.note ? ' open' : '') + '">'
           + '<input class="noteInput" type="text" placeholder="Add a note…" value="' + esc(r.note) + '">'
           + '</div>';
+        wbRow = '<div class="wbRow">'
+          + '<div class="wbCell wbCellRoom">' + esc(r.name) + '</div>'
+          + '<div class="wbCell wbCellPt">' + esc(r.patient) + '</div>'
+          + '<div class="wbCell wbCellTy">' + esc(ty.label) + '</div>'
+          + '<div class="wbCell wbCellDr"><span class="wbDocInit">' + esc(d.init) + '</span>' + esc(r.doc) + '</div>'
+          + '<div class="wbCell wbTm' + (alert ? " alert" : (warn ? " warn" : "")) + '" data-wb-timer>' + fmt(r.secs) + '</div>'
+          + '<div class="wbCell wbCellNote' + (r.note ? '' : ' empty') + '">' + (r.note ? esc(r.note) : '—') + '</div>'
+          + '</div>';
       }
-      el.innerHTML = top + body + noteRow;
+      el.innerHTML = top + body + noteRow + wbRow;
       return el;
     }
 
@@ -248,8 +274,11 @@
       else grid.appendChild(neu);
     }
 
+    var wbHeaderEl = document.getElementById("bdWbHeader");
+
     function render() {
       grid.innerHTML = "";
+      if (wbHeaderEl) grid.appendChild(wbHeaderEl); // always keep header at top
       rooms.forEach(function (r) { grid.appendChild(makeCard(r)); });
     }
     render();
@@ -262,12 +291,18 @@
         r.secs += 1;
         var el = grid.querySelector('[data-room="' + r.name + '"]');
         if (!el) return;
-        var timerEl = el.querySelector("[data-timer]");
-        if (!timerEl) return;
         var alert = r.state === "active" && r.secs > TIMER_ALERT;
         var warn  = r.state === "active" && r.secs > TIMER_WARN && !alert;
-        timerEl.textContent = fmt(r.secs);
-        timerEl.className = "timer" + (alert ? " alert" : (warn ? " warn" : ""));
+        var timerEl = el.querySelector("[data-timer]");
+        if (timerEl) {
+          timerEl.textContent = fmt(r.secs);
+          timerEl.className = "timer" + (alert ? " alert" : (warn ? " warn" : ""));
+        }
+        var wbTimer = el.querySelector("[data-wb-timer]");
+        if (wbTimer) {
+          wbTimer.textContent = fmt(r.secs);
+          wbTimer.className = "wbTm" + (alert ? " alert" : (warn ? " warn" : ""));
+        }
         el.classList.toggle("alert", alert);
       });
     }, 1000);

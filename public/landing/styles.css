@@ -298,12 +298,11 @@ img { max-width: 100%; display: block; }
   100% { filter: brightness(1); }
 }
 
-/* ONLY ACTIVE toggle: on state */
-.bd-toggle { cursor: pointer; transition: color .2s, border-color .2s; }
-.bd-toggle.on { color: #c4fce6; border-color: rgba(24, 176, 107, .45); }
-.bd-toggle.on .sw2 { background: #18b06b; }
-.bd-toggle.on .sw2::after { left: 13px; background: #fff; }
-.bd-toggle .sw2::after { transition: left .2s ease; }
+/* ONLY ACTIVE toggle: on state (teal like real app) */
+.bd-toggle { cursor: pointer; transition: border-color .2s, box-shadow .2s; }
+.bd-toggle.on { border-color: rgba(125,211,252,.42); box-shadow: 0 0 0 1px rgba(125,211,252,.16); }
+.bd-toggle.on .sw2 { background: #7dd3fc; }
+.bd-toggle.on .sw2::after { left: 16px; background: #fff; }
 /* hide non-active rooms when filter is on */
 .bd-grid.only-active .room.empty,
 .bd-grid.only-active .room.cleaning { display: none; }
@@ -316,20 +315,69 @@ img { max-width: 100%; display: block; }
 }
 .bd-ico.shake { animation: bdShake .35s ease; }
 
-/* Grid / List view toggle */
-.bd-grid.list-view { grid-template-columns: 1fr; gap: 7px; }
-.bd-grid.list-view .room { flex-direction: row; min-height: 0; border-radius: 12px; }
-.bd-grid.list-view .room:hover { transform: translateY(-1px) scale(1); }
-.bd-grid.list-view .roomTop { flex-shrink: 0; width: 100px; border-bottom: none; border-right: 1px solid rgba(255,255,255,.10); padding: 0 12px; margin: 0; align-self: stretch; display: flex; align-items: center; }
-.bd-grid.list-view .roomIcons { display: none; }
-.bd-grid.list-view .roomBody { flex-direction: row; align-items: center; padding: 10px 14px; gap: 16px; flex: 1; }
-.bd-grid.list-view .roomInfoLine { flex: 1; font-size: 13px; }
-.bd-grid.list-view .roomFoot { margin-top: 0; flex-shrink: 0; padding: 0; }
-.bd-grid.list-view .roomFoot .timer { font-size: 16px; padding: 5px 10px; }
-.bd-grid.list-view .roomFoot .docBadge { width: 34px; height: 34px; }
-.bd-grid.list-view .noteDock { display: none; }
-.bd-grid.list-view .roomEmptyText { margin: 0; }
-.bd-grid.list-view .noteRow { display: none !important; }
+/* ---- List view: faithful to real app ---- */
+.bd-grid.list-view {
+  display: flex; flex-direction: column; gap: 0;
+  grid-template-columns: none; /* override grid */
+}
+/* wbHeader (column labels) — hidden in grid view, shown in list view */
+.wbHeader { display: none; border-radius: 8px 8px 0 0; overflow: hidden; }
+.bd-grid.list-view .wbHeader { display: block; background: rgba(11,18,32,.88); border-bottom: 1px solid rgba(255,255,255,.10); }
+.wbHeader .wbRow { padding: 7px 12px; }
+.wbHeader .wbCell { font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: #5b6f96; }
+
+/* Shared row grid (header + room rows) */
+.wbRow {
+  display: grid;
+  grid-template-columns: 78px 1.5fr 1fr 1.1fr 100px 2fr;
+  gap: 6px; align-items: center; width: 100%;
+}
+
+/* Hide wbRow in grid/box view; show in list view */
+.room .wbRow { display: none; }
+.bd-grid.list-view .room .wbRow { display: grid; padding: 9px 12px; }
+
+/* Room card in list view — table row style */
+.bd-grid.list-view .room {
+  min-height: 0; border-radius: 0;
+  border: 0; border-bottom: 1px solid rgba(255,255,255,.06);
+  border-left: 3px solid rgba(255,255,255,.10);
+  background: linear-gradient(90deg, var(--rowTint, rgba(255,255,255,.02)), transparent 70%);
+  flex-direction: row; align-items: center;
+  overflow: visible;
+  box-shadow: none;
+  transition: background .15s;
+}
+.bd-grid.list-view .room:first-of-type { border-radius: 0; }
+.bd-grid.list-view .room:last-child { border-radius: 0 0 8px 8px; border-bottom: none; }
+.bd-grid.list-view .room:hover { transform: none; box-shadow: none; background: linear-gradient(90deg, var(--rowTintHover, rgba(255,255,255,.06)), rgba(255,255,255,.02) 70%); }
+
+/* Hide box-view elements in list mode */
+.bd-grid.list-view .room .roomTop,
+.bd-grid.list-view .room .roomBody,
+.bd-grid.list-view .room .noteRow { display: none !important; }
+
+/* Row tint + left accent by visit type */
+.bd-grid.list-view .room[data-type="exam"]      { border-left-color: #3b82f6; --rowTint: rgba(59,130,246,.08); --rowTintHover: rgba(59,130,246,.14); }
+.bd-grid.list-view .room[data-type="followup"]  { border-left-color: #18b06b; --rowTint: rgba(24,176,107,.08); --rowTintHover: rgba(24,176,107,.14); }
+.bd-grid.list-view .room[data-type="procedure"] { border-left-color: #ef476f; --rowTint: rgba(239,71,111,.08); --rowTintHover: rgba(239,71,111,.14); }
+.bd-grid.list-view .room[data-type="consult"]   { border-left-color: #8b5cf6; --rowTint: rgba(139,92,246,.08); --rowTintHover: rgba(139,92,246,.14); }
+.bd-grid.list-view .room[data-type="workin"]    { border-left-color: #f59e0b; --rowTint: rgba(245,158,11,.08); --rowTintHover: rgba(245,158,11,.14); }
+.bd-grid.list-view .room.cleaning { border-left-color: #fbbf24; --rowTint: rgba(251,191,36,.10); }
+.bd-grid.list-view .room.empty { border-left-color: rgba(255,255,255,.08); }
+
+/* List view cell styles */
+.wbCell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: #c4d0e4; }
+.wbCellRoom { font-weight: 700; color: #eef3ff; font-size: 12.5px; }
+.wbCellPt { font-weight: 600; color: #d0daf0; }
+.wbCellTy { color: #8096b8; font-size: 12px; }
+.wbCellDr { color: #8096b8; font-size: 12px; display: flex; align-items: center; gap: 5px; }
+.wbDocInit { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.16); font-size: 9px; font-weight: 800; color: #eef3ff; flex: none; }
+.wbTm { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-weight: 700; font-size: 14px; color: #c4d0e4; text-align: right; font-variant-numeric: tabular-nums; }
+.wbTm.warn { color: #e2a017; }
+.wbTm.alert { color: #e23b3b; }
+.wbCellNote { color: #7dd3fc; font-size: 11.5px; font-style: italic; }
+.wbCellNote.empty { color: rgba(255,255,255,.18); font-style: normal; }
 
 /* Per-room note row */
 .noteRow { overflow: hidden; max-height: 0; transition: max-height .25s ease, padding .25s ease; padding: 0 16px; }
@@ -374,16 +422,32 @@ img { max-width: 100%; display: block; }
 
 /* Board header bar */
 .bd-bar { display: flex; align-items: center; gap: 10px; padding: 4px 6px 14px; border-bottom: 1px solid rgba(255,255,255,.07); margin-bottom: 10px; }
-.bd-bar-title { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: #eef3ff; letter-spacing: -.01em; flex: 1; }
-.bd-tools { display: flex; align-items: center; gap: 8px; }
+
+/* Practice logo + subtitle */
+.bd-brand { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.bd-practice-logo { display: flex; align-items: center; gap: 7px; }
+.bd-practice-cross { flex: none; }
+.bd-practice-name { font-family: var(--font-display); font-weight: 800; font-size: 15px; color: #eef3ff; letter-spacing: -.02em; white-space: nowrap; }
+.bd-bar-sub { font-size: 10.5px; color: #5b6f96; letter-spacing: .01em; padding-left: 25px; }
+
+.bd-tools { display: flex; align-items: center; gap: 6px; }
+
 /* Live pill */
 .bd-live-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #18b06b; background: rgba(24, 176, 107, .12); border: 1px solid rgba(24, 176, 107, .28); padding: 5px 12px; border-radius: 999px; flex: none; }
 .bd-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #18b06b; box-shadow: 0 0 6px 1px rgba(24, 176, 107, .7); animation: livePulse 2s ease-in-out infinite; }
 @keyframes livePulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
-.bd-toggle { display: inline-flex; align-items: center; gap: 7px; font-size: 9.5px; font-weight: 700; letter-spacing: .05em; color: #aebdd8; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.10); padding: 5px 9px; border-radius: 999px; }
-.bd-toggle .sw2 { width: 26px; height: 15px; border-radius: 999px; background: #2a3a55; position: relative; }
-.bd-toggle .sw2::after { content: ""; position: absolute; top: 2px; left: 2px; width: 11px; height: 11px; border-radius: 50%; background: #cdd8ee; }
-.bd-ico { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; color: #aebdd8; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.10); font-size: 13px; transition: background .15s; }
+
+/* ONLY ACTIVE toggle — matches real headerToggleWrap */
+.bd-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.10);
+  padding: 5px 8px 5px 10px; border-radius: 999px; white-space: nowrap;
+}
+.bd-toggle-label { font-size: 9.5px; font-weight: 700; letter-spacing: .05em; color: #8096b8; text-transform: uppercase; }
+.bd-toggle .sw2 { width: 34px; height: 20px; border-radius: 999px; background: #1e2d47; position: relative; flex: none; }
+.bd-toggle .sw2::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #7a90b8; transition: left .18s ease, background .18s ease; }
+
+.bd-ico { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; color: #aebdd8; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.10); font-size: 13px; transition: background .15s; }
 .bd-ico:hover { background: rgba(255,255,255,.12); }
 
 .bd-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
