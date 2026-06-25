@@ -21,13 +21,20 @@
     });
   }
 
-  /* ---------- Nav shadow on scroll + back-to-top ---------- */
+  /* ---------- Nav shadow on scroll + back-to-top + board tilt ---------- */
   var nav = document.getElementById("nav");
   var toTop = document.getElementById("toTop");
   function onScroll() {
     var y = window.pageYOffset || document.documentElement.scrollTop;
     if (nav) nav.classList.toggle("scrolled", y > 8);
     if (toTop) toTop.classList.toggle("show", y > 600);
+    /* Flatten the hero board perspective as the user scrolls past it */
+    var boardEl = document.getElementById("boardDemo");
+    if (boardEl && window.innerWidth > 940) {
+      var progress = Math.min(y / (window.innerHeight * 0.55), 1);
+      var tilt = 8 * (1 - progress);
+      boardEl.style.transform = "perspective(1800px) rotateX(" + tilt + "deg)";
+    }
   }
   window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
@@ -113,6 +120,39 @@
     });
   }
 
+  /* ---------- Branding panel — theme picker + clinic name ---------- */
+  var btpRow = document.getElementById("btpRow");
+  var bbp = document.getElementById("brandBoardPreview");
+  var bbpName = document.getElementById("bbpClinicName");
+
+  if (btpRow && bbp) {
+    btpRow.addEventListener("click", function (e) {
+      var btn = e.target.closest(".btp");
+      if (!btn) return;
+      [].slice.call(btpRow.querySelectorAll(".btp")).forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      var bg = btn.getAttribute("data-bg");
+      var panel = btn.getAttribute("data-panel");
+      var text = btn.getAttribute("data-text");
+      var border = btn.getAttribute("data-border");
+      bbp.style.background = bg;
+      bbp.style.borderColor = border;
+      bbp.querySelector(".bbp-bar").style.borderBottomColor = border;
+      bbp.querySelector(".bbp-name").style.color = text;
+    });
+  }
+
+  var clinicPills = document.querySelectorAll(".bbp-clinic-pill");
+  if (clinicPills.length && bbpName) {
+    clinicPills.forEach(function (pill) {
+      pill.addEventListener("click", function () {
+        clinicPills.forEach(function (p) { p.classList.remove("active"); });
+        pill.classList.add("active");
+        bbpName.textContent = pill.getAttribute("data-name");
+      });
+    });
+  }
+
   /* ---------- Pricing billing toggle ---------- */
   var billingSwitch = document.getElementById("billingSwitch");
   var btMonthly = document.getElementById("btMonthly");
@@ -172,10 +212,12 @@
     var TIMER_ALERT = 45 * 60;  // red border + red timer
 
     var rooms = [
-      { name: "Room 1", patient: "R. Patel",  doc: "Dr. Maro",   type: "exam",      secs: 72 * 60 + 14, state: "active" },
-      { name: "Room 2", patient: "J. Nguyen", doc: "Dr. Reyes",  type: "followup",  secs: 24 * 60 + 8,  state: "active" },
-      { name: "Room 3", patient: "M. Ortiz",  doc: "Dr. Okafor", type: "procedure", secs: 8 * 60 + 33,  state: "active" },
-      { name: "Room 4", patient: "",          doc: "",           type: "exam",      secs: 0,            state: "empty" }
+      { name: "Room 1", patient: "R. Patel",  doc: "Dr. Maro",   type: "exam",      secs: 72 * 60 + 14, state: "active", note: "BP 140/90 — refill Lisinopril ready at front desk" },
+      { name: "Room 2", patient: "J. Nguyen", doc: "Dr. Reyes",  type: "followup",  secs: 24 * 60 + 8,  state: "active", note: "Follow-up: knee MRI results. Patient anxious — take extra time." },
+      { name: "Room 3", patient: "M. Ortiz",  doc: "Dr. Reyes",  type: "procedure", secs: 8 * 60 + 33,  state: "active", note: "Allergic to penicillin. Consent signed. Pre-procedure vitals done." },
+      { name: "Room 4", patient: "",          doc: "",           type: "exam",      secs: 0,            state: "empty",  note: "" },
+      { name: "Room 5", patient: "C. Wells",  doc: "Dr. Park",   type: "consult",   secs: 31 * 60 + 47, state: "active", note: "Spanish interpreter requested. Family member present." },
+      { name: "Room 6", patient: "D. Flynn",  doc: "Dr. Park",   type: "workin",    secs: 7 * 60 + 19,  state: "active", note: "Walk-in: chest tightness. Vitals taken, EKG ordered." }
     ];
 
     function fmt(secs) {
@@ -202,29 +244,60 @@
       var warn = r.state === "active" && r.secs > TIMER_WARN && !alert;
       el.className = "room" + (r.state === "empty" ? " empty" : "") + (r.state === "cleaning" ? " cleaning" : "") + (alert ? " alert" : "");
       el.setAttribute("data-room", r.name);
+      el.setAttribute("data-type", r.type || "");
       if (r.state === "active") { el.style.setProperty("--c", ty.c); el.style.color = readableText(ty.c); }
       var icons = '<span class="roomIcons">🐾 ↪ ▤</span>';
       var top = '<div class="roomTop"><span class="roomName">' + esc(r.name) + '</span>' + icons + '</div>';
       var body;
+      var noteRow = "";
+      var wbRow = "";
       if (r.state === "empty") {
         body = '<div class="roomBody"><span class="roomEmptyText">Empty</span>'
           + '<div class="roomFoot"><span class="timer" data-timer>' + fmt(0) + '</span></div></div>';
+        wbRow = '<div class="wbRow">'
+          + '<div class="wbCell wbCellRoom">' + esc(r.name) + '</div>'
+          + '<div class="wbCell" style="opacity:.3">Empty</div>'
+          + '<div class="wbCell"></div>'
+          + '<div class="wbCell"></div>'
+          + '<div class="wbCell wbTm" data-wb-timer>' + fmt(0) + '</div>'
+          + '<div class="wbCell"></div>'
+          + '</div>';
       } else if (r.state === "cleaning") {
         body = '<div class="roomBody"><span class="roomCleanPill">NEEDS TO BE CLEANED</span>'
           + '<div class="roomFoot"><span class="timer warn" data-timer>' + fmt(r.secs) + '</span></div></div>';
+        wbRow = '<div class="wbRow">'
+          + '<div class="wbCell wbCellRoom">' + esc(r.name) + '</div>'
+          + '<div class="wbCell wbCellTy" style="color:#fbbf24">Cleaning</div>'
+          + '<div class="wbCell"></div>'
+          + '<div class="wbCell"></div>'
+          + '<div class="wbCell wbTm warn" data-wb-timer>' + fmt(r.secs) + '</div>'
+          + '<div class="wbCell"></div>'
+          + '</div>';
       } else {
         var d = DOCS[r.doc] || { img: BASE + "seaturtle-badge.png", init: "DR" };
         var info = esc(r.patient) + '<span class="sep">•</span>' + esc(ty.label) + '<span class="sep">•</span>' + esc(r.doc);
         var badge = '<span class="docBadge"><img alt="" src="' + d.img
           + '" onerror="this.parentNode.classList.add(\'fallback\');this.remove();">'
           + '<span class="docBadgeInit">' + d.init + '</span></span>';
+        var notePop = '<div class="notePopover">'
+          + '<div class="notePopoverLabel">Notes</div>'
+          + '<div class="notePopoverInput">' + esc(r.note) + '</div>'
+          + '</div>';
         body = '<div class="roomBody">'
-          + '<span class="noteDock">📝</span>'
+          + '<span class="noteDock' + (r.note ? ' has-note' : '') + '">📝' + notePop + '</span>'
           + '<div class="roomInfoLine">' + info + '</div>'
           + '<div class="roomFoot"><span class="timer' + (alert ? " alert" : (warn ? " warn" : "")) + '" data-timer>' + fmt(r.secs) + '</span>'
           + badge + '</div></div>';
+        wbRow = '<div class="wbRow">'
+          + '<div class="wbCell wbCellRoom">' + esc(r.name) + '</div>'
+          + '<div class="wbCell wbCellPt">' + esc(r.patient) + '</div>'
+          + '<div class="wbCell wbCellTy">' + esc(ty.label) + '</div>'
+          + '<div class="wbCell wbCellDr"><span class="wbDocInit">' + esc(d.init) + '</span>' + esc(r.doc) + '</div>'
+          + '<div class="wbCell wbTm' + (alert ? " alert" : (warn ? " warn" : "")) + '" data-wb-timer>' + fmt(r.secs) + '</div>'
+          + '<div class="wbCell wbCellNote' + (r.note ? '' : ' empty') + '">' + (r.note ? esc(r.note) : '—') + '</div>'
+          + '</div>';
       }
-      el.innerHTML = top + body;
+      el.innerHTML = top + body + noteRow + wbRow;
       return el;
     }
 
@@ -235,10 +308,36 @@
       else grid.appendChild(neu);
     }
 
+    var wbHeaderEl = document.getElementById("bdWbHeader");
+
     function render() {
       grid.innerHTML = "";
+      if (wbHeaderEl) grid.appendChild(wbHeaderEl);
       rooms.forEach(function (r) { grid.appendChild(makeCard(r)); });
     }
+
+    function renderGrouped() {
+      grid.innerHTML = "";
+      if (wbHeaderEl) grid.appendChild(wbHeaderEl);
+      var active = rooms.filter(function (r) { return r.state === "active"; });
+      var byDoc = {}, order = [];
+      active.forEach(function (r) {
+        if (!byDoc[r.doc]) { byDoc[r.doc] = []; order.push(r.doc); }
+        byDoc[r.doc].push(r);
+      });
+      order.forEach(function (doc) {
+        var d = DOCS[doc] || { init: "DR" };
+        var div = document.createElement("div");
+        div.className = "activeDoctorDivider";
+        div.innerHTML = '<span class="activeDoctorDividerLabel">'
+          + '<span class="wbDocInit">' + esc(d.init) + '</span>'
+          + esc(doc)
+          + '</span>';
+        grid.appendChild(div);
+        byDoc[doc].forEach(function (r) { grid.appendChild(makeCard(r)); });
+      });
+    }
+
     render();
 
     // Tick timers in-place — update only the text node, never rebuild DOM,
@@ -249,12 +348,18 @@
         r.secs += 1;
         var el = grid.querySelector('[data-room="' + r.name + '"]');
         if (!el) return;
-        var timerEl = el.querySelector("[data-timer]");
-        if (!timerEl) return;
         var alert = r.state === "active" && r.secs > TIMER_ALERT;
         var warn  = r.state === "active" && r.secs > TIMER_WARN && !alert;
-        timerEl.textContent = fmt(r.secs);
-        timerEl.className = "timer" + (alert ? " alert" : (warn ? " warn" : ""));
+        var timerEl = el.querySelector("[data-timer]");
+        if (timerEl) {
+          timerEl.textContent = fmt(r.secs);
+          timerEl.className = "timer" + (alert ? " alert" : (warn ? " warn" : ""));
+        }
+        var wbTimer = el.querySelector("[data-wb-timer]");
+        if (wbTimer) {
+          wbTimer.textContent = fmt(r.secs);
+          wbTimer.className = "wbTm" + (alert ? " alert" : (warn ? " warn" : ""));
+        }
         el.classList.toggle("alert", alert);
       });
     }, 1000);
@@ -280,9 +385,226 @@
         } else if (r.secs > TIMER_ALERT && Math.random() > 0.5) {
           r.state = "cleaning"; r.secs = Math.floor(Math.random() * 60) + 5;
         } else { return; } // no state change, skip redraw
-        // Only redraw the single card that changed
-        renderOne(r);
+        if (onlyActive) { renderGrouped(); } else { renderOne(r); }
+        updateActiveCount();
       }, 2800);
     }
+
+    /* ---------- Board interactivity ---------- */
+    function updateActiveCount() {
+      var el = document.getElementById("bdActiveCount");
+      if (el) el.textContent = rooms.filter(function (r) { return r.state === "active"; }).length;
+    }
+
+    function hideTryHint() {
+      var hint = document.getElementById("bdTryHint");
+      if (hint) hint.classList.add("hidden");
+    }
+
+    var clickNames = ["S. Rivera", "K. Adams", "T. Brooks", "L. Hayes", "D. Flynn", "C. Wells", "P. Shah", "B. Carter"];
+    var clickDocs  = Object.keys(DOCS);
+    var clickTypes = Object.keys(TYPES);
+
+    function randomPatient(r) {
+      r.state   = "active";
+      r.patient = clickNames[Math.floor(Math.random() * clickNames.length)];
+      r.doc     = clickDocs[Math.floor(Math.random() * clickDocs.length)];
+      r.type    = clickTypes[Math.floor(Math.random() * clickTypes.length)];
+      r.secs    = Math.floor(Math.random() * 4 * 60) + 60;
+    }
+
+    function closeAllNotePopovers() {
+      [].slice.call(grid.querySelectorAll(".notePopover.open")).forEach(function (p) {
+        p.classList.remove("open");
+        var dock = p.closest(".noteDock");
+        if (dock) dock.classList.remove("pop-open");
+        var card = p.closest(".room");
+        if (card) card.classList.remove("noteOpen");
+      });
+    }
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest(".noteDock")) closeAllNotePopovers();
+    });
+
+    /* Click a room to cycle its state (also handles noteDock + notePopover) */
+    grid.addEventListener("click", function (e) {
+      /* noteDock: toggle that room's note popover */
+      var dock = e.target.closest(".noteDock");
+      if (dock) {
+        e.stopPropagation();
+        var card = dock.closest(".room");
+        var pop = dock.querySelector(".notePopover");
+        if (pop) {
+          var opening = !pop.classList.contains("open");
+          closeAllNotePopovers();
+          pop.classList.toggle("open", opening);
+          dock.classList.toggle("pop-open", opening);
+          if (card) card.classList.toggle("noteOpen", opening);
+          if (opening) { /* display only */ }
+        }
+        return;
+      }
+      /* notePopoverInput: stop propagation so clicking inside doesn't cycle room */
+      if (e.target.classList.contains("notePopoverInput")) { e.stopPropagation(); return; }
+
+      var card = e.target.closest(".room");
+      if (!card) return;
+      var roomName = card.getAttribute("data-room");
+      var room = rooms.find(function (r) { return r.name === roomName; });
+      if (!room) return;
+
+      if (room.state === "active")        { room.state = "cleaning"; room.secs = 0; }
+      else if (room.state === "cleaning") { room.state = "empty";    room.secs = 0; }
+      else                                { randomPatient(room); }
+
+      if (onlyActive) {
+        renderGrouped();
+      } else {
+        renderOne(room);
+        var newCard = grid.querySelector('[data-room="' + roomName + '"]');
+        if (newCard) {
+          newCard.classList.add("click-flash");
+          setTimeout(function () { newCard.classList.remove("click-flash"); }, 380);
+        }
+      }
+      updateActiveCount();
+      hideTryHint();
+    });
+
+    /* Note input handler removed — notes are display-only in the demo */
+    grid.addEventListener("input", function (e) {
+      if (!e.target.classList.contains("notePopoverInput")) return;
+    });
+
+    /* "+" button: add patient to first empty room, shake if none available */
+    var addBtn = document.getElementById("bdAddBtn");
+    if (addBtn) {
+      addBtn.addEventListener("click", function () {
+        var empty = rooms.find(function (r) { return r.state === "empty"; });
+        if (empty) {
+          randomPatient(empty); renderOne(empty); updateActiveCount(); hideTryHint();
+        } else {
+          addBtn.classList.add("shake");
+          setTimeout(function () { addBtn.classList.remove("shake"); }, 380);
+        }
+      });
+    }
+
+    /* ONLY ACTIVE toggle — filters to active rooms grouped by doctor */
+    var onlyActiveBtn = document.getElementById("bdOnlyActive");
+    var onlyActive = false;
+    if (onlyActiveBtn) {
+      onlyActiveBtn.addEventListener("click", function () {
+        onlyActive = !onlyActive;
+        onlyActiveBtn.classList.toggle("on", onlyActive);
+        grid.classList.toggle("only-active", onlyActive);
+        if (onlyActive) { renderGrouped(); } else { render(); }
+      });
+    }
+
+    /* Grid / List view toggle */
+    var viewToggleBtn = document.getElementById("bdViewToggle");
+    var isListView = false;
+    if (viewToggleBtn) {
+      viewToggleBtn.addEventListener("click", function () {
+        isListView = !isListView;
+        grid.classList.toggle("list-view", isListView);
+        viewToggleBtn.classList.toggle("active", isListView);
+        viewToggleBtn.textContent = isListView ? "☰" : "▦";
+      });
+    }
+
+    /* Notes mode toggle: open all note popovers at once */
+    var notesToggleBtn = document.getElementById("bdNotesToggle");
+    var notesMode = false;
+    if (notesToggleBtn) {
+      notesToggleBtn.addEventListener("click", function () {
+        notesMode = !notesMode;
+        notesToggleBtn.classList.toggle("active", notesMode);
+        if (notesMode) {
+          [].slice.call(grid.querySelectorAll(".room:not(.empty):not(.cleaning) .notePopover")).forEach(function (p) {
+            p.classList.add("open");
+          });
+        } else {
+          closeAllNotePopovers();
+        }
+      });
+    }
   }
+
+  /* ---------- Scroll progress bar ---------- */
+  var progressBar = document.getElementById("scrollProgress");
+  function updateProgress() {
+    if (!progressBar) return;
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.style.width = (docHeight > 0 ? (scrollTop / docHeight) * 100 : 0) + "%";
+  }
+  window.addEventListener("scroll", updateProgress, { passive: true });
+  updateProgress();
+
+  /* ---------- Enhanced board parallax — Y shift added to existing tilt ---------- */
+  /* Override the onScroll board tilt to also add a gentle Y translation */
+  (function patchBoardScroll() {
+    var boardEl = document.getElementById("boardDemo");
+    if (!boardEl) return;
+    var origOnScroll = onScroll;
+    window.removeEventListener("scroll", origOnScroll);
+    window.addEventListener("scroll", function () {
+      var y = window.pageYOffset || document.documentElement.scrollTop;
+      /* nav + back-to-top (replicate original) */
+      if (nav) nav.classList.toggle("scrolled", y > 8);
+      if (toTop) toTop.classList.toggle("show", y > 600);
+      updateProgress();
+      /* Board tilt + parallax Y */
+      if (window.innerWidth > 940) {
+        var progress = Math.min(y / (window.innerHeight * 0.55), 1);
+        var tilt  = 8 * (1 - progress);
+        var yShift = -progress * 28;
+        boardEl.style.transform = "perspective(1800px) rotateX(" + tilt + "deg) translateY(" + yShift + "px)";
+      }
+    }, { passive: true });
+  }());
+
+  /* ---------- Count-up animation for waitstat numbers ---------- */
+  var countEls = [].slice.call(document.querySelectorAll("[data-count]"));
+  if (countEls.length && "IntersectionObserver" in window) {
+    var countIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        var target = parseFloat(el.getAttribute("data-count"));
+        var suffix = el.getAttribute("data-suffix") || "";
+        var decimals = (target % 1 !== 0) ? 1 : 0;
+        var duration = 1600;
+        var startTime = null;
+        function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+        function tick(now) {
+          if (!startTime) startTime = now;
+          var t = Math.min((now - startTime) / duration, 1);
+          el.textContent = (target * easeOut(t)).toFixed(decimals) + suffix;
+          if (t < 1) { requestAnimationFrame(tick); }
+          else { el.textContent = target.toFixed(decimals) + suffix; el.classList.add("counted"); }
+        }
+        requestAnimationFrame(tick);
+        countIO.unobserve(el);
+      });
+    }, { threshold: 0.4 });
+    countEls.forEach(function (el) { countIO.observe(el); });
+  }
+
+  /* ---------- Section-head entrance animation ---------- */
+  var sectionHeads = [].slice.call(document.querySelectorAll(".section-head"));
+  if (sectionHeads.length && "IntersectionObserver" in window) {
+    var headIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("head-in");
+          headIO.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
+    sectionHeads.forEach(function (el) { headIO.observe(el); });
+  }
+
 })();
