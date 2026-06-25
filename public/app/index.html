@@ -289,35 +289,35 @@
 <span>Subscription</span>
 <span class="billingBadge" id="billingBadge">Not loaded</span>
 </div>
-<div class="billingDetails" id="billingDetails" hidden>
-<div class="billingDetailRow">
-<span class="billingDetailLabel">Plan</span>
-<span class="billingDetailValue" id="billingPlanLabel">—</span>
-</div>
-<div class="billingDetailRow">
-<span class="billingDetailLabel" id="billingDateLabel">Renews</span>
-<span class="billingDetailValue" id="billingDateValue">—</span>
-</div>
-</div>
-<div class="muted sxCardNote" id="billingSummary">Sign in to view subscription status.</div>
-<div class="billingPlanGrid" id="billingPlanGrid" style="padding:8px 16px;">
-<button class="billingPlanBtn" data-billing-plan="monthly" id="billingMonthlyBtn" type="button">
-<strong>Monthly</strong>
-<span>Subscribe with Stripe</span>
-</button>
-<button class="billingPlanBtn" data-billing-plan="annual" id="billingAnnualBtn" type="button">
-<strong>Annual</strong>
-<span>Subscribe with Stripe</span>
-</button>
+<div class="billingCurrentPlan">
+<div class="billingCurrentLabel">My current plan</div>
+<div class="billingCurrentValue" id="billingCurrentValue">—</div>
+<div class="billingCurrentMeta" id="billingCurrentMeta"></div>
 </div>
 <div class="billingActions">
-<button class="btn billingPrimaryAction" id="billingManageBtn" type="button" hidden>Manage subscription</button>
+<button class="btn billingManageBtn" id="billingManageBtn" type="button">Manage subscription</button>
 <div class="billingUtilBtns">
 <button class="btn sm" id="billingRefreshBtn" type="button">Refresh billing</button>
-<button class="btn sm" id="billingChangeBillingBtn" type="button" hidden>Change billing</button>
+<button class="btn sm" id="billingChangeBillingBtn" type="button">Change billing</button>
 </div>
 </div>
-<div class="muted sxCardNote sxCardNoteBottom" id="billingHelp">Checkout and card management open through Stripe. No payment details are stored in RoomBoard.</div>
+<div class="billingUpgrade" id="billingUpgradeSection" hidden>
+<div class="billingUpgradeHead">
+<span class="planGateBadge">Advanced</span>
+<span>Unlock Stats, branding &amp; more</span>
+</div>
+<div class="billingPlanGrid">
+<button class="billingPlanBtn" data-billing-plan="advanced_monthly" id="billingMonthlyBtn" type="button">
+<strong>Monthly</strong>
+<span>Advanced plan</span>
+</button>
+<button class="billingPlanBtn" data-billing-plan="advanced_annual" id="billingAnnualBtn" type="button">
+<strong>Annual</strong>
+<span>Best value</span>
+</button>
+</div>
+</div>
+<div class="muted sxCardNote sxCardNoteBottom">Billing managed through Stripe. No payment details stored in RoomBoard.</div>
 </div>
 <details class="sxSection settingsCollapsible" id="joinPracticePanel">
 <summary>
