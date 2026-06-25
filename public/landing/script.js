@@ -21,13 +21,20 @@
     });
   }
 
-  /* ---------- Nav shadow on scroll + back-to-top ---------- */
+  /* ---------- Nav shadow on scroll + back-to-top + board tilt ---------- */
   var nav = document.getElementById("nav");
   var toTop = document.getElementById("toTop");
   function onScroll() {
     var y = window.pageYOffset || document.documentElement.scrollTop;
     if (nav) nav.classList.toggle("scrolled", y > 8);
     if (toTop) toTop.classList.toggle("show", y > 600);
+    /* Flatten the hero board perspective as the user scrolls past it */
+    var boardEl = document.getElementById("boardDemo");
+    if (boardEl && window.innerWidth > 940) {
+      var progress = Math.min(y / (window.innerHeight * 0.55), 1);
+      var tilt = 8 * (1 - progress);
+      boardEl.style.transform = "perspective(1800px) rotateX(" + tilt + "deg)";
+    }
   }
   window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
@@ -175,7 +182,9 @@
       { name: "Room 1", patient: "R. Patel",  doc: "Dr. Maro",   type: "exam",      secs: 72 * 60 + 14, state: "active" },
       { name: "Room 2", patient: "J. Nguyen", doc: "Dr. Reyes",  type: "followup",  secs: 24 * 60 + 8,  state: "active" },
       { name: "Room 3", patient: "M. Ortiz",  doc: "Dr. Okafor", type: "procedure", secs: 8 * 60 + 33,  state: "active" },
-      { name: "Room 4", patient: "",          doc: "",           type: "exam",      secs: 0,            state: "empty" }
+      { name: "Room 4", patient: "",          doc: "",           type: "exam",      secs: 0,            state: "empty"  },
+      { name: "Room 5", patient: "C. Wells",  doc: "Dr. Park",   type: "consult",   secs: 31 * 60 + 47, state: "active" },
+      { name: "Room 6", patient: "D. Flynn",  doc: "Dr. Hahn",   type: "workin",    secs: 7 * 60 + 19,  state: "active" }
     ];
 
     function fmt(secs) {
