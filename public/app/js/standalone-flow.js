@@ -573,7 +573,7 @@
     var tokens = getStoredTokens();
     if(!tokens){ enterAuth(); return; }
     if(btn){ btn.disabled = true; btn.querySelector("span") && (btn.querySelector("span").textContent = "Loading…"); }
-    var returnUrl = (window.location.origin || "") + "/app/index.html?mode=startup&next=board";
+    var returnUrl = (window.location.origin || "") + "/app/index.html?mode=setup";
     fetch("/api/billing/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -663,6 +663,14 @@
     if(standaloneClickBound) return;
     standaloneClickBound = true;
     document.addEventListener("click", function(event){
+      // Setup wizard step buttons — navigate to the relevant settings tab.
+      var setupBtn = event.target && event.target.closest ? event.target.closest(".setupGoBtn[data-setup-tab]") : null;
+      if(setupBtn){
+        var tabId = setupBtn.getAttribute("data-setup-tab");
+        if(tabId) activateSettingsTab(tabId);
+        return;
+      }
+
       var target = event.target && event.target.closest ? event.target.closest(".standaloneOpenBoardBtn, #headerBoardBtn") : null;
       if(!target) return;
       event.preventDefault();
