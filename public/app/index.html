@@ -361,14 +361,31 @@
 </div>
 </div>
 <div class="tabPanel" id="tabRooms">
-<div class="sxSection">
-<div class="sxHead">Rooms</div>
+<details class="sxSection settingsCollapsible" open>
+<summary>
+<span class="settingsCollapsibleCopy">
+<strong>Rooms</strong>
+<small>Add and manage your clinic rooms.</small>
+</span>
+<span aria-hidden="true" class="settingsCollapsibleHint"></span>
+</summary>
+<div class="settingsCollapsibleBody">
 <div class="sxAddRow">
 <input id="newRoomName" placeholder="e.g., Room 10" type="text" style="flex:1;">
 <button class="btn sm primary" id="addRoomBtn" type="button">Add</button>
 </div>
 <div id="roomsList" style="padding:0 16px 4px;"></div>
-<div class="sxSubHead">Types &amp; color labels</div>
+</div>
+</details>
+<details class="sxSection settingsCollapsible">
+<summary>
+<span class="settingsCollapsibleCopy">
+<strong>Types &amp; color labels</strong>
+<small>Custom status colors for patient rooms.</small>
+</span>
+<span aria-hidden="true" class="settingsCollapsibleHint"></span>
+</summary>
+<div class="settingsCollapsibleBody">
 <div class="sxAddRow">
 <input id="newColorTitle" placeholder="e.g., Waiting" type="text" style="flex:1;">
 <input id="newColorValue" type="color">
@@ -379,13 +396,33 @@
 <select id="defaultColorLabelSelect" style="flex:1;"></select>
 </div>
 <div id="colorsList" style="padding:0 16px 4px;"></div>
-<div class="sxSubHead">Quick notes</div>
+</div>
+</details>
+<details class="sxSection settingsCollapsible">
+<summary>
+<span class="settingsCollapsibleCopy">
+<strong>Quick notes</strong>
+<small>Shortcut notes available clinic-wide on any room.</small>
+</span>
+<span aria-hidden="true" class="settingsCollapsibleHint"></span>
+</summary>
+<div class="settingsCollapsibleBody">
 <div class="sxAddRow">
 <input id="newQuickNoteLabel" placeholder="e.g., Needs translator" type="text" style="flex:1;">
 <button class="btn sm primary" id="addQuickNoteBtn" type="button">Add</button>
 </div>
 <div id="quickNotesList" style="padding:0 16px 4px;"></div>
-<div class="sxSubHead">Doctors</div>
+</div>
+</details>
+<details class="sxSection settingsCollapsible">
+<summary>
+<span class="settingsCollapsibleCopy">
+<strong>Doctors</strong>
+<small>Manage doctor names and initials for room assignment.</small>
+</span>
+<span aria-hidden="true" class="settingsCollapsibleHint"></span>
+</summary>
+<div class="settingsCollapsibleBody">
 <div class="sxAddRow">
 <input id="newDoctorName" placeholder="e.g., Dr. Smith" type="text" style="flex:1;">
 <button class="btn sm primary" id="addDoctorBtn" type="button">Add</button>
@@ -394,6 +431,7 @@
 <div class="sxSubHead">Doctor initials</div>
 <div id="doctorInitialsList" style="padding:0 16px 8px;"></div>
 </div>
+</details>
 <details class="sxSection settingsCollapsible" id="doctorBadgeStylesPanel">
 <summary>
 <span class="settingsCollapsibleCopy">
