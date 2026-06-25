@@ -3814,13 +3814,20 @@
 	              updateAuthUI(true);
 	              if(authFlowInProgress) return;
               if(authEvent === "INITIAL_SESSION") return;
+              if(currentPracticeId){
+                // Already loaded for this clinic in this tab. supabase-js
+                // re-emits SIGNED_IN (and TOKEN_REFRESHED) every time the tab
+                // regains focus; running the full clinic reload + board
+                // re-render + theme re-apply below is what made the display
+                // flash on every tab return. Realtime keeps the board live,
+                // so skip the reload for any such re-emit.
+                return;
+              }
               if(authEvent === "TOKEN_REFRESHED" || authEvent === "USER_UPDATED"){
-                if(!currentPracticeId){
-                  fetchClinicContext().catch(function(e){
-                    setStatus("Clinic lookup failed: " + getErrorMessage(e));
-                    setSyncUI("err", "Clinic error");
-                  });
-                }
+                fetchClinicContext().catch(function(e){
+                  setStatus("Clinic lookup failed: " + getErrorMessage(e));
+                  setSyncUI("err", "Clinic error");
+                });
                 return;
               }
 	              fetchClinicContext().then(function(){
