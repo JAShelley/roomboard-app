@@ -655,7 +655,17 @@
       var wrapRect = wrap.getBoundingClientRect ? wrap.getBoundingClientRect() : null;
       var width = Math.max(Number(wrap.clientWidth || 0), wrapRect ? Number(wrapRect.width || 0) : 0);
       var height = Math.max(Number(wrap.clientHeight || 0), wrapRect ? Number(wrapRect.height || 0) : 0);
-      return width >= 120 && height >= 120;
+      if(width < 120 || height < 120) return false;
+      // Guard against fitting before layout has settled. On a desktop the board
+      // wrap spans almost the whole viewport, so if it measures much narrower
+      // (e.g. the instant the board un-hides on open, before layout reflows),
+      // the column math would wrongly collapse to 1 column and lock in a tiny
+      // scaled board. Defer until the wrap is realistically wide; until then
+      // applyActiveDisplayFit() falls back to the configured grid and a retry
+      // is queued.
+      var viewportWidth = Math.max(0, Number(window.innerWidth || (document.documentElement && document.documentElement.clientWidth) || 0));
+      if(viewportWidth > 820 && width < Math.min(640, viewportWidth * 0.6)) return false;
+      return true;
     }
 
     function queueActiveDisplayFitRetry(){
