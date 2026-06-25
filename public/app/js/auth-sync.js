@@ -4064,8 +4064,7 @@
         applyAccountSettingsToState(state);
         applySessionUiPrefs(state);
         saveLocal();
-        await withTimeout(savePracticeData(), 15000, "Initial clinic save");
-        await withTimeout(finishAuthenticatedFlow({ attempts: 8, waitMs: 250 }), 15000, "Clinic setup");
+        savePracticeData().catch(function(e){ console.warn("Initial clinic save failed:", e); });
       }catch(e){
         console.error("signup failed:", e);
         var signupErrMsg = humanizeAuthError(getErrorMessage(e));
