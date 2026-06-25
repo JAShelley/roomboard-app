@@ -580,8 +580,13 @@
       body: JSON.stringify({ plan: plan, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, returnUrl: returnUrl })
     })
     .then(function(r){ return r.json(); })
-    .then(function(data){ if(data.url) window.location.href = data.url; })
-    .catch(function(){ if(btn){ btn.disabled = false; } });
+    .then(function(data){
+      if(data.url){ window.location.href = data.url; return; }
+      if(btn){ btn.disabled = false; btn.querySelector("span") && (btn.querySelector("span").textContent = btn.querySelector("span").getAttribute("data-orig") || "Get " + plan); }
+      var msg = data.error || data.message || "Could not start checkout.";
+      alert("Checkout error (" + plan + "): " + msg);
+    })
+    .catch(function(e){ if(btn){ btn.disabled = false; } alert("Checkout failed: " + (e && e.message || "network error")); });
   }
 
   function openBillingPortal(){
