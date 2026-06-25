@@ -19,6 +19,23 @@
     return arr.reduce(function(a,b){ return a+b; }, 0) / arr.length;
   }
 
+  function median(arr){
+    if(!arr.length) return 0;
+    var c = arr.slice().sort(function(a,b){ return a-b; });
+    var mid = Math.floor(c.length / 2);
+    return c.length % 2 ? c[mid] : (c[mid-1] + c[mid]) / 2;
+  }
+
+  function percentile(arr, p){
+    if(!arr.length) return 0;
+    var c = arr.slice().sort(function(a,b){ return a-b; });
+    if(c.length === 1) return c[0];
+    var idx = (c.length - 1) * p;
+    var lo = Math.floor(idx), hi = Math.ceil(idx);
+    if(lo === hi) return c[lo];
+    return c[lo] + (c[hi] - c[lo]) * (idx - lo);
+  }
+
   function groupBy(arr, key){
     var out = {};
     arr.forEach(function(item){
@@ -29,19 +46,21 @@
     return out;
   }
 
-  function barChart(title, rows, maxMs){
+  function barChart(title, rows, opts){
     // rows: [{label, ms, count}]
     if(!rows.length) return "";
-    var maxVal = maxMs || Math.max.apply(null, rows.map(function(r){ return r.ms; })) || 1;
+    opts = opts || {};
+    var maxVal = opts.maxMs || Math.max.apply(null, rows.map(function(r){ return r.ms; })) || 1;
+    var fillClass = opts.teal ? "statsBarFill teal" : "statsBarFill";
     var html = '<div class="statsChartWrap"><div class="statsChartTitle">' + esc(title) + '</div>';
     rows.forEach(function(r){
       var pct = Math.max(4, Math.round((r.ms / maxVal) * 100));
       html += '<div class="statsBarRow">'
-        + '<span class="statsBarLabel">' + esc(r.label) + '</span>'
+        + '<span class="statsBarLabel" title="' + esc(r.label) + '">' + esc(r.label) + '</span>'
         + '<div class="statsBarTrack">'
-        + '<div class="statsBarFill" style="width:' + pct + '%"></div>'
+        + '<div class="' + fillClass + '" style="width:' + pct + '%"></div>'
         + '</div>'
-        + '<span class="statsBarVal">' + fmtDuration(r.ms) + (r.count ? ' <small>(' + r.count + ')</small>' : '') + '</span>'
+        + '<span class="statsBarVal">' + esc(opts.format ? opts.format(r) : fmtDuration(r.ms)) + (!opts.hideCount && r.count ? ' <small>(' + r.count + ')</small>' : '') + '</span>'
         + '</div>';
     });
     html += '</div>';
@@ -54,31 +73,119 @@
     });
   }
 
-  function dayLabel(isoStr){
-    var d = new Date(isoStr);
+  function dayShort(d){
     return (d.getMonth()+1) + "/" + d.getDate();
   }
 
-  function renderStats(roomSessions, cleanSessions, days){
-    var today = new Date(); today.setHours(0,0,0,0);
+  function weekdayName(i){
+    return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][i] || "—";
+  }
 
-    // ---- Summary tiles ----
-    var todayRoom = roomSessions.filter(function(s){
-      return new Date(s.started_at) >= today;
+  function hourLabel(h){
+    h = Number(h) || 0;
+    var suffix = h >= 12 ? "pm" : "am";
+    var display = h % 12; if(display === 0) display = 12;
+    return display + suffix;
+  }
+
+  // SVG area + line chart of a daily series. points: [{label, full, value}]
+  function trendLineChart(points, opts){
+    opts = opts || {};
+    if(points.length < 2) return "";
+    var w = 760, h = 250, padL = 38, padR = 14, padT = 14, padB = 30;
+    var innerW = w - padL - padR, innerH = h - padT - padB;
+    var maxVal = Math.max.apply(null, points.map(function(p){ return p.value; }));
+    if(maxVal <= 0) maxVal = 1;
+    // round axis max to a "nice" number
+    var niceMax = maxVal <= 4 ? maxVal : Math.ceil(maxVal / 5) * 5;
+    var n = points.length;
+    var xAt = function(i){ return padL + (n === 1 ? innerW/2 : (i/(n-1)) * innerW); };
+    var yAt = function(v){ return padT + innerH - (v/niceMax) * innerH; };
+
+    var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" preserveAspectRatio="none" role="img" aria-label="Sessions per day">';
+    svg += '<defs><linearGradient id="statsTrendGrad" x1="0" y1="0" x2="0" y2="1">'
+      + '<stop offset="0%" stop-color="var(--settingsAccent,#7dd3fc)" stop-opacity="0.32"/>'
+      + '<stop offset="100%" stop-color="var(--settingsAccent,#7dd3fc)" stop-opacity="0"/>'
+      + '</linearGradient></defs>';
+
+    // horizontal gridlines + y labels (0, mid, max)
+    [0, 0.5, 1].forEach(function(t){
+      var val = Math.round(niceMax * t);
+      var y = yAt(val);
+      svg += '<line class="statsTrendGrid" x1="' + padL + '" y1="' + y.toFixed(1) + '" x2="' + (w-padR) + '" y2="' + y.toFixed(1) + '"/>';
+      svg += '<text class="statsTrendYLabel" x="' + (padL-7) + '" y="' + (y+3.5).toFixed(1) + '" text-anchor="end">' + val + '</text>';
     });
-    var avgRoom = avg(roomSessions.map(function(s){ return s.duration_ms || 0; }));
-    var avgClean = avg(cleanSessions.map(function(s){ return s.duration_ms || 0; }));
+
+    // build line + area paths
+    var line = "", area = "";
+    points.forEach(function(p, i){
+      var x = xAt(i).toFixed(1), y = yAt(p.value).toFixed(1);
+      line += (i === 0 ? "M" : "L") + x + " " + y + " ";
+      area += (i === 0 ? "M" : "L") + x + " " + y + " ";
+    });
+    area += "L" + xAt(n-1).toFixed(1) + " " + yAt(0).toFixed(1) + " L" + xAt(0).toFixed(1) + " " + yAt(0).toFixed(1) + " Z";
+    svg += '<path d="' + area + '" fill="url(#statsTrendGrad)"/>';
+    svg += '<path class="statsTrendLine" d="' + line + '"/>';
+
+    // x labels: sample so they don't overlap (~7 labels), always include the last
+    var step = Math.max(1, Math.round(n / 7));
+    var labelIdx = [];
+    for(var li = 0; li < n; li += step) labelIdx.push(li);
+    if(labelIdx[labelIdx.length-1] !== n-1){
+      // drop the last sampled label if it would crowd the final one
+      if((n-1) - labelIdx[labelIdx.length-1] < step * 0.6) labelIdx.pop();
+      labelIdx.push(n-1);
+    }
+    labelIdx.forEach(function(i){
+      svg += '<text class="statsTrendXLabel" x="' + xAt(i).toFixed(1) + '" y="' + (h-9) + '" text-anchor="middle">' + esc(points[i].label) + '</text>';
+    });
+
+    // points with native tooltip
+    points.forEach(function(p, i){
+      svg += '<circle class="statsTrendDot" cx="' + xAt(i).toFixed(1) + '" cy="' + yAt(p.value).toFixed(1) + '" r="3">'
+        + '<title>' + esc(p.full + ": " + p.value + " session" + (p.value === 1 ? "" : "s")) + '</title></circle>';
+    });
+
+    svg += '</svg>';
+    return '<div class="statsChartWrap statsTrendPanel"><div class="statsChartTitle">' + esc(opts.title || "Sessions per day") + '</div>'
+      + '<div class="statsTrendChart">' + svg + '</div></div>';
+  }
+
+  function metricCard(label, value, sub){
+    return '<article class="statsMetric">'
+      + '<strong>' + esc(label) + '</strong>'
+      + '<span>' + esc(String(value)) + '</span>'
+      + (sub ? '<em>' + esc(sub) + '</em>' : '')
+      + '</article>';
+  }
+
+  function highlight(label, value){
+    return '<div class="statsHighlight"><strong>' + esc(label) + '</strong><span>' + esc(String(value)) + '</span></div>';
+  }
+
+  function renderStats(roomSessions, cleanSessions, days){
+    // ---- Core metrics ----
+    var roomDur = roomSessions.filter(function(s){ return s.duration_ms > 0; }).map(function(s){ return s.duration_ms; });
+    var cleanDur = cleanSessions.filter(function(s){ return s.duration_ms > 0; }).map(function(s){ return s.duration_ms; });
+    var roomTotalMs = roomDur.reduce(function(a,b){ return a+b; }, 0);
+    var uniqueRooms = {};
+    roomSessions.forEach(function(s){ if(s.room_name) uniqueRooms[s.room_name] = true; });
+
     var summaryEl = $("statsSummaryRow");
     if(summaryEl){
       summaryEl.innerHTML =
-        tile("Today's rooms", todayRoom.length, "visits")
-        + tile("Avg room time", fmtDuration(avgRoom), "last " + days + " days")
-        + tile("Avg clean time", fmtDuration(avgClean), "last " + days + " days")
-        + tile("Total sessions", roomSessions.length, "last " + days + " days");
+        metricCard("Visits", roomSessions.length, "Appointments in range")
+        + metricCard("Avg room time", fmtDuration(avg(roomDur)), "Mean appointment duration")
+        + metricCard("Median room time", fmtDuration(median(roomDur)), "Typical appointment")
+        + metricCard("P90 room time", fmtDuration(percentile(roomDur, 0.9)), "Upper-end duration")
+        + metricCard("Cleanings", cleanSessions.length, "Closed cleaning sessions")
+        + metricCard("Avg clean time", fmtDuration(avg(cleanDur)), "Average turnaround")
+        + metricCard("Room hours", (roomTotalMs / 3600000).toFixed(1), "Total appointment hours")
+        + metricCard("Rooms used", Object.keys(uniqueRooms).length, "Distinct rooms in range");
       summaryEl.hidden = false;
     }
 
-    // ---- Room bar chart ----
+    // ---- Room bar chart (avg time by room) ----
     var byRoom = groupBy(roomSessions, "room_name");
     var roomRows = Object.keys(byRoom).map(function(name){
       var sessions = byRoom[name];
@@ -87,7 +194,7 @@
     }).filter(function(r){ return r.ms > 0; });
     roomRows.sort(function(a,b){ return b.ms - a.ms; });
 
-    // ---- Doctor bar chart ----
+    // ---- Doctor bar chart (avg time by doctor) ----
     var withDoctor = roomSessions.filter(function(s){ return s.doctor_name; });
     var byDoc = groupBy(withDoctor, "doctor_name");
     var docRows = Object.keys(byDoc).map(function(name){
@@ -99,63 +206,75 @@
 
     // ---- Hour-of-day distribution ----
     var hourCounts = new Array(24).fill(0);
-    roomSessions.forEach(function(s){
-      var h = new Date(s.started_at).getHours();
-      hourCounts[h]++;
-    });
-    var peakCount = Math.max.apply(null, hourCounts) || 1;
+    roomSessions.forEach(function(s){ hourCounts[new Date(s.started_at).getHours()]++; });
+    var peakHourCount = Math.max.apply(null, hourCounts) || 1;
     var hourRows = [];
     for(var h = 7; h <= 19; h++){
-      var label = h === 0 ? "12am" : h < 12 ? h + "am" : h === 12 ? "12pm" : (h-12) + "pm";
-      hourRows.push({ label: label, ms: hourCounts[h] * (peakCount > 0 ? (avgRoom / peakCount) * hourCounts[h] : 1), count: hourCounts[h] });
+      hourRows.push({ label: hourLabel(h), ms: hourCounts[h], count: hourCounts[h] });
     }
 
-    // ---- 14-day trend ----
+    // ---- Daily trend across the range ----
+    var trendDays = Math.min(days, 90);
     var trendMap = {};
-    for(var i = 0; i < Math.min(days, 14); i++){
+    var orderedKeys = [];
+    for(var i = trendDays - 1; i >= 0; i--){
       var d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - i);
-      trendMap[d.toDateString()] = { label: dayLabel(d.toISOString()), count: 0 };
+      var key = d.toDateString();
+      orderedKeys.push(key);
+      trendMap[key] = {
+        label: dayShort(d),
+        full: d.toLocaleDateString([], { weekday:"short", month:"short", day:"numeric" }),
+        value: 0
+      };
     }
     roomSessions.forEach(function(s){
       var key = new Date(s.started_at).toDateString();
-      if(trendMap[key]) trendMap[key].count++;
+      if(trendMap[key]) trendMap[key].value++;
     });
-    var maxDayCount = Math.max.apply(null, Object.values(trendMap).map(function(v){ return v.count; })) || 1;
-    var trendRows = Object.values(trendMap).reverse();
+    var trendPoints = orderedKeys.map(function(k){ return trendMap[k]; });
+
+    // ---- Highlights ----
+    var weekdayCounts = new Array(7).fill(0);
+    roomSessions.forEach(function(s){ weekdayCounts[new Date(s.started_at).getDay()]++; });
+    var busiestWeekday = weekdayCounts.indexOf(Math.max.apply(null, weekdayCounts));
+    var peakHour = hourCounts.indexOf(peakHourCount);
+    var topDoctor = docRows.slice().sort(function(a,b){ return b.count - a.count; })[0];
+    var longestRoom = roomRows.length ? roomRows[0] : null;
+    var longestSession = roomDur.length ? Math.max.apply(null, roomDur) : 0;
+    var busiestDay = trendPoints.slice().sort(function(a,b){ return b.value - a.value; })[0];
 
     var chartEl = $("statsRoomChart");
     if(chartEl){
       var html = "";
-      if(roomRows.length) html += barChart("Avg room time by room", roomRows);
-      if(docRows.length) html += barChart("Avg room time by doctor", docRows);
 
-      // Hour chart (visual only, count-based)
       if(roomSessions.length){
-        html += '<div class="statsChartWrap"><div class="statsChartTitle">Sessions by time of day</div>';
-        hourRows.forEach(function(r){
-          var pct = Math.max(2, Math.round((r.count / peakCount) * 100));
-          html += '<div class="statsBarRow">'
-            + '<span class="statsBarLabel">' + esc(r.label) + '</span>'
-            + '<div class="statsBarTrack"><div class="statsBarFill teal" style="width:' + pct + '%"></div></div>'
-            + '<span class="statsBarVal">' + r.count + '</span>'
-            + '</div>';
-        });
+        html += '<div class="statsSection">';
+        html += trendLineChart(trendPoints, { title: "Sessions per day (last " + trendDays + " days)" });
+        html += '<div class="statsHighlights">'
+          + '<div class="statsChartTitle">Highlights</div>'
+          + '<div class="statsHighlightGrid">'
+          + highlight("Busiest weekday", (weekdayCounts[busiestWeekday] ? weekdayName(busiestWeekday) + " (" + weekdayCounts[busiestWeekday] + ")" : "—"))
+          + highlight("Peak start hour", (peakHourCount ? hourLabel(peakHour) + " (" + peakHourCount + ")" : "—"))
+          + highlight("Busiest day", (busiestDay && busiestDay.value ? busiestDay.full + " (" + busiestDay.value + ")" : "—"))
+          + highlight("Top doctor", (topDoctor ? topDoctor.label + " (" + topDoctor.count + ")" : "—"))
+          + highlight("Longest room avg", (longestRoom ? longestRoom.label + " · " + fmtDuration(longestRoom.ms) : "—"))
+          + highlight("Longest session", fmtDuration(longestSession))
+          + '</div></div>';
         html += '</div>';
       }
 
-      // 14-day trend mini sparkline
-      if(trendRows.length > 1){
-        html += '<div class="statsChartWrap"><div class="statsChartTitle">Sessions per day (last ' + Math.min(days,14) + ' days)</div>';
-        html += '<div class="statsTrendRow">';
-        trendRows.forEach(function(r){
-          var pct = Math.max(4, Math.round((r.count / maxDayCount) * 100));
-          html += '<div class="statsTrendBar" title="' + esc(r.label) + ': ' + r.count + '">'
-            + '<div class="statsTrendFill" style="height:' + pct + '%"></div>'
-            + '<span class="statsTrendLabel">' + esc(r.label) + '</span>'
-            + '</div>';
+      var bars = "";
+      if(docRows.length) bars += barChart("Avg room time by doctor", docRows);
+      if(roomRows.length) bars += barChart("Avg room time by room", roomRows);
+      if(roomSessions.length){
+        bars += barChart("Sessions by time of day", hourRows, {
+          teal: true,
+          hideCount: true,
+          maxMs: peakHourCount,
+          format: function(r){ return String(r.count); }
         });
-        html += '</div></div>';
       }
+      if(bars) html += '<div class="statsBars">' + bars + '</div>';
 
       chartEl.innerHTML = html;
       chartEl.hidden = false;
@@ -166,13 +285,6 @@
       roomSessions.length + " room session" + (roomSessions.length !== 1 ? "s" : "")
       + " and " + cleanSessions.length + " cleaning session" + (cleanSessions.length !== 1 ? "s" : "")
       + " in the last " + days + " days.";
-  }
-
-  function tile(label, value, sub){
-    return '<div class="statsTile"><div class="statsTileValue">' + esc(String(value)) + '</div>'
-      + '<div class="statsTileLabel">' + esc(label) + '</div>'
-      + (sub ? '<div class="statsTileSub">' + esc(sub) + '</div>' : '')
-      + '</div>';
   }
 
   window.roomboardLoadStats = function(days){
