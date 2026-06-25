@@ -4054,11 +4054,11 @@
             }).eq("id", newPracticeId);
           }catch(e){ console.warn("Could not save extra practice fields:", e); }
         }
-        updateAuthUI(true);
         currentPracticeId = newPracticeId;
         currentPracticeName = practiceName;
         window.__roomboardPracticeId = currentPracticeId;
         window.__roomboardNewAccount = true;
+        updateAuthUI(true);
         updateClinicContextUi();
         state = ensureStateShape(loadLocal() || null);
         applyAccountSettingsToState(state);
