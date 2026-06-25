@@ -246,15 +246,15 @@
         var badge = '<span class="docBadge"><img alt="" src="' + d.img
           + '" onerror="this.parentNode.classList.add(\'fallback\');this.remove();">'
           + '<span class="docBadgeInit">' + d.init + '</span></span>';
-        body = '<div class="roomBody">'
-          + '<span class="noteDock' + (r.note ? ' has-note' : '') + '">📝</span>'
-          + '<div class="roomInfoLine">' + info + '</div>'
-          + '<div class="roomFoot"><span class="timer' + (alert ? " alert" : (warn ? " warn" : "")) + '" data-timer>' + fmt(r.secs) + '</span>'
-          + badge + '</div></div>';
-        noteRow = '<div class="notePopover">'
+        var notePop = '<div class="notePopover">'
           + '<div class="notePopoverLabel">Notes</div>'
           + '<textarea class="notePopoverInput" placeholder="Add a note…">' + esc(r.note) + '</textarea>'
           + '</div>';
+        body = '<div class="roomBody">'
+          + '<span class="noteDock' + (r.note ? ' has-note' : '') + '">📝' + notePop + '</span>'
+          + '<div class="roomInfoLine">' + info + '</div>'
+          + '<div class="roomFoot"><span class="timer' + (alert ? " alert" : (warn ? " warn" : "")) + '" data-timer>' + fmt(r.secs) + '</span>'
+          + badge + '</div></div>';
         wbRow = '<div class="wbRow">'
           + '<div class="wbCell wbCellRoom">' + esc(r.name) + '</div>'
           + '<div class="wbCell wbCellPt">' + esc(r.patient) + '</div>'
@@ -383,10 +383,14 @@
     function closeAllNotePopovers() {
       [].slice.call(grid.querySelectorAll(".notePopover.open")).forEach(function (p) {
         p.classList.remove("open");
+        var dock = p.closest(".noteDock");
+        if (dock) dock.classList.remove("pop-open");
+        var card = p.closest(".room");
+        if (card) card.classList.remove("noteOpen");
       });
     }
     document.addEventListener("click", function (e) {
-      if (!e.target.closest(".room")) closeAllNotePopovers();
+      if (!e.target.closest(".noteDock")) closeAllNotePopovers();
     });
 
     /* Click a room to cycle its state (also handles noteDock + notePopover) */
@@ -396,11 +400,13 @@
       if (dock) {
         e.stopPropagation();
         var card = dock.closest(".room");
-        var pop = card ? card.querySelector(".notePopover") : null;
+        var pop = dock.querySelector(".notePopover");
         if (pop) {
           var opening = !pop.classList.contains("open");
           closeAllNotePopovers();
           pop.classList.toggle("open", opening);
+          dock.classList.toggle("pop-open", opening);
+          if (card) card.classList.toggle("noteOpen", opening);
           if (opening) { var ta = pop.querySelector(".notePopoverInput"); if (ta) setTimeout(function () { ta.focus(); }, 30); }
         }
         return;
