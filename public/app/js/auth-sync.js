@@ -849,7 +849,7 @@
         }
       }
 
-      if(manageBtn) manageBtn.hidden = !hasCustomer;
+      if(manageBtn) manageBtn.hidden = !subscribed;
       if(changeBillingBtn) changeBillingBtn.hidden = !hasCustomer;
       if(monthlyBtn) monthlyBtn.classList.toggle("isCurrent", subscribed && plan === "monthly");
       if(annualBtn) annualBtn.classList.toggle("isCurrent", subscribed && plan === "annual");
