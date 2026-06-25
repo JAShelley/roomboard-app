@@ -303,9 +303,18 @@ img { max-width: 100%; display: block; }
 .bd-toggle.on { border-color: rgba(125,211,252,.42); box-shadow: 0 0 0 1px rgba(125,211,252,.16); }
 .bd-toggle.on .sw2 { background: #7dd3fc; }
 .bd-toggle.on .sw2::after { left: 16px; background: #fff; }
-/* hide non-active rooms when filter is on */
-.bd-grid.only-active .room.empty,
-.bd-grid.only-active .room.cleaning { display: none; }
+/* doctor group dividers inside the grid */
+.activeDoctorDivider {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; gap: 7px;
+  padding: 10px 2px 4px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: #5b6f96;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  margin-bottom: 2px;
+}
+.activeDoctorDivider:first-child { padding-top: 0; }
+.activeDoctorDividerLabel { display: flex; align-items: center; gap: 6px; }
 
 /* Quick add shake — when no empty rooms available */
 @keyframes bdShake {
@@ -355,7 +364,7 @@ img { max-width: 100%; display: block; }
 /* Hide box-view elements in list mode */
 .bd-grid.list-view .room .roomTop,
 .bd-grid.list-view .room .roomBody,
-.bd-grid.list-view .room .noteRow { display: none !important; }
+.bd-grid.list-view .room .notePopover { display: none !important; }
 
 /* Row tint + left accent by visit type */
 .bd-grid.list-view .room[data-type="exam"]      { border-left-color: #3b82f6; --rowTint: rgba(59,130,246,.08); --rowTintHover: rgba(59,130,246,.14); }
@@ -379,17 +388,32 @@ img { max-width: 100%; display: block; }
 .wbCellNote { color: #7dd3fc; font-size: 11.5px; font-style: italic; }
 .wbCellNote.empty { color: rgba(255,255,255,.18); font-style: normal; }
 
-/* Per-room note row */
-.noteRow { overflow: hidden; max-height: 0; transition: max-height .25s ease, padding .25s ease; padding: 0 16px; }
-.noteRow.open { max-height: 52px; padding: 0 16px 12px; }
-.bd-grid.notes-mode .noteRow { max-height: 52px; padding: 0 16px 12px; }
-.noteInput {
-  width: 100%; background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.14);
-  border-radius: 8px; padding: 7px 10px; font-size: 11.5px; color: inherit;
-  font-family: inherit; outline: none; box-sizing: border-box;
+/* Notes popup — floats over lower portion of room card */
+.notePopover {
+  display: none;
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  min-height: 96px;
+  z-index: 30;
+  background: rgba(8, 14, 28, 0.93);
+  border-top: 1px solid rgba(255,255,255,.12);
+  border-radius: 0 0 16px 16px;
+  padding: 9px 13px 13px;
+  flex-direction: column; gap: 6px;
+  backdrop-filter: blur(8px);
 }
-.noteInput:focus { border-color: rgba(255,255,255,.32); }
-.noteInput::placeholder { color: rgba(255,255,255,.28); font-style: italic; }
+.notePopover.open { display: flex; }
+.notePopoverLabel {
+  font-size: 9px; font-weight: 800; letter-spacing: .14em;
+  text-transform: uppercase; color: #5b6f96;
+}
+.notePopoverInput {
+  width: 100%; background: transparent; border: none; outline: none;
+  font-size: 12px; line-height: 1.5; color: #d0daf0;
+  font-family: inherit; resize: none; padding: 0;
+  min-height: 52px;
+}
+.notePopoverInput::placeholder { color: rgba(255,255,255,.22); font-style: italic; }
 /* green dot on noteDock when a note exists */
 .noteDock { cursor: pointer; }
 .noteDock.has-note::after {

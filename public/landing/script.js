@@ -181,10 +181,10 @@
     var rooms = [
       { name: "Room 1", patient: "R. Patel",  doc: "Dr. Maro",   type: "exam",      secs: 72 * 60 + 14, state: "active", note: "BP 140/90 — refill ready" },
       { name: "Room 2", patient: "J. Nguyen", doc: "Dr. Reyes",  type: "followup",  secs: 24 * 60 + 8,  state: "active", note: "" },
-      { name: "Room 3", patient: "M. Ortiz",  doc: "Dr. Okafor", type: "procedure", secs: 8 * 60 + 33,  state: "active", note: "Allergic to penicillin" },
+      { name: "Room 3", patient: "M. Ortiz",  doc: "Dr. Reyes",  type: "procedure", secs: 8 * 60 + 33,  state: "active", note: "Allergic to penicillin" },
       { name: "Room 4", patient: "",          doc: "",           type: "exam",      secs: 0,            state: "empty",  note: "" },
       { name: "Room 5", patient: "C. Wells",  doc: "Dr. Park",   type: "consult",   secs: 31 * 60 + 47, state: "active", note: "Interpreter requested" },
-      { name: "Room 6", patient: "D. Flynn",  doc: "Dr. Hahn",   type: "workin",    secs: 7 * 60 + 19,  state: "active", note: "" }
+      { name: "Room 6", patient: "D. Flynn",  doc: "Dr. Park",   type: "workin",    secs: 7 * 60 + 19,  state: "active", note: "" }
     ];
 
     function fmt(secs) {
@@ -251,8 +251,9 @@
           + '<div class="roomInfoLine">' + info + '</div>'
           + '<div class="roomFoot"><span class="timer' + (alert ? " alert" : (warn ? " warn" : "")) + '" data-timer>' + fmt(r.secs) + '</span>'
           + badge + '</div></div>';
-        noteRow = '<div class="noteRow' + (r.note ? ' open' : '') + '">'
-          + '<input class="noteInput" type="text" placeholder="Add a note…" value="' + esc(r.note) + '">'
+        noteRow = '<div class="notePopover">'
+          + '<div class="notePopoverLabel">Notes</div>'
+          + '<textarea class="notePopoverInput" placeholder="Add a note…">' + esc(r.note) + '</textarea>'
           + '</div>';
         wbRow = '<div class="wbRow">'
           + '<div class="wbCell wbCellRoom">' + esc(r.name) + '</div>'
@@ -278,9 +279,32 @@
 
     function render() {
       grid.innerHTML = "";
-      if (wbHeaderEl) grid.appendChild(wbHeaderEl); // always keep header at top
+      if (wbHeaderEl) grid.appendChild(wbHeaderEl);
       rooms.forEach(function (r) { grid.appendChild(makeCard(r)); });
     }
+
+    function renderGrouped() {
+      grid.innerHTML = "";
+      if (wbHeaderEl) grid.appendChild(wbHeaderEl);
+      var active = rooms.filter(function (r) { return r.state === "active"; });
+      var byDoc = {}, order = [];
+      active.forEach(function (r) {
+        if (!byDoc[r.doc]) { byDoc[r.doc] = []; order.push(r.doc); }
+        byDoc[r.doc].push(r);
+      });
+      order.forEach(function (doc) {
+        var d = DOCS[doc] || { init: "DR" };
+        var div = document.createElement("div");
+        div.className = "activeDoctorDivider";
+        div.innerHTML = '<span class="activeDoctorDividerLabel">'
+          + '<span class="wbDocInit">' + esc(d.init) + '</span>'
+          + esc(doc)
+          + '</span>';
+        grid.appendChild(div);
+        byDoc[doc].forEach(function (r) { grid.appendChild(makeCard(r)); });
+      });
+    }
+
     render();
 
     // Tick timers in-place — update only the text node, never rebuild DOM,
@@ -328,8 +352,7 @@
         } else if (r.secs > TIMER_ALERT && Math.random() > 0.5) {
           r.state = "cleaning"; r.secs = Math.floor(Math.random() * 60) + 5;
         } else { return; } // no state change, skip redraw
-        // Only redraw the single card that changed
-        renderOne(r);
+        if (onlyActive) { renderGrouped(); } else { renderOne(r); }
         updateActiveCount();
       }, 2800);
     }
@@ -357,22 +380,33 @@
       r.secs    = Math.floor(Math.random() * 4 * 60) + 60;
     }
 
-    /* Click a room to cycle its state (also handles noteDock + noteInput) */
+    function closeAllNotePopovers() {
+      [].slice.call(grid.querySelectorAll(".notePopover.open")).forEach(function (p) {
+        p.classList.remove("open");
+      });
+    }
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest(".room")) closeAllNotePopovers();
+    });
+
+    /* Click a room to cycle its state (also handles noteDock + notePopover) */
     grid.addEventListener("click", function (e) {
-      /* noteDock: toggle that room's note row */
+      /* noteDock: toggle that room's note popover */
       var dock = e.target.closest(".noteDock");
       if (dock) {
         e.stopPropagation();
-        var noteRow = dock.closest(".room").querySelector(".noteRow");
-        if (noteRow) {
-          var opening = !noteRow.classList.contains("open");
-          noteRow.classList.toggle("open", opening);
-          if (opening) { var ni = noteRow.querySelector(".noteInput"); if (ni) { ni.focus(); ni.select(); } }
+        var card = dock.closest(".room");
+        var pop = card ? card.querySelector(".notePopover") : null;
+        if (pop) {
+          var opening = !pop.classList.contains("open");
+          closeAllNotePopovers();
+          pop.classList.toggle("open", opening);
+          if (opening) { var ta = pop.querySelector(".notePopoverInput"); if (ta) setTimeout(function () { ta.focus(); }, 30); }
         }
         return;
       }
-      /* noteInput: don't bubble to room cycling */
-      if (e.target.classList.contains("noteInput")) { e.stopPropagation(); return; }
+      /* notePopoverInput: stop propagation so clicking inside doesn't cycle room */
+      if (e.target.classList.contains("notePopoverInput")) { e.stopPropagation(); return; }
 
       var card = e.target.closest(".room");
       if (!card) return;
@@ -384,19 +418,23 @@
       else if (room.state === "cleaning") { room.state = "empty";    room.secs = 0; }
       else                                { randomPatient(room); }
 
-      renderOne(room);
-      var newCard = grid.querySelector('[data-room="' + roomName + '"]');
-      if (newCard) {
-        newCard.classList.add("click-flash");
-        setTimeout(function () { newCard.classList.remove("click-flash"); }, 380);
+      if (onlyActive) {
+        renderGrouped();
+      } else {
+        renderOne(room);
+        var newCard = grid.querySelector('[data-room="' + roomName + '"]');
+        if (newCard) {
+          newCard.classList.add("click-flash");
+          setTimeout(function () { newCard.classList.remove("click-flash"); }, 380);
+        }
       }
       updateActiveCount();
       hideTryHint();
     });
 
-    /* Note input: save text to room object, update dot indicator */
+    /* Note textarea: save text, update dot indicator and list-view cell */
     grid.addEventListener("input", function (e) {
-      if (!e.target.classList.contains("noteInput")) return;
+      if (!e.target.classList.contains("notePopoverInput")) return;
       var card = e.target.closest(".room");
       if (!card) return;
       var roomName = card.getAttribute("data-room");
@@ -405,6 +443,8 @@
         room.note = e.target.value;
         var dock = card.querySelector(".noteDock");
         if (dock) dock.classList.toggle("has-note", !!room.note);
+        var noteCell = card.querySelector(".wbCellNote");
+        if (noteCell) { noteCell.textContent = room.note || "—"; noteCell.classList.toggle("empty", !room.note); }
       }
     });
 
@@ -422,7 +462,7 @@
       });
     }
 
-    /* ONLY ACTIVE toggle */
+    /* ONLY ACTIVE toggle — filters to active rooms grouped by doctor */
     var onlyActiveBtn = document.getElementById("bdOnlyActive");
     var onlyActive = false;
     if (onlyActiveBtn) {
@@ -430,6 +470,7 @@
         onlyActive = !onlyActive;
         onlyActiveBtn.classList.toggle("on", onlyActive);
         grid.classList.toggle("only-active", onlyActive);
+        if (onlyActive) { renderGrouped(); } else { render(); }
       });
     }
 
@@ -445,18 +486,19 @@
       });
     }
 
-    /* Notes mode toggle: expand/collapse all note rows at once */
+    /* Notes mode toggle: open all note popovers at once */
     var notesToggleBtn = document.getElementById("bdNotesToggle");
     var notesMode = false;
     if (notesToggleBtn) {
       notesToggleBtn.addEventListener("click", function () {
         notesMode = !notesMode;
         notesToggleBtn.classList.toggle("active", notesMode);
-        grid.classList.toggle("notes-mode", notesMode);
         if (notesMode) {
-          /* focus the first visible note input */
-          var first = grid.querySelector(".room:not(.empty):not(.cleaning) .noteInput");
-          if (first) { setTimeout(function () { first.focus(); }, 260); }
+          [].slice.call(grid.querySelectorAll(".room:not(.empty):not(.cleaning) .notePopover")).forEach(function (p) {
+            p.classList.add("open");
+          });
+        } else {
+          closeAllNotePopovers();
         }
       });
     }
