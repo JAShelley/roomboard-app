@@ -841,9 +841,9 @@
         }
       }
 
-      if(upgradeSection) upgradeSection.hidden = isAdvanced;
-      if(monthlyBtn) monthlyBtn.classList.toggle("isCurrent", subscribed && isAdvanced && isMonthly);
-      if(annualBtn) annualBtn.classList.toggle("isCurrent", subscribed && isAdvanced && !isMonthly);
+      if(upgradeSection) upgradeSection.hidden = subscribed;
+      if(monthlyBtn) monthlyBtn.classList.toggle("isCurrent", false);
+      if(annualBtn) annualBtn.classList.toggle("isCurrent", false);
     }
 
     function renderBillingError(message){
