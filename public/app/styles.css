@@ -4995,3 +4995,27 @@ body.settingsPageMode #settingsBackBtn:hover{
   .statsBarLabel{ font-size:12px; }
   .statsHeader{ flex-direction:column; }
 }
+
+/* ===== Board skeleton shimmer ===== */
+@keyframes boardSkeletonShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.skeletonRoom {
+  pointer-events: none;
+  min-height: 180px;
+}
+.skLine {
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,.04) 25%,
+    rgba(255,255,255,.10) 50%,
+    rgba(255,255,255,.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: boardSkeletonShimmer 1.4s ease-in-out infinite;
+}
+.skName  { height: 13px; width: 42%; margin: 18px 0 0 16px; }
+.skTimer { height: 34px; width: 62%; margin: 22px auto 0; border-radius: 8px; }
+.skFoot  { height: 10px; width: 50%; margin: 22px 0 0 16px; opacity: .45; }

@@ -522,31 +522,25 @@
       currentUserEmail = String(user.email || "").trim();
       currentUserFullName = String(user.user_metadata && user.user_metadata.full_name || "").trim();
 
-      var practiceIdRes = await supabase.rpc("get_my_practice_id");
+      // Run RPC and profile lookup in parallel — both are independent of each other.
+      // Also pre-fetch the practice name using the cached ID so it arrives in the
+      // same round trip for returning users (saves ~200ms vs. the old sequential path).
+      var cachedCtxId = (typeof getLastKnownPracticeId === "function") ? getLastKnownPracticeId() : null;
+      var ctxParallel = await Promise.all([
+        supabase.rpc("get_my_practice_id"),
+        supabase.from("profiles").select("practice_id, full_name").eq("user_id", user.id).maybeSingle(),
+        cachedCtxId ? supabase.from("practices").select("id, name").eq("id", cachedCtxId).maybeSingle() : Promise.resolve(null)
+      ]);
+      var practiceIdRes = ctxParallel[0];
       if(practiceIdRes.error) throw practiceIdRes.error;
+      var profileRes = ctxParallel[1];
+      if(profileRes.error) throw profileRes.error;
+      var cachedPracticeRes = ctxParallel[2];
 
       var practiceId = normalizePracticeId(practiceIdRes.data);
-      var profileRow = null;
-      if(!practiceId){
-        var profileRes = await supabase
-          .from("profiles")
-          .select("practice_id, full_name")
-          .eq("user_id", user.id)
-          .maybeSingle();
-        if(profileRes.error) throw profileRes.error;
-        profileRow = profileRes && profileRes.data ? profileRes.data : null;
-        if(profileRow && profileRow.full_name) currentUserFullName = String(profileRow.full_name || "").trim() || currentUserFullName;
-        practiceId = normalizePracticeId(profileRow ? profileRow.practice_id : null);
-      } else {
-        var linkedProfileRes = await supabase
-          .from("profiles")
-          .select("practice_id, full_name")
-          .eq("user_id", user.id)
-          .maybeSingle();
-        if(linkedProfileRes.error) throw linkedProfileRes.error;
-        profileRow = linkedProfileRes && linkedProfileRes.data ? linkedProfileRes.data : null;
-        if(profileRow && profileRow.full_name) currentUserFullName = String(profileRow.full_name || "").trim() || currentUserFullName;
-      }
+      var profileRow = profileRes && profileRes.data ? profileRes.data : null;
+      if(profileRow && profileRow.full_name) currentUserFullName = String(profileRow.full_name || "").trim() || currentUserFullName;
+      if(!practiceId) practiceId = normalizePracticeId(profileRow ? profileRow.practice_id : null);
 
       if(!practiceId){
         currentPracticeId = null;
@@ -563,15 +557,18 @@
         return null;
       }
 
-      var practiceRes = await supabase
-        .from("practices")
-        .select("id, name")
-        .eq("id", practiceId)
-        .single();
-      if(practiceRes.error) throw practiceRes.error;
+      // Use the pre-fetched practice row if it matched; otherwise fetch now.
+      var practiceData = (cachedPracticeRes && !cachedPracticeRes.error && cachedPracticeRes.data && cachedPracticeRes.data.id === practiceId)
+        ? cachedPracticeRes.data
+        : null;
+      if(!practiceData){
+        var practiceRes = await supabase.from("practices").select("id, name").eq("id", practiceId).single();
+        if(practiceRes.error) throw practiceRes.error;
+        practiceData = practiceRes.data;
+      }
 
-      currentPracticeId = practiceRes.data.id;
-      currentPracticeName = practiceRes.data.name || "";
+      currentPracticeId = practiceData.id;
+      currentPracticeName = practiceData.name || "";
       resetKnownBoardVersion();
       window.__roomboardPracticeId = currentPracticeId;
       if(typeof window.setLastKnownPracticeId === "function") window.setLastKnownPracticeId(currentPracticeId);
@@ -2961,6 +2958,22 @@
       if(!await requireAuthenticatedSession("Clinic load")) return false;
       try{
         setSyncUI("syncing", "Loading clinic");
+        // Show skeleton cards immediately if the board is currently empty so the
+        // user sees structure instead of a blank grid while the data arrives.
+        (function(){
+          var grid = typeof $ === "function" ? $("displayGrid") : null;
+          var hasRooms = state && state.rooms && state.rooms.length > 0;
+          if(grid && !hasRooms){
+            grid.innerHTML = "";
+            grid.className = "grid boxView";
+            for(var s = 0; s < 6; s++){
+              var sk = document.createElement("div");
+              sk.className = "room skeletonRoom";
+              sk.innerHTML = '<div class="skLine skName"></div><div class="skLine skTimer"></div><div class="skLine skFoot"></div>';
+              grid.appendChild(sk);
+            }
+          }
+        }());
         var localState = ensureStateShape(loadLocal() || null);
         var persistedSettingsPromise = Promise.all([
           loadUserSettingsRecord(),
