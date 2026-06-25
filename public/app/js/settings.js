@@ -1,3 +1,71 @@
+    // ===== Plan gating (Base vs Advanced) =====
+    document.addEventListener("click", function(e){
+      var btn = e.target && e.target.closest ? e.target.closest("[data-upgrade-btn]") : null;
+      if(!btn) return;
+      if(typeof window.activateRoomBoardSettingsTab === "function") window.activateRoomBoardSettingsTab("tabAccount");
+      var card = document.getElementById("billingCard");
+      if(card) card.scrollIntoView({ behavior: "smooth" });
+    });
+
+    function refreshAdvancedPlanGating(){
+      var plan = typeof window.roomboardGetCurrentPlan === "function" ? window.roomboardGetCurrentPlan() : null;
+      var isBase = !!(plan && plan.indexOf("base") !== -1);
+
+      // ── Stats tab ──
+      var statsTab = document.getElementById("tabStats");
+      var statsGate = document.getElementById("statsAdvancedGate");
+      if(statsTab){
+        if(isBase){
+          if(!statsGate){
+            statsGate = document.createElement("div");
+            statsGate.id = "statsAdvancedGate";
+            statsGate.className = "planGateOverlay";
+            statsGate.innerHTML = '<div class="planGateBox"><div class="planGateBadge">Advanced</div><strong>Room &amp; Cleaning Analytics</strong><p>Upgrade to Advanced to unlock the Stats dashboard, custom branding, and more.</p><button class="btn primary" data-upgrade-btn="1" type="button">Upgrade to Advanced</button></div>';
+            statsTab.insertBefore(statsGate, statsTab.firstChild);
+          }
+        } else {
+          if(statsGate) statsGate.remove();
+        }
+      }
+
+      // ── Branding section ──
+      var brandingPanel = document.getElementById("headerBrandingPanel");
+      var brandingGate = document.getElementById("brandingAdvancedGate");
+      if(brandingPanel){
+        if(isBase){
+          if(!brandingGate){
+            var body = brandingPanel.querySelector(".settingsCollapsibleBody");
+            if(body){
+              brandingGate = document.createElement("div");
+              brandingGate.id = "brandingAdvancedGate";
+              brandingGate.className = "planGateOverlay";
+              brandingGate.innerHTML = '<div class="planGateBox"><div class="planGateBadge">Advanced</div><strong>Custom Branding</strong><p>Upgrade to Advanced to upload your clinic logo and customize header colors.</p><button class="btn primary" data-upgrade-btn="1" type="button">Upgrade to Advanced</button></div>';
+              body.insertBefore(brandingGate, body.firstChild);
+            }
+          }
+        } else {
+          if(brandingGate) brandingGate.remove();
+        }
+      }
+
+      // ── Stats tab button badge ──
+      var statsTabBtn = document.querySelector("[data-tab='tabStats']");
+      if(statsTabBtn){
+        var existing = statsTabBtn.querySelector(".planBadge");
+        if(isBase){
+          if(!existing){
+            var badge = document.createElement("span");
+            badge.className = "planBadge";
+            badge.textContent = "Advanced";
+            statsTabBtn.appendChild(badge);
+          }
+        } else {
+          if(existing) existing.remove();
+        }
+      }
+    }
+    window.refreshAdvancedPlanGating = refreshAdvancedPlanGating;
+
     // ===== Drawer controls =====
 	    function openDrawer(){
 	      closeQuickAdd();
@@ -14,6 +82,7 @@
 	      if($("stopwatchDiagnosticsPanel") && $("stopwatchDiagnosticsPanel").open && typeof window.runStopwatchDiagnostics === "function"){
 	        window.runStopwatchDiagnostics();
 	      }
+      refreshAdvancedPlanGating();
 	    }
     function closeDrawer(){
       document.body.className = document.body.className.replace(/\bdrawerOpen\b|\bsettingsPageMode\b/g,"").replace(/\s+/g," ").trim();

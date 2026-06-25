@@ -9,9 +9,15 @@
     },
     {
       "name": "landing",
-      "runtimeExecutable": "/Applications/Codex.app/Contents/Resources/cua_node/bin/npx",
-      "runtimeArgs": ["serve", "public", "--no-clipboard"],
-      "port": 4000,
+      "runtimeExecutable": "/usr/bin/python3",
+      "runtimeArgs": ["/tmp/serve-roomboard-landing.py"],
+      "port": 4000
+    },
+    {
+      "name": "app-static",
+      "runtimeExecutable": "/usr/bin/python3",
+      "runtimeArgs": ["/tmp/serve-roomboard-app.py"],
+      "port": 4001,
       "autoPort": true
     }
   ]

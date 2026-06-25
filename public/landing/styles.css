@@ -115,6 +115,15 @@ img { max-width: 100%; display: block; }
 }
 [data-theme="dark"] .eyebrow { color: var(--teal-300); }
 
+.eyebrow-pulse {
+  display: inline-block;
+  animation: eyebrowPulse 2.2s ease-in-out infinite;
+}
+@keyframes eyebrowPulse {
+  0%, 100% { opacity: 1;  transform: scale(1); }
+  50%       { opacity: .4; transform: scale(.75); }
+}
+
 .section { padding: 96px 0; position: relative; }
 .section-head { max-width: 660px; margin: 0 auto 56px; text-align: center; }
 .section-head h2 { font-size: clamp(28px, 4vw, 44px); margin: 16px 0 14px; }
@@ -182,7 +191,18 @@ img { max-width: 100%; display: block; }
 .hero > .wrap { display: flex; flex-direction: column; align-items: center; }
 .hero-col { text-align: center; max-width: 760px; width: 100%; }
 .hero h1 { font-size: clamp(42px, 5.5vw, 78px); margin: 16px 0 24px; line-height: 1.08; font-weight: 800; letter-spacing: -.03em; }
-.hero h1 .grad { background: linear-gradient(110deg, var(--teal-300) 5%, var(--coral) 75%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero h1 .grad {
+  background: linear-gradient(110deg, var(--teal-300), var(--coral), var(--teal-300));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradShift 6s ease-in-out infinite;
+}
+@keyframes gradShift {
+  0%, 100% { background-position: 0% center; }
+  50%       { background-position: 100% center; }
+}
 .hero-microtrust { font-size: 14px; color: var(--muted); margin: 8px 0 20px; text-align: center; }
 .hero .lede { font-size: 20px; color: var(--ink-2); max-width: 560px; line-height: 1.6; margin: 0 auto; }
 .hero-cta { display: flex; gap: 16px; margin: 38px 0 28px; flex-wrap: wrap; justify-content: center; }
@@ -455,7 +475,12 @@ img { max-width: 100%; display: block; }
   transform: perspective(1800px) rotateX(8deg);
   transform-origin: top center;
   will-change: transform;
-  animation: boardFadeIn .9s .18s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: boardFadeIn .9s .18s cubic-bezier(0.22, 1, 0.36, 1) both,
+             boardGlow 7s 1.5s ease-in-out infinite;
+}
+@keyframes boardGlow {
+  0%, 100% { box-shadow: 0 40px 100px rgba(2, 132, 199, .35), inset 0 1px 2px rgba(255,255,255,.05); }
+  50%       { box-shadow: 0 40px 110px rgba(2, 132, 199, .55), 0 0 70px rgba(2, 132, 199, .14), inset 0 1px 2px rgba(255,255,255,.05); }
 }
 @keyframes boardFadeIn {
   from { opacity: 0; }

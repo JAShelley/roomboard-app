@@ -296,6 +296,7 @@
 	    var authAccessMode = "login";
 	    var currentPracticeInviteAdmin = false;
 	    var currentBillingAccess = null;
+	    var currentBillingPlan = null;
 	    var billingRefreshInFlight = null;
 	    var billingLastFetchedAt = 0;
 	    var BILLING_CACHE_MS = 5 * 60 * 1000;
@@ -778,6 +779,9 @@
       return true;
     };
 
+    window.roomboardGetCurrentPlan = function(){ return currentBillingPlan; };
+    window.roomboardIsAdvancedPlan = function(){ return !!(currentBillingPlan && currentBillingPlan.indexOf("advanced") !== -1); };
+
     function renderBillingStatus(data){
       var summary = $("billingSummary");
       var badge = $("billingBadge");
@@ -791,6 +795,8 @@
       var subscribed = !!(data && data.subscribed);
       var trialing = !!(data && data.trialing);
       currentBillingAccess = hasAccess;
+      currentBillingPlan = plan || null;
+      if(typeof window.refreshAdvancedPlanGating === "function") window.refreshAdvancedPlanGating();
       setBillingCardVisible(!!currentPracticeId);
       updateStandaloneOpenBoardAccess();
 
@@ -828,6 +834,8 @@
         badge.textContent = "Check billing";
       }
       currentBillingAccess = null;
+      currentBillingPlan = null;
+      if(typeof window.refreshAdvancedPlanGating === "function") window.refreshAdvancedPlanGating();
       updateStandaloneOpenBoardAccess();
     }
 

@@ -176,6 +176,12 @@
   }
 
   window.roomboardLoadStats = function(days){
+    var plan = typeof window.roomboardGetCurrentPlan === "function" ? window.roomboardGetCurrentPlan() : null;
+    if(plan && plan.indexOf("base") !== -1){
+      var sl = $("statsStatusLine");
+      if(sl) sl.textContent = "Stats are available on the Advanced plan. Upgrade in Settings → Clinic → Billing.";
+      return;
+    }
     var practiceId = window.__roomboardPracticeId;
     var sb = window.__roomboardSupabase;
     if(!practiceId || !sb){

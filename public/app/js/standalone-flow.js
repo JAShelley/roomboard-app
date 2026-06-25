@@ -319,7 +319,7 @@
       hideErr();
     }
     var statusEl = document.getElementById("rbAStatus");
-    function showErr(msg){ errorDiv.textContent = msg; errorDiv.style.display = ""; if(statusEl) statusEl.textContent = ""; }
+    function showErr(msg){ errorDiv.textContent = msg; errorDiv.style.display = "block"; if(statusEl) statusEl.textContent = ""; }
     function hideErr(){ errorDiv.style.display = "none"; }
     var busyWatchdog = null;
     function setBusy(b){

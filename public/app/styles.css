@@ -5605,3 +5605,62 @@ details.sxSection .settingsCollapsibleBody .sxRow:last-child { border-bottom: no
 }
 .sxInviteBox input { flex: 1; min-width: 0; }
 
+
+/* ── Plan gate overlays (Advanced feature upsells) ────────────────── */
+.planGateOverlay {
+  position: relative;
+  z-index: 1;
+}
+.planGateBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 28px 24px 24px;
+  background: rgba(30,40,60,.72);
+  border: 1px solid rgba(100,140,210,.2);
+  border-radius: 12px;
+  margin: 8px 0 4px;
+  backdrop-filter: blur(6px);
+}
+.planGateBadge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #a0c8ff;
+  background: rgba(80,120,220,.25);
+  border: 1px solid rgba(100,150,255,.35);
+  border-radius: 20px;
+  padding: 3px 10px;
+  margin-bottom: 2px;
+}
+.planGateBox strong {
+  font-size: 14px;
+  color: rgba(200,220,255,.9);
+}
+.planGateBox p {
+  font-size: 12px;
+  color: rgba(160,185,230,.65);
+  margin: 0;
+  max-width: 260px;
+  line-height: 1.55;
+}
+/* Tab badge for Advanced-only tabs */
+.tabBtn .planBadge {
+  display: inline-block;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: #7eb3ff;
+  background: rgba(60,100,200,.22);
+  border: 1px solid rgba(80,130,230,.3);
+  border-radius: 10px;
+  padding: 1px 5px;
+  margin-left: 5px;
+  vertical-align: middle;
+  line-height: 1.4;
+}
