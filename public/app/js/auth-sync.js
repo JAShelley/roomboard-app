@@ -210,13 +210,7 @@
       if(statusLine && currentPracticeName && statusLine.textContent === "Loading…"){
         statusLine.textContent = currentPracticeName + " ready.";
       }
-      // Clinic name + BOARD button in top-right header
-      var clinicHeaderArea = $("clinicHeaderArea");
-      var clinicHeaderName = $("clinicHeaderName");
-      if(clinicHeaderArea){
-        clinicHeaderArea.hidden = !currentPracticeName;
-        if(clinicHeaderName) clinicHeaderName.textContent = currentPracticeName || "";
-      }
+      // Clinic name + BOARD button removed from header
       // Show clinic profile editor only when logged in
       var profilePanel = $("clinicProfileEditPanel");
       if(profilePanel) profilePanel.hidden = !currentPracticeId;

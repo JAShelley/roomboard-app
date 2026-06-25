@@ -294,4 +294,80 @@
       }, 2800);
     }
   }
+
+  /* ---------- Scroll progress bar ---------- */
+  var progressBar = document.getElementById("scrollProgress");
+  function updateProgress() {
+    if (!progressBar) return;
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.style.width = (docHeight > 0 ? (scrollTop / docHeight) * 100 : 0) + "%";
+  }
+  window.addEventListener("scroll", updateProgress, { passive: true });
+  updateProgress();
+
+  /* ---------- Enhanced board parallax — Y shift added to existing tilt ---------- */
+  /* Override the onScroll board tilt to also add a gentle Y translation */
+  (function patchBoardScroll() {
+    var boardEl = document.getElementById("boardDemo");
+    if (!boardEl) return;
+    var origOnScroll = onScroll;
+    window.removeEventListener("scroll", origOnScroll);
+    window.addEventListener("scroll", function () {
+      var y = window.pageYOffset || document.documentElement.scrollTop;
+      /* nav + back-to-top (replicate original) */
+      if (nav) nav.classList.toggle("scrolled", y > 8);
+      if (toTop) toTop.classList.toggle("show", y > 600);
+      updateProgress();
+      /* Board tilt + parallax Y */
+      if (window.innerWidth > 940) {
+        var progress = Math.min(y / (window.innerHeight * 0.55), 1);
+        var tilt  = 8 * (1 - progress);
+        var yShift = -progress * 28;
+        boardEl.style.transform = "perspective(1800px) rotateX(" + tilt + "deg) translateY(" + yShift + "px)";
+      }
+    }, { passive: true });
+  }());
+
+  /* ---------- Count-up animation for waitstat numbers ---------- */
+  var countEls = [].slice.call(document.querySelectorAll("[data-count]"));
+  if (countEls.length && "IntersectionObserver" in window) {
+    var countIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        var target = parseFloat(el.getAttribute("data-count"));
+        var suffix = el.getAttribute("data-suffix") || "";
+        var decimals = (target % 1 !== 0) ? 1 : 0;
+        var duration = 1600;
+        var startTime = null;
+        function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+        function tick(now) {
+          if (!startTime) startTime = now;
+          var t = Math.min((now - startTime) / duration, 1);
+          el.textContent = (target * easeOut(t)).toFixed(decimals) + suffix;
+          if (t < 1) { requestAnimationFrame(tick); }
+          else { el.textContent = target.toFixed(decimals) + suffix; el.classList.add("counted"); }
+        }
+        requestAnimationFrame(tick);
+        countIO.unobserve(el);
+      });
+    }, { threshold: 0.4 });
+    countEls.forEach(function (el) { countIO.observe(el); });
+  }
+
+  /* ---------- Section-head entrance animation ---------- */
+  var sectionHeads = [].slice.call(document.querySelectorAll(".section-head"));
+  if (sectionHeads.length && "IntersectionObserver" in window) {
+    var headIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("head-in");
+          headIO.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
+    sectionHeads.forEach(function (el) { headIO.observe(el); });
+  }
+
 })();

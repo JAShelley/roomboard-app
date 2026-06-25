@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="/landing/styles.css">
 </head>
 <body>
+<div id="scrollProgress" aria-hidden="true"></div>
 
 <!-- ===================== NAV ===================== -->
 <nav class="nav" id="nav">
@@ -124,10 +125,10 @@
 <!-- ===================== STATS ===================== -->
 <section class="stats">
   <div class="wrap">
-    <div class="stat"><div class="n">&lt;1s</div><div class="l">Real-time sync</div></div>
-    <div class="stat"><div class="n">0</div><div class="l">Setup time</div></div>
-    <div class="stat"><div class="n">∞</div><div class="l">Rooms</div></div>
-    <div class="stat"><div class="n">∞</div><div class="l">Screens</div></div>
+    <div class="stat reveal"><div class="n">&lt;1s</div><div class="l">Real-time sync</div></div>
+    <div class="stat reveal"><div class="n">0</div><div class="l">Setup time</div></div>
+    <div class="stat reveal"><div class="n">∞</div><div class="l">Rooms</div></div>
+    <div class="stat reveal"><div class="n">∞</div><div class="l">Screens</div></div>
   </div>
 </section>
 
@@ -141,22 +142,22 @@
     </div>
     <div class="waitstats">
       <article class="waitstat reveal">
-        <div class="ws-n">7.8&times;</div>
+        <div class="ws-n" data-count="7.8" data-suffix="×">7.8×</div>
         <div class="ws-l">more likely to leave a negative review after commenting on a long (1&nbsp;hr+) wait</div>
         <div class="ws-src"><a href="https://www.phreesia.com/insights/infographic-the-high-cost-of-long-wait-times/" target="_blank" rel="noopener">NRC Health — 170,000 patient comments</a></div>
       </article>
       <article class="waitstat reveal">
-        <div class="ws-n">63%</div>
+        <div class="ws-n" data-count="63" data-suffix="%">63%</div>
         <div class="ws-l">of patients would switch doctors over consistently long waits</div>
         <div class="ws-src"><a href="https://www.phreesia.com/insights/infographic-the-high-cost-of-long-wait-times/" target="_blank" rel="noopener">NRC Health, 2022</a></div>
       </article>
       <article class="waitstat reveal">
-        <div class="ws-n">30%</div>
+        <div class="ws-n" data-count="30" data-suffix="%">30%</div>
         <div class="ws-l">have walked out of an appointment because the wait was too long</div>
         <div class="ws-src"><a href="https://www.phreesia.com/insights/infographic-the-high-cost-of-long-wait-times/" target="_blank" rel="noopener">Vitals Wait Time Report, 2018</a></div>
       </article>
       <article class="waitstat reveal">
-        <div class="ws-n">97%</div>
+        <div class="ws-n" data-count="97" data-suffix="%">97%</div>
         <div class="ws-l">of patients report frustration about waiting too long to be seen</div>
         <div class="ws-src"><a href="https://www.phreesia.com/insights/infographic-the-high-cost-of-long-wait-times/" target="_blank" rel="noopener">Physicians Practice, 2017</a></div>
       </article>
@@ -175,25 +176,25 @@
     </div>
     <div class="features-grid">
 
-      <article class="feature reveal">
+      <article class="feature reveal reveal-left">
         <div class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/></svg></div>
         <h3>One board, every screen</h3>
         <p>Patient name, provider, appointment type, and current status — front desk, wall display, and phones all see the same board, live.</p>
       </article>
 
-      <article class="feature reveal">
+      <article class="feature reveal reveal-right">
         <div class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg></div>
         <h3>Always-on timers</h3>
         <p>Track how long a patient has waited. Timers turn amber, then red when they exceed your thresholds — so no one slips through the cracks.</p>
       </article>
 
-      <article class="feature reveal">
+      <article class="feature reveal reveal-left">
         <div class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
         <h3>Status flags at a glance</h3>
         <p>Mark rooms ready, cleaning needed, or discharge-ready. Your team knows the next move without talking — flow just works.</p>
       </article>
 
-      <article class="feature reveal">
+      <article class="feature reveal reveal-right">
         <div class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></div>
         <h3>Instant updates from the board</h3>
         <p>Add a patient, swap a room, note a delay — all without leaving the display. Everything syncs to every screen in less than a second.</p>
@@ -213,7 +214,7 @@
     </div>
     <div class="testimonials-grid">
 
-      <div class="testimonial reveal">
+      <div class="testimonial reveal reveal-left">
         <div class="testimonial-stars">★★★★★</div>
         <p class="testimonial-body">We used to shout across the hall to find out who was in which room. RoomBoard ended that on day one. The whole team just looks up at the screen now.</p>
         <div class="testimonial-author">
@@ -237,7 +238,7 @@
         </div>
       </div>
 
-      <div class="testimonial reveal">
+      <div class="testimonial reveal reveal-right">
         <div class="testimonial-stars">★★★★★</div>
         <p class="testimonial-body">I was skeptical about adding another tool, but this one actually replaced two whiteboards and a group chat. The Apple Watch feature is a bonus I didn't expect to love.</p>
         <div class="testimonial-author">
@@ -262,7 +263,7 @@
       <p>Click an appointment in your scheduler. RoomBoard reads it and auto-fills the board. No typing, no errors.</p>
     </div>
     <div class="steps">
-      <div class="step reveal">
+      <div class="step reveal reveal-left">
         <h3>Click to arm</h3>
         <p>Enable capture from the menu bar or browser. A quick overlay waits for your move.</p>
       </div>
@@ -270,7 +271,7 @@
         <h3>Click the appointment</h3>
         <p>Point at any appointment block. RoomBoard reads it automatically — accessibility on Mac/Windows, OCR for web schedulers.</p>
       </div>
-      <div class="step reveal">
+      <div class="step reveal reveal-right">
         <h3>Confirm &amp; go</h3>
         <p>Patient, doctor, and type are pre-filled. Pick the room and it's live on every board instantly.</p>
       </div>
@@ -345,7 +346,7 @@
       <p>Wall display, front desk, your pocket, your wrist. All seeing the same board, all synced.</p>
     </div>
     <div class="devices-grid">
-      <article class="device reveal">
+      <article class="device reveal reveal-left">
         <div class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4" stroke-linecap="round"/></svg></div>
         <h3>Desktop app <span class="cs-badge">Coming soon</span></h3>
         <p>Native RoomBoard for macOS and Windows, with a tray icon and full-screen wall display.</p>
@@ -360,7 +361,7 @@
         <h3>iPhone &amp; iPad</h3>
         <p>A native iOS app to view rooms, edit on the move, and send quick feedback from anywhere.</p>
       </article>
-      <article class="device reveal">
+      <article class="device reveal reveal-right">
         <div class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="3"/><path d="M8.5 6 9 2.5h6L15.5 6M8.5 18 9 21.5h6l.5-3.5" stroke-linecap="round"/></svg></div>
         <h3>Apple Watch <span class="cs-badge">Coming soon</span></h3>
         <p>A glanceable board snapshot on your wrist — see who's waiting without pulling out a phone.</p>
@@ -468,7 +469,7 @@
 
     <div class="pricing-grid" id="pricingGrid">
 
-      <div class="plan reveal">
+      <div class="plan reveal reveal-scale">
         <h3>Base</h3>
         <div class="plan-price">
           <span class="price-num" data-monthly="$4.99" data-annual="$4.17">$4.99</span>
@@ -485,7 +486,7 @@
         </ul>
       </div>
 
-      <div class="plan featured reveal">
+      <div class="plan featured reveal reveal-scale">
         <div class="plan-badge">Most popular</div>
         <h3>Advanced</h3>
         <div class="plan-price">
