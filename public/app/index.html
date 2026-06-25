@@ -149,7 +149,7 @@
 <div class="tabPanel active" id="tabAccount">
 <div class="sxSection clinicAccessCard">
 <div class="sxHead">Clinic access</div>
-<div style="padding:12px 16px 4px;">
+<div class="sxAuthForm">
 <div class="authModeSwitch" id="authModeSwitch">
 <button class="authModeBtn active" data-auth-mode="login" type="button">Login</button>
 <button class="authModeBtn" data-auth-mode="create" type="button">Create clinic</button>
@@ -210,14 +210,14 @@
 <input checked id="rememberMe" style="width:16px; height:16px; margin:0;" type="checkbox">
 <span>Keep me logged in</span>
 </label>
-<div class="actions" style="margin-top:8px;">
+<div class="actions">
 <button class="btn sm primary" id="loginBtn" type="button">Login</button>
 <button class="btn sm" id="signupBtn" type="button">Create clinic</button>
 <button class="btn sm" id="logoutBtn" style="display:none;" type="button">Logout</button>
 </div>
-<div style="margin-top:8px; font-size:12px; color:var(--muted); display:flex; gap:14px; flex-wrap:wrap; padding-bottom:12px;">
-<a href="#" id="forgotPasswordLink" style="color:var(--muted); text-decoration:underline; text-underline-offset:2px;">Forgot password?</a>
-<a href="/" style="color:var(--muted); text-decoration:underline; text-underline-offset:2px;">← Back to theroomboard.com</a>
+<div class="sxLinkRow">
+<button class="sxLinkBtn" id="forgotPasswordLink" type="button">Forgot password?</button>
+<button class="sxLinkBtn" onclick="window.location.href='/'" type="button">← theroomboard.com</button>
 </div>
 <div hidden id="loggedInSummary" style="border-top:1px solid rgba(255,255,255,.06);">
 <div class="sxRow">
@@ -237,14 +237,14 @@
 </div>
 </div>
 <details class="sxSection settingsCollapsible" id="clinicProfileEditPanel" hidden>
-<summary class="settingsCollapsibleCopy" style="padding:11px 16px; cursor:pointer; display:flex; align-items:center; justify-content:space-between; list-style:none;">
-<span>
+<summary>
+<span class="settingsCollapsibleCopy">
 <strong>Edit clinic profile</strong>
-<small style="display:block; font-size:11px; color:var(--settingsMuted); font-weight:400; text-transform:none; letter-spacing:0;">Update your clinic name, contact info, and specialty.</small>
+<small>Update your clinic name, contact info, and specialty.</small>
 </span>
 <span aria-hidden="true" class="settingsCollapsibleHint"></span>
 </summary>
-<div class="settingsCollapsibleBody" style="padding:12px 16px;">
+<div class="settingsCollapsibleBody">
 <div class="miniRow">
 <div class="field">
 <label>Clinic name</label>
@@ -284,11 +284,11 @@
 </div>
 </details>
 <div class="sxSection billingCard" id="billingCard" hidden>
-<div class="sxHead" style="display:flex; align-items:center; justify-content:space-between;">
+<div class="sxHead sxHeadFlex">
 <span>Subscription</span>
 <span class="billingBadge" id="billingBadge">Not loaded</span>
 </div>
-<div class="muted" id="billingSummary" style="padding:8px 16px 4px; font-size:12px;">Sign in to view subscription status.</div>
+<div class="muted sxCardNote" id="billingSummary">Sign in to view subscription status.</div>
 <div class="billingPlanGrid" style="padding:8px 16px;">
 <button class="billingPlanBtn" data-billing-plan="monthly" id="billingMonthlyBtn" type="button">
 <strong>Monthly</strong>
@@ -299,21 +299,21 @@
 <span>Subscribe with Stripe</span>
 </button>
 </div>
-<div class="actions" style="padding:4px 16px 10px;">
+<div class="actions sxCardActions">
 <button class="btn sm" id="billingRefreshBtn" type="button">Refresh billing</button>
 <button class="btn sm" id="billingPortalBtn" type="button">Manage billing</button>
 </div>
-<div class="muted" id="billingHelp" style="padding:0 16px 12px; font-size:12px;">Checkout and card management open through Stripe. No payment details are stored in RoomBoard.</div>
+<div class="muted sxCardNote sxCardNoteBottom" id="billingHelp">Checkout and card management open through Stripe. No payment details are stored in RoomBoard.</div>
 </div>
 <details class="sxSection settingsCollapsible" id="joinPracticePanel">
-<summary class="settingsCollapsibleCopy" style="padding:11px 16px; cursor:pointer; display:flex; align-items:center; justify-content:space-between; list-style:none;">
-<span>
+<summary>
+<span class="settingsCollapsibleCopy">
 <strong id="joinPracticePanelLabel">Join existing clinic</strong>
-<small id="joinPracticePanelHelp" style="display:block; font-size:11px; color:var(--settingsMuted); font-weight:400; text-transform:none; letter-spacing:0;">If your clinic already has RoomBoard, create your user here with the clinic invite code.</small>
+<small id="joinPracticePanelHelp">If your clinic already has RoomBoard, create your user here with the clinic invite code.</small>
 </span>
 <span aria-hidden="true" class="settingsCollapsibleHint"></span>
 </summary>
-<div class="settingsCollapsibleBody" style="padding:12px 16px;">
+<div class="settingsCollapsibleBody">
 <div class="miniRow" id="joinPracticeFields">
 <div class="field">
 <label>Full name</label>
@@ -350,13 +350,13 @@
 </details>
 <div class="sxSection">
 <div class="sxHead">Team feedback</div>
-<div style="padding:10px 16px 12px;">
-<textarea id="feedbackInput" placeholder="Example: Too many clicks to update a room. Or: We love the Quick Add workflow and want more tools like that." style="width:100%; box-sizing:border-box; min-height:72px; margin-bottom:8px;"></textarea>
-<div class="actions" style="margin:0 0 8px;">
+<div class="sxCardBody">
+<textarea class="sxFeedbackTextarea" id="feedbackInput" placeholder="Example: Too many clicks to update a room. Or: We love the Quick Add workflow and want more tools like that."></textarea>
+<div class="actions">
 <button class="btn sm primary" id="addFeedbackBtn" type="button">Add item</button>
 </div>
 <div class="feedbackChecklist" id="feedbackChecklist"></div>
-<div class="muted" id="feedbackStatusLine" style="font-size:12px; margin-top:6px;">Checklist items are saved on this computer so the team can check them off and remove them later.</div>
+<div class="muted sxFeedbackStatus" id="feedbackStatusLine">Checklist items are saved on this computer so the team can check them off and remove them later.</div>
 </div>
 </div>
 </div>

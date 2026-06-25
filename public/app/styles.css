@@ -5433,6 +5433,52 @@ details.sxSection .settingsCollapsibleBody .sxRow:last-child { border-bottom: no
 .sxAuthForm .miniRow { margin-bottom: 8px; }
 .sxAuthForm .field { margin-bottom: 0; }
 
+/* sxHead flex variant (title + badge side by side) */
+.sxHeadFlex { display: flex; align-items: center; justify-content: space-between; }
+
+/* Generic card body padding */
+.sxCardBody { padding: 10px 16px 12px; display: flex; flex-direction: column; gap: 8px; }
+
+/* Muted note lines inside cards */
+.sxCardNote { padding: 8px 16px 4px; font-size: 12px; }
+.sxCardNoteBottom { padding: 2px 16px 12px; }
+
+/* Action row with card-edge padding */
+.sxCardActions { padding: 4px 16px 10px; }
+
+/* Feedback textarea */
+.sxFeedbackTextarea { width: 100%; box-sizing: border-box; min-height: 72px; }
+.sxFeedbackStatus { font-size: 12px; margin-top: 2px; }
+
+/* Link-style buttons (forgot password, back to site) */
+.sxLinkRow {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 2px 0 10px;
+}
+.sxLinkBtn {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  min-height: 0 !important;
+  padding: 3px 6px !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  color: var(--muted) !important;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color .14s ease, background .14s ease !important;
+}
+.sxLinkBtn:hover {
+  color: var(--settingsText) !important;
+  background: rgba(255,255,255,.07) !important;
+  transform: none !important;
+}
+
 /* Alert threshold row — keep color picker tighter */
 .sxAlertRow { gap: 8px; }
 .sxAlertBadge {
