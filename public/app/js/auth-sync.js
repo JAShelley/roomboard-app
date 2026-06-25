@@ -3892,6 +3892,7 @@
 	                if(typeof window.refreshAccountSettingsForSession === "function") window.refreshAccountSettingsForSession();
 	                if(typeof window.refreshThemePrefsForSession === "function") window.refreshThemePrefsForSession();
 	                startPracticeRealtime();
+                showBoardLoadOverlay(currentPracticeName);
 	                loadPracticeData();
               }).catch(function(e){
                 setStatus("Clinic lookup failed: " + getErrorMessage(e));
@@ -3967,6 +3968,7 @@
           if(typeof window.refreshAccountSettingsForSession === "function") window.refreshAccountSettingsForSession();
           if(typeof window.refreshThemePrefsForSession === "function") window.refreshThemePrefsForSession();
           startPracticeRealtime();
+          showBoardLoadOverlay(currentPracticeName);
           await loadPracticeData();
           await serverNowPromise;
         } else {
