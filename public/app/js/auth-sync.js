@@ -1026,6 +1026,9 @@
       }, remaining);
     }
 
+    window.showBoardLoadOverlay = showBoardLoadOverlay;
+    window.hideBoardLoadOverlay = hideBoardLoadOverlay;
+
     async function finishAuthenticatedFlow(options){
       options = options || {};
       var context = await resolveClinicContextWithRetry(options.attempts || 6, options.waitMs || 250);

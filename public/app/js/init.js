@@ -27,6 +27,7 @@
       if(typeof getAppointmentTypesConfigSignature === "function") lastAppointmentTypesSignature = getAppointmentTypesConfigSignature();
       if(typeof getRoomBoardSignature === "function") lastRoomBoardSignature = getRoomBoardSignature();
       initSettingsTabs();
+      if(restoringClinicSnapshot && typeof window.showBoardLoadOverlay === "function") window.showBoardLoadOverlay("");
       refreshUiFromState({ applyTheme: true, renderSettingsLists: true });
       refreshKnownRoomIds(state.rooms);
       setStatus(restoringClinicSnapshot ? "Restoring clinic snapshot..." : "Ready");
