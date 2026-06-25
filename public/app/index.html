@@ -468,29 +468,45 @@
 </details>
 </div>
 <div class="tabPanel" id="tabAppearance">
-<div class="sxSection">
-<div class="sxHead">Theme presets</div>
-<div style="padding:10px 16px 4px;">
+<details class="sxSection settingsCollapsible" open>
+<summary>
+<span class="settingsCollapsibleCopy">
+<strong>Theme presets</strong>
+<small>Choose a theme or set your clinic default.</small>
+</span>
+<span aria-hidden="true" class="settingsCollapsibleHint"></span>
+</summary>
+<div class="settingsCollapsibleBody">
 <div class="themePresetGrid" id="themePresetGrid"></div>
-</div>
+<div class="sxRowGroup">
 <div class="sxRow">
 <span class="sxLabel">Current theme</span>
-<select id="themePreset" style="flex:1;"></select>
+<select id="themePreset"></select>
 </div>
-<div class="sxRow" style="padding-bottom:4px;">
-<span class="sxLabel" style="font-size:11px; color:var(--settingsMuted);" id="themePresetHelp">Theme details will appear here.</span>
+<div class="sxRow">
+<span class="sxLabel sxLabelMuted" id="themePresetHelp">Theme details will appear here.</span>
 </div>
 <div class="sxRow">
 <span class="sxLabel">Default theme</span>
-<select id="themeDefaultPreset" style="flex:1;"></select>
+<select id="themeDefaultPreset"></select>
 </div>
-<div style="padding:8px 16px 12px; display:flex; gap:8px;">
+</div>
+<div class="actions">
 <button class="btn sm" id="resetThemeBtn" type="button">Reset to default</button>
 <button class="btn sm" id="makeDefaultThemeBtn" type="button">Make current default</button>
 </div>
 </div>
-<div class="sxSection">
-<div class="sxHead">Display layout</div>
+</details>
+<details class="sxSection settingsCollapsible">
+<summary>
+<span class="settingsCollapsibleCopy">
+<strong>Display layout</strong>
+<small>Columns, rows, card scale, and line spacing.</small>
+</span>
+<span aria-hidden="true" class="settingsCollapsibleHint"></span>
+</summary>
+<div class="settingsCollapsibleBody">
+<div class="sxRowGroup">
 <div class="sxRow">
 <span class="sxLabel">Columns<span class="sxLabelNote">room cards per row</span></span>
 <input class="sxInputNum" id="displayCols" min="1" step="1" type="number">
@@ -514,8 +530,18 @@
 </div>
 </div>
 </div>
-<div class="sxSection">
-<div class="sxHead">Room card fields</div>
+</div>
+</details>
+<details class="sxSection settingsCollapsible">
+<summary>
+<span class="settingsCollapsibleCopy">
+<strong>Room card fields</strong>
+<small>Show or hide individual fields on each room card.</small>
+</span>
+<span aria-hidden="true" class="settingsCollapsibleHint"></span>
+</summary>
+<div class="settingsCollapsibleBody">
+<div class="sxRowGroup">
 <div class="sxRow"><span class="sxLabel">Patient name</span><input checked id="showRoomCardPatient" type="checkbox"></div>
 <div class="sxRow"><span class="sxLabel">Type</span><input checked id="showRoomCardType" type="checkbox"></div>
 <div class="sxRow"><span class="sxLabel">Doctor name</span><input checked id="showRoomCardDoctorName" type="checkbox"></div>
@@ -525,8 +551,18 @@
 <div class="sxRow"><span class="sxLabel">Quick notes</span><input checked id="showRoomCardQuickNote" type="checkbox"></div>
 <div class="sxRow"><span class="sxLabel">Status notes</span><input checked id="showRoomCardStatusNotes" type="checkbox"></div>
 </div>
-<div class="sxSection">
-<div class="sxHead">Fonts</div>
+</div>
+</details>
+<details class="sxSection settingsCollapsible">
+<summary>
+<span class="settingsCollapsibleCopy">
+<strong>Fonts</strong>
+<small>Base, card, display, timer, and input font sizes.</small>
+</span>
+<span aria-hidden="true" class="settingsCollapsibleHint"></span>
+</summary>
+<div class="settingsCollapsibleBody">
+<div class="sxRowGroup">
 <div class="sxRow">
 <span class="sxLabel">Base (px)</span>
 <input class="sxInputNum" id="fontBase" min="10" step="1" type="number">
@@ -548,8 +584,18 @@
 <input class="sxInputNum" id="fontInput" min="10" step="1" type="number">
 </div>
 </div>
-<div class="sxSection">
-<div class="sxHead">Display colors</div>
+</div>
+</details>
+<details class="sxSection settingsCollapsible">
+<summary>
+<span class="settingsCollapsibleCopy">
+<strong>Display colors</strong>
+<small>Font color, muted text, card text contrast, and doctor highlight.</small>
+</span>
+<span aria-hidden="true" class="settingsCollapsibleHint"></span>
+</summary>
+<div class="settingsCollapsibleBody">
+<div class="sxRowGroup">
 <div class="sxRow">
 <span class="sxLabel">Font color</span>
 <input id="displayFontColor" type="color">
@@ -560,7 +606,7 @@
 </div>
 <div class="sxRow">
 <span class="sxLabel">Card text on colors</span>
-<select id="cardTextMode" style="flex:1;">
+<select id="cardTextMode">
 <option value="auto">Auto (best contrast)</option>
 <option value="light">Always light</option>
 <option value="dark">Always dark</option>
@@ -568,13 +614,23 @@
 </div>
 <div class="sxRow" id="doctorHighlightWrap">
 <span class="sxLabel">Highlight doctor</span>
-<select id="doctorHighlightSelect" style="flex:1;">
+<select id="doctorHighlightSelect">
 <option value="">None</option>
 </select>
 </div>
 </div>
-<div class="sxSection mobileOnlySettingsCard">
-<div class="sxHead">Mobile quick view</div>
+</div>
+</details>
+<details class="sxSection settingsCollapsible mobileOnlySettingsCard">
+<summary>
+<span class="settingsCollapsibleCopy">
+<strong>Mobile quick view</strong>
+<small>Columns, tile gap, and font sizes for the mobile overlay.</small>
+</span>
+<span aria-hidden="true" class="settingsCollapsibleHint"></span>
+</summary>
+<div class="settingsCollapsibleBody">
+<div class="sxRowGroup">
 <div class="sxRow">
 <span class="sxLabel">Columns</span>
 <input class="sxInputNum" id="mobileQuickViewColumns" max="5" min="2" step="1" type="number">
@@ -598,6 +654,8 @@
 </div>
 </div>
 </div>
+</div>
+</details>
 <details class="sxSection settingsCollapsible" id="headerBrandingPanel">
 <summary>
 <span class="settingsCollapsibleCopy">
@@ -607,6 +665,7 @@
 <span aria-hidden="true" class="settingsCollapsibleHint"></span>
 </summary>
 <div class="settingsCollapsibleBody">
+<div class="sxRowGroup">
 <div class="sxRow">
 <span class="sxLabel">Practice name color</span>
 <input id="practiceNameColor" type="color">
@@ -626,15 +685,16 @@
 <span class="sxLabel">Invert logo colors</span>
 <input id="practiceLogoInvert" type="checkbox">
 </div>
-<div style="padding:10px 16px 4px;">
-<input accept="image/png,image/jpeg,image/webp,image/svg+xml" id="practiceLogoFile" type="file" style="width:100%;">
-<div class="muted" id="practiceLogoHelp" style="font-size:12px; margin-top:4px;">Uploads replace the RoomBoard wordmark with your clinic logo for the whole clinic.</div>
 </div>
-<div class="practiceLogoPreview" id="practiceLogoPreviewWrap" style="margin:0 16px 8px;">
+<div class="sxCardBody">
+<input accept="image/png,image/jpeg,image/webp,image/svg+xml" id="practiceLogoFile" type="file" style="width:100%;">
+<div class="muted sxCardNote" id="practiceLogoHelp">Uploads replace the RoomBoard wordmark with your clinic logo for the whole clinic.</div>
+</div>
+<div class="practiceLogoPreview" id="practiceLogoPreviewWrap">
 <img alt="Clinic logo preview" hidden id="practiceLogoPreviewImage">
 <div class="practiceLogoPreviewEmpty" id="practiceLogoPreviewEmpty">No clinic logo uploaded yet.</div>
 </div>
-<div style="padding:4px 16px 12px; display:flex; gap:8px;">
+<div class="actions sxCardActions">
 <button class="btn sm primary" id="uploadPracticeLogoBtn" type="button">Upload logo</button>
 <button class="btn sm" id="removePracticeLogoBtn" type="button">Remove logo</button>
 </div>
@@ -646,20 +706,20 @@
 <div class="sxHead">Timer alerts</div>
 <div class="sxRow sxAlertRow">
 <span class="sxLabel">Alert 1 after<span class="sxLabelNote">seconds elapsed → card color changes</span></span>
-<input class="sxInputNum" id="timerAlert1AtSec" min="0" step="10" type="number" style="width:70px;">
+<input class="sxInputNum" id="timerAlert1AtSec" min="0" step="10" type="number">
 <span class="sxAlertBadge">sec</span>
 <input id="timerAlert1Color" type="color">
 </div>
 <div class="sxRow sxAlertRow">
 <span class="sxLabel">Alert 2 after<span class="sxLabelNote">overrides alert 1 color</span></span>
-<input class="sxInputNum" id="timerAlert2AtSec" min="0" step="10" type="number" style="width:70px;">
+<input class="sxInputNum" id="timerAlert2AtSec" min="0" step="10" type="number">
 <span class="sxAlertBadge">sec</span>
 <input id="timerAlert2Color" type="color">
 </div>
 <div class="sxSubHead">Actions</div>
 <div class="sxRow">
 <span class="sxLabel">Stopwatch style</span>
-<select id="stopwatchStyle" style="flex:1;">
+<select id="stopwatchStyle">
 <option value="classic">Classic</option>
 <option value="minimal">Minimal</option>
 <option value="glass">Glass</option>
@@ -669,7 +729,7 @@
 </div>
 <div class="sxRow">
 <span class="sxLabel">Discharge icon</span>
-<select id="dischargeIconStyle" style="flex:1;">
+<select id="dischargeIconStyle">
 <option value="paw">Paw + arrow + doorway</option>
 <option value="tooth">Tooth + arrow + doorway</option>
 <option value="door">Door only</option>
@@ -684,8 +744,8 @@
 </span>
 <span aria-hidden="true" class="settingsCollapsibleHint"></span>
 </summary>
-<div class="settingsCollapsibleBody" style="padding:10px 16px 12px;">
-<div class="actions" style="margin-bottom:8px;">
+<div class="settingsCollapsibleBody">
+<div class="actions">
 <button class="btn sm primary" id="runStopwatchDiagnosticsBtn" type="button">Run self-check</button>
 <button class="btn sm" id="repairStopwatchCoverageBtn" type="button">Repair coverage</button>
 </div>
@@ -710,7 +770,7 @@
 </div>
 <div class="statsSummaryRow" hidden id="statsSummaryRow"></div>
 <div hidden id="statsRoomChart"></div>
-<div class="muted" id="statsStatusLine" style="padding:10px 16px; font-size:12px;">Click "Load" to pull your clinic's session data.</div>
+<div class="muted sxStatsStatus" id="statsStatusLine">Click "Load" to pull your clinic's session data.</div>
 </div>
 </div>
 <div class="tabPanel" id="tabUtilities">
@@ -721,7 +781,7 @@
 <div class="sxToolActions">
 <a class="btn sm primary" href="https://chromewebstore.google.com/detail/injkdfclmcokpgjecophgaohdajfgdfj?utm_source=item-share-cb" rel="noopener" style="text-decoration:none;" target="_blank">Get the Chrome extension</a>
 </div>
-<p class="sxToolDesc" style="margin:0;">After installing, hover or click an appointment in your scheduler — RoomBoard reads the patient, doctor, and type and drops it into Quick Add.</p>
+<p class="sxToolDesc sxToolDescLast">After installing, hover or click an appointment in your scheduler — RoomBoard reads the patient, doctor, and type and drops it into Quick Add.</p>
 </div>
 </div>
 <div class="sxSection" id="desktopDownloadCard" style="display:none;">
@@ -732,7 +792,7 @@
 <a class="btn sm primary" href="#" id="desktopDownloadLink" rel="noopener" style="text-decoration:none;" target="_blank">Download Windows app</a>
 <a class="btn sm" hidden href="#" id="desktopReleaseLink" rel="noopener" style="text-decoration:none;" target="_blank">GitHub releases</a>
 </div>
-<div class="sxToolDesc" id="desktopDownloadMeta" style="margin:0;"></div>
+<p class="sxToolDesc sxToolDescLast" id="desktopDownloadMeta"></p>
 </div>
 </div>
 <div class="sxSection" id="desktopMacDownloadCard" style="display:none;">
@@ -742,7 +802,7 @@
 <div class="sxToolActions">
 <a class="btn sm primary" href="#" id="desktopMacDownloadLink" rel="noopener" style="text-decoration:none;" target="_blank">Download RoomBoard for Mac</a>
 </div>
-<div class="sxToolDesc" id="desktopMacDownloadMeta" style="margin:0;"></div>
+<p class="sxToolDesc sxToolDescLast" id="desktopMacDownloadMeta"></p>
 </div>
 </div>
 <div class="sxSection" id="captureDownloadCard" style="display:none;">
@@ -752,19 +812,19 @@
 <div class="sxToolActions">
 <a class="btn sm primary" href="#" id="captureDownloadLink" rel="noopener" style="text-decoration:none;" target="_blank">Download Capture for Windows</a>
 </div>
-<div class="sxToolDesc" id="captureDownloadMeta" style="margin:0;"></div>
+<p class="sxToolDesc sxToolDescLast" id="captureDownloadMeta"></p>
 </div>
 </div>
 <div class="sxSection">
 <div class="sxHead">Defaults &amp; backup</div>
-<div class="sxToolBody" style="padding-bottom:4px;">
+<div class="sxToolBody">
 <p class="sxToolDesc">Save your current board layout, fonts, and display settings as the clinic-wide default.</p>
 <button class="btn sm primary" id="savePracticeDefaultsBtn" type="button">Save as default</button>
 </div>
 <div class="sxSubHead">Backup &amp; restore</div>
-<div class="sxToolBody" style="padding-bottom:12px;">
+<div class="sxToolBody">
 <p class="sxToolDesc">Export your full clinic config as JSON, or restore from a previous export.</p>
-<div class="sxToolActions" style="margin:0;">
+<div class="sxToolActions sxToolActionsLast">
 <button class="btn sm" id="exportClinicConfigBtn" type="button">Export config</button>
 <button class="btn sm" id="importClinicConfigBtn" type="button">Import config</button>
 </div>
@@ -779,8 +839,8 @@
 </span>
 <span aria-hidden="true" class="settingsCollapsibleHint"></span>
 </summary>
-<div class="settingsCollapsibleBody" style="padding:10px 16px 12px;">
-<div class="muted" style="font-size:12px; margin-bottom:10px;">RoomBoard separates settings by where they should apply so changes are easier to trust.</div>
+<div class="settingsCollapsibleBody">
+<div class="muted sxCardNote">RoomBoard separates settings by where they should apply so changes are easier to trust.</div>
 <div class="scopeLegend">
 <span class="scopeBadge scopeBadgeWindow">This window</span>
 <span class="scopeBadge scopeBadgePersonal">My defaults</span>
@@ -810,7 +870,7 @@
 </span>
 <span aria-hidden="true" class="settingsCollapsibleHint"></span>
 </summary>
-<div class="settingsCollapsibleBody" style="padding:10px 16px 12px;">
+<div class="settingsCollapsibleBody">
 <div class="muted" id="settingsHealthSummary">RoomBoard checks your settings before it saves them, kind of like a spell-check for setup changes.</div>
 <ul class="settingsHealthList isOk" id="settingsHealthList">
 <li>Everything looks good right now.</li>

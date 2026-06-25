@@ -5479,6 +5479,34 @@ details.sxSection .settingsCollapsibleBody .sxRow:last-child { border-bottom: no
   transform: none !important;
 }
 
+/* Tool section trailing-element cleanup */
+.sxToolDescLast { margin-bottom: 0 !important; }
+.sxToolActionsLast { margin-bottom: 0 !important; }
+
+/* Stats status line */
+.sxStatsStatus { padding: 10px 16px; font-size: 12px; }
+
+/* Theme help label — muted secondary text inside a sxRow */
+.sxLabelMuted {
+  font-size: 11px;
+  color: var(--settingsMuted);
+  font-weight: 400;
+  flex: 1;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Selects inside sxRow fill available space */
+.sxRow select { flex: 1; min-width: 0; }
+
+/* sxRowGroup — cancels settingsCollapsibleBody horizontal padding so
+   sxRows render flush to the card edge, matching the flat-section look */
+.settingsCollapsibleBody > .sxRowGroup {
+  margin: 0 -16px;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Alert threshold row — keep color picker tighter */
 .sxAlertRow { gap: 8px; }
 .sxAlertBadge {
