@@ -289,12 +289,65 @@ img { max-width: 100%; display: block; }
 
 /* Interactive room cards */
 .room { cursor: pointer; }
-.bd-ico { cursor: pointer; transition: background .15s; }
+.bd-ico { cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
 .bd-ico:hover { background: rgba(255,255,255,.12); border-radius: 6px; }
+.bd-ico.active { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.30); color: #fff; }
 .room.click-flash { animation: roomFlash .35s ease-out; }
 @keyframes roomFlash {
   0%   { filter: brightness(1.55); }
   100% { filter: brightness(1); }
+}
+
+/* ONLY ACTIVE toggle: on state */
+.bd-toggle { cursor: pointer; transition: color .2s, border-color .2s; }
+.bd-toggle.on { color: #c4fce6; border-color: rgba(24, 176, 107, .45); }
+.bd-toggle.on .sw2 { background: #18b06b; }
+.bd-toggle.on .sw2::after { left: 13px; background: #fff; }
+.bd-toggle .sw2::after { transition: left .2s ease; }
+/* hide non-active rooms when filter is on */
+.bd-grid.only-active .room.empty,
+.bd-grid.only-active .room.cleaning { display: none; }
+
+/* Quick add shake — when no empty rooms available */
+@keyframes bdShake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-4px) rotate(-5deg); }
+  75%       { transform: translateX(4px) rotate(5deg); }
+}
+.bd-ico.shake { animation: bdShake .35s ease; }
+
+/* Grid / List view toggle */
+.bd-grid.list-view { grid-template-columns: 1fr; gap: 7px; }
+.bd-grid.list-view .room { flex-direction: row; min-height: 0; border-radius: 12px; }
+.bd-grid.list-view .room:hover { transform: translateY(-1px) scale(1); }
+.bd-grid.list-view .roomTop { flex-shrink: 0; width: 100px; border-bottom: none; border-right: 1px solid rgba(255,255,255,.10); padding: 0 12px; margin: 0; align-self: stretch; display: flex; align-items: center; }
+.bd-grid.list-view .roomIcons { display: none; }
+.bd-grid.list-view .roomBody { flex-direction: row; align-items: center; padding: 10px 14px; gap: 16px; flex: 1; }
+.bd-grid.list-view .roomInfoLine { flex: 1; font-size: 13px; }
+.bd-grid.list-view .roomFoot { margin-top: 0; flex-shrink: 0; padding: 0; }
+.bd-grid.list-view .roomFoot .timer { font-size: 16px; padding: 5px 10px; }
+.bd-grid.list-view .roomFoot .docBadge { width: 34px; height: 34px; }
+.bd-grid.list-view .noteDock { display: none; }
+.bd-grid.list-view .roomEmptyText { margin: 0; }
+.bd-grid.list-view .noteRow { display: none !important; }
+
+/* Per-room note row */
+.noteRow { overflow: hidden; max-height: 0; transition: max-height .25s ease, padding .25s ease; padding: 0 16px; }
+.noteRow.open { max-height: 52px; padding: 0 16px 12px; }
+.bd-grid.notes-mode .noteRow { max-height: 52px; padding: 0 16px 12px; }
+.noteInput {
+  width: 100%; background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.14);
+  border-radius: 8px; padding: 7px 10px; font-size: 11.5px; color: inherit;
+  font-family: inherit; outline: none; box-sizing: border-box;
+}
+.noteInput:focus { border-color: rgba(255,255,255,.32); }
+.noteInput::placeholder { color: rgba(255,255,255,.28); font-style: italic; }
+/* green dot on noteDock when a note exists */
+.noteDock { cursor: pointer; }
+.noteDock.has-note::after {
+  content: ""; position: absolute; top: -3px; right: -3px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #18b06b; border: 1.5px solid rgba(0,0,0,.18);
 }
 
 /* ---------- Board demo (faithful to the real RoomBoard display) ---------- */

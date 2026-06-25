@@ -179,12 +179,12 @@
     var TIMER_ALERT = 45 * 60;  // red border + red timer
 
     var rooms = [
-      { name: "Room 1", patient: "R. Patel",  doc: "Dr. Maro",   type: "exam",      secs: 72 * 60 + 14, state: "active" },
-      { name: "Room 2", patient: "J. Nguyen", doc: "Dr. Reyes",  type: "followup",  secs: 24 * 60 + 8,  state: "active" },
-      { name: "Room 3", patient: "M. Ortiz",  doc: "Dr. Okafor", type: "procedure", secs: 8 * 60 + 33,  state: "active" },
-      { name: "Room 4", patient: "",          doc: "",           type: "exam",      secs: 0,            state: "empty"  },
-      { name: "Room 5", patient: "C. Wells",  doc: "Dr. Park",   type: "consult",   secs: 31 * 60 + 47, state: "active" },
-      { name: "Room 6", patient: "D. Flynn",  doc: "Dr. Hahn",   type: "workin",    secs: 7 * 60 + 19,  state: "active" }
+      { name: "Room 1", patient: "R. Patel",  doc: "Dr. Maro",   type: "exam",      secs: 72 * 60 + 14, state: "active", note: "" },
+      { name: "Room 2", patient: "J. Nguyen", doc: "Dr. Reyes",  type: "followup",  secs: 24 * 60 + 8,  state: "active", note: "" },
+      { name: "Room 3", patient: "M. Ortiz",  doc: "Dr. Okafor", type: "procedure", secs: 8 * 60 + 33,  state: "active", note: "" },
+      { name: "Room 4", patient: "",          doc: "",           type: "exam",      secs: 0,            state: "empty",  note: "" },
+      { name: "Room 5", patient: "C. Wells",  doc: "Dr. Park",   type: "consult",   secs: 31 * 60 + 47, state: "active", note: "" },
+      { name: "Room 6", patient: "D. Flynn",  doc: "Dr. Hahn",   type: "workin",    secs: 7 * 60 + 19,  state: "active", note: "" }
     ];
 
     function fmt(secs) {
@@ -215,6 +215,7 @@
       var icons = '<span class="roomIcons">🐾 ↪ ▤</span>';
       var top = '<div class="roomTop"><span class="roomName">' + esc(r.name) + '</span>' + icons + '</div>';
       var body;
+      var noteRow = "";
       if (r.state === "empty") {
         body = '<div class="roomBody"><span class="roomEmptyText">Empty</span>'
           + '<div class="roomFoot"><span class="timer" data-timer>' + fmt(0) + '</span></div></div>';
@@ -228,12 +229,15 @@
           + '" onerror="this.parentNode.classList.add(\'fallback\');this.remove();">'
           + '<span class="docBadgeInit">' + d.init + '</span></span>';
         body = '<div class="roomBody">'
-          + '<span class="noteDock">📝</span>'
+          + '<span class="noteDock' + (r.note ? ' has-note' : '') + '">📝</span>'
           + '<div class="roomInfoLine">' + info + '</div>'
           + '<div class="roomFoot"><span class="timer' + (alert ? " alert" : (warn ? " warn" : "")) + '" data-timer>' + fmt(r.secs) + '</span>'
           + badge + '</div></div>';
+        noteRow = '<div class="noteRow' + (r.note ? ' open' : '') + '">'
+          + '<input class="noteInput" type="text" placeholder="Add a note…" value="' + esc(r.note) + '">'
+          + '</div>';
       }
-      el.innerHTML = top + body;
+      el.innerHTML = top + body + noteRow;
       return el;
     }
 
@@ -318,8 +322,23 @@
       r.secs    = Math.floor(Math.random() * 4 * 60) + 60;
     }
 
-    /* Click a room to cycle its state */
+    /* Click a room to cycle its state (also handles noteDock + noteInput) */
     grid.addEventListener("click", function (e) {
+      /* noteDock: toggle that room's note row */
+      var dock = e.target.closest(".noteDock");
+      if (dock) {
+        e.stopPropagation();
+        var noteRow = dock.closest(".room").querySelector(".noteRow");
+        if (noteRow) {
+          var opening = !noteRow.classList.contains("open");
+          noteRow.classList.toggle("open", opening);
+          if (opening) { var ni = noteRow.querySelector(".noteInput"); if (ni) { ni.focus(); ni.select(); } }
+        }
+        return;
+      }
+      /* noteInput: don't bubble to room cycling */
+      if (e.target.classList.contains("noteInput")) { e.stopPropagation(); return; }
+
       var card = e.target.closest(".room");
       if (!card) return;
       var roomName = card.getAttribute("data-room");
@@ -331,7 +350,6 @@
       else                                { randomPatient(room); }
 
       renderOne(room);
-      /* Flash the new card (renderOne already replaced the DOM node) */
       var newCard = grid.querySelector('[data-room="' + roomName + '"]');
       if (newCard) {
         newCard.classList.add("click-flash");
@@ -341,12 +359,70 @@
       hideTryHint();
     });
 
-    /* "+" button adds a patient to the first empty room */
+    /* Note input: save text to room object, update dot indicator */
+    grid.addEventListener("input", function (e) {
+      if (!e.target.classList.contains("noteInput")) return;
+      var card = e.target.closest(".room");
+      if (!card) return;
+      var roomName = card.getAttribute("data-room");
+      var room = rooms.find(function (r) { return r.name === roomName; });
+      if (room) {
+        room.note = e.target.value;
+        var dock = card.querySelector(".noteDock");
+        if (dock) dock.classList.toggle("has-note", !!room.note);
+      }
+    });
+
+    /* "+" button: add patient to first empty room, shake if none available */
     var addBtn = document.getElementById("bdAddBtn");
     if (addBtn) {
       addBtn.addEventListener("click", function () {
         var empty = rooms.find(function (r) { return r.state === "empty"; });
-        if (empty) { randomPatient(empty); renderOne(empty); updateActiveCount(); hideTryHint(); }
+        if (empty) {
+          randomPatient(empty); renderOne(empty); updateActiveCount(); hideTryHint();
+        } else {
+          addBtn.classList.add("shake");
+          setTimeout(function () { addBtn.classList.remove("shake"); }, 380);
+        }
+      });
+    }
+
+    /* ONLY ACTIVE toggle */
+    var onlyActiveBtn = document.getElementById("bdOnlyActive");
+    var onlyActive = false;
+    if (onlyActiveBtn) {
+      onlyActiveBtn.addEventListener("click", function () {
+        onlyActive = !onlyActive;
+        onlyActiveBtn.classList.toggle("on", onlyActive);
+        grid.classList.toggle("only-active", onlyActive);
+      });
+    }
+
+    /* Grid / List view toggle */
+    var viewToggleBtn = document.getElementById("bdViewToggle");
+    var isListView = false;
+    if (viewToggleBtn) {
+      viewToggleBtn.addEventListener("click", function () {
+        isListView = !isListView;
+        grid.classList.toggle("list-view", isListView);
+        viewToggleBtn.classList.toggle("active", isListView);
+        viewToggleBtn.textContent = isListView ? "☰" : "▦";
+      });
+    }
+
+    /* Notes mode toggle: expand/collapse all note rows at once */
+    var notesToggleBtn = document.getElementById("bdNotesToggle");
+    var notesMode = false;
+    if (notesToggleBtn) {
+      notesToggleBtn.addEventListener("click", function () {
+        notesMode = !notesMode;
+        notesToggleBtn.classList.toggle("active", notesMode);
+        grid.classList.toggle("notes-mode", notesMode);
+        if (notesMode) {
+          /* focus the first visible note input */
+          var first = grid.querySelector(".room:not(.empty):not(.cleaning) .noteInput");
+          if (first) { setTimeout(function () { first.focus(); }, 260); }
+        }
       });
     }
   }
