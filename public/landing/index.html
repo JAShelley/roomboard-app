@@ -62,21 +62,14 @@
 <header class="hero" id="top">
   <div class="wrap">
     <div class="hero-col">
-      <span class="eyebrow">● For busy practices</span>
-      <h1>Every room on one <span class="grad">live board.</span></h1>
-      <p class="lede">Stop asking "who's in room 3?" Your whole team sees patient, provider, wait time, and status instantly — and it syncs across every screen in under a second.</p>
+      <span class="eyebrow">● Live room status, on every screen</span>
+      <h1>Never ask <span class="grad">"who's in<br>room 3?"</span> again</h1>
+      <p class="lede">One live board your whole clinic watches — patients, providers, timers and room status, synced across every screen in under a second.</p>
       <div class="hero-cta">
         <a class="btn primary lg" href="/app/index.html?mode=startup&auth=signup">Start free trial</a>
-        <a class="btn ghost lg" href="#features">See it in action</a>
+        <a class="btn ghost lg" href="#features">Watch 60-sec demo</a>
       </div>
-      <div class="hero-trust">
-        <span class="dots" aria-hidden="true">
-          <span style="background:var(--st-exam)">●</span>
-          <span style="background:var(--st-surgery)">●</span>
-          <span style="background:var(--st-ready)">●</span>
-        </span>
-        Works on web, desktop, iPhone, iPad, and Apple Watch.
-      </div>
+      <p class="hero-microtrust">No credit card&nbsp;·&nbsp;Set up in minutes&nbsp;·&nbsp;Cancel anytime</p>
       <div class="specialties" aria-label="Practice types">
         <span>Medical (MD)</span>
         <span>Dental</span>
@@ -89,10 +82,31 @@
 
   <!-- Live board demo — full-width below the copy -->
   <div class="hero-board-outer">
+    <!-- Floating feature callout badges -->
+    <div class="board-badge badge-tl" aria-hidden="true">
+      <span class="bb-icon">⏱</span>
+      <span class="bb-dot" style="background:#f59e0b"></span>
+      <span class="bb-body"><strong>Live timers</strong><small>Turn amber → red</small></span>
+    </div>
+    <div class="board-badge badge-tr" aria-hidden="true">
+      <span class="bb-icon">⚡</span>
+      <span class="bb-dot" style="background:var(--teal-500)"></span>
+      <span class="bb-body"><strong>&lt; 1s sync</strong><small>Every screen instantly</small></span>
+    </div>
+    <div class="board-badge badge-bl" aria-hidden="true">
+      <span class="bb-icon">✓</span>
+      <span class="bb-dot" style="background:#18b06b"></span>
+      <span class="bb-body"><strong>Ready flags</strong><small>Room + Doctor status</small></span>
+    </div>
+    <div class="board-badge badge-br" aria-hidden="true">
+      <span class="bb-icon">🩺</span>
+      <span class="bb-dot" style="background:#8b5cf6"></span>
+      <span class="bb-body"><strong>Doctor assigned</strong><small>Initials on every card</small></span>
+    </div>
+
     <div class="board-demo" id="boardDemo" aria-label="Example clinic board">
       <div class="bd-bar">
-        <span class="bd-logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="20"/></svg></span>
-        <span class="bd-brand"><b>RIVERSIDE CLINIC</b><small>Board ready.</small></span>
+        <span class="bd-bar-title">Today&nbsp;·&nbsp;<span id="bdActiveCount">6</span> rooms active</span>
         <span class="bd-tools">
           <span class="bd-toggle">ONLY ACTIVE <span class="sw2"></span></span>
           <span class="bd-ico">+</span>
@@ -100,6 +114,7 @@
           <span class="bd-ico">▦</span>
           <span class="bd-ico">⚙</span>
         </span>
+        <span class="bd-live-pill"><span class="bd-live-dot"></span>Live</span>
       </div>
       <div class="bd-grid" id="bdGrid"><!-- rooms injected by script.js --></div>
     </div>
