@@ -689,6 +689,14 @@
       if(statusText) setStatus(statusText);
     }
 
+    function setOverlayStatus(text){
+      if(typeof window.setOverlayStatus === "function") window.setOverlayStatus(text);
+    }
+    function setBoardLoadStep(text){
+      var el = document.getElementById("boardLoadStep");
+      if(el) el.textContent = text || "";
+    }
+
     async function withTimeout(promise, ms, label){
       var timeoutMs = Math.max(1, Number(ms || 1));
       var timer = null;
@@ -1031,8 +1039,10 @@
 
     async function finishAuthenticatedFlow(options){
       options = options || {};
+      setBoardLoadStep("Finding your clinic…");
       var context = await resolveClinicContextWithRetry(options.attempts || 6, options.waitMs || 250);
       if(!context || !context.practiceId){
+        setBoardLoadStep("");
         setStatus("Logged in, but no clinic was linked to this account.");
         setSyncUI("err", "No clinic");
         return false;
@@ -1041,7 +1051,9 @@
       if(typeof window.refreshThemePrefsForSession === "function") window.refreshThemePrefsForSession();
       var billingPromise = refreshBillingStatus().catch(function(){ return null; });
       showBoardLoadOverlay(currentPracticeName);
+      setBoardLoadStep("Loading board data…");
       await loadPracticeData();
+      setBoardLoadStep("");
       var billingStatus = await billingPromise;
       if(billingStatus && billingStatus.hasAccess === false){
         setStatus("Subscribe or renew billing to open the live board.");
@@ -4018,6 +4030,7 @@
           return;
         }
         if(!(existingSession && existingSession.data && existingSession.data.session)){
+          setOverlayStatus("Creating your account…");
           var res = await withTimeout(supabase.auth.signUp({
             email: email,
             password: password,
@@ -4032,6 +4045,7 @@
             throw new Error("Sign up succeeded, but there is no active session yet. Disable email confirmation in Supabase Auth for the immediate clinic setup flow.");
           }
         }
+        setOverlayStatus("Setting up your clinic…");
         var rpcRes = null;
         var rpcError = null;
         for(var attempt=0; attempt<5; attempt++){
@@ -4129,9 +4143,11 @@
           setStatus("Email and password are required.");
           return;
         }
+        setOverlayStatus("Verifying credentials…");
         var res = await signInWithPasswordRobust(email, password);
         if(res.error) throw res.error;
         updateAuthUI(true);
+        setOverlayStatus("Loading your board…");
         showBoardLoadOverlay("");
         var loaded = await withTimeout(finishAuthenticatedFlow({ attempts: 8, waitMs: 250 }), 15000, "Clinic login");
         if(!loaded){

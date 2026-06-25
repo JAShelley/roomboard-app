@@ -192,6 +192,10 @@
         "transition:opacity .15s,transform .18s cubic-bezier(.22,1,.36,1),box-shadow .15s;}",
       ".rbASubmit:hover:not(:disabled){opacity:.92;transform:translateY(-1px);box-shadow:0 6px 28px rgba(14,165,233,.40);}",
       ".rbASubmit:disabled{opacity:.45;cursor:default;transform:none;box-shadow:none;}",
+      /* status line below submit */
+      ".rbAStatus{font-size:12px;color:rgba(148,178,220,.45);text-align:center;",
+        "margin:-10px 0 14px;min-height:1.4em;font-style:italic;",
+        "transition:opacity .2s ease;}",
       /* footer */
       ".rbAFooterLinks{display:flex;justify-content:center;gap:20px;}",
       ".rbAFooterLinks a{color:rgba(148,178,220,.45);font-size:12.5px;text-decoration:none;transition:color .15s;}",
@@ -282,6 +286,7 @@
           '<div class="rbAField"><label>Password</label><input id="rbaPassword" placeholder="Password" type="password" autocomplete="current-password"></div>',
           '<div class="rbAError" id="rbAError"></div>',
           '<button class="rbASubmit" id="rbaSubmit" type="button">Sign in</button>',
+          '<p class="rbAStatus" id="rbAStatus"></p>',
           '<div class="rbAFooterLinks">',
             '<a href="#" id="rbaForgotLink">Forgot password?</a>',
             '<a href="/">← theroomboard.com</a>',
@@ -313,12 +318,14 @@
       if(formSub) formSub.textContent = mode === "create" ? "Create your RoomBoard account." : "Sign in to your clinic account.";
       hideErr();
     }
-    function showErr(msg){ errorDiv.textContent = msg; errorDiv.style.display = ""; }
+    var statusEl = document.getElementById("rbAStatus");
+    function showErr(msg){ errorDiv.textContent = msg; errorDiv.style.display = ""; if(statusEl) statusEl.textContent = ""; }
     function hideErr(){ errorDiv.style.display = "none"; }
     var busyWatchdog = null;
     function setBusy(b){
       submitBtn.disabled = !!b;
       submitBtn.textContent = b ? (curMode === "create" ? "Creating clinic…" : "Signing in…") : (curMode === "create" ? "Create clinic" : "Sign in");
+      if(!b && statusEl) statusEl.textContent = "";
       // Safety net: never let the button hang on "Signing in…" forever. If the
       // overlay is still up after 18s, reset and surface a clear message.
       if(busyWatchdog){ clearTimeout(busyWatchdog); busyWatchdog = null; }
@@ -333,6 +340,7 @@
 
     window.roomboardShowAuthError = function(msg){ showErr(msg); setBusy(false); };
     window.setOverlayMode = applyMode;
+    window.setOverlayStatus = function(text){ if(statusEl) statusEl.textContent = text || ""; };
 
     tabs.forEach(function(t){ t.addEventListener("click", function(){ applyMode(t.getAttribute("data-mode")); }); });
     if(specSel) specSel.addEventListener("change", function(){ specOther.style.display = specSel.value === "Other" ? "" : "none"; });

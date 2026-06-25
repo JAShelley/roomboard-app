@@ -361,6 +361,33 @@
     #syncPill #syncTime{
       display:none;
     }
+    /* Expand the pill to show text when syncing or in error */
+    #syncPill[data-state="syncing"],
+    #syncPill[data-state="err"]{
+      width:auto;
+      height:auto;
+      min-width:0;
+      min-height:0;
+      padding:5px 10px;
+      gap:5px;
+      border-radius:999px;
+      transition: width .25s ease, padding .25s ease, min-width .25s ease;
+    }
+    #syncPill[data-state="syncing"] #syncText,
+    #syncPill[data-state="err"] #syncText{
+      display:inline;
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:.02em;
+    }
+    /* Flash animation for room cards on update — triggered by adding .roomJustUpdated */
+    @keyframes roomUpdateFlash{
+      0%   { box-shadow: 0 0 0 2px rgba(125,211,252,.70), var(--shadow); }
+      100% { box-shadow: var(--shadow); }
+    }
+    .room.roomJustUpdated{
+      animation: roomUpdateFlash .55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
     #syncIcon{
       display:inline-flex;
       align-items:center;
@@ -503,10 +530,25 @@
       padding-bottom:48px;
     }
     #displayGrid.boxView .room.isEmptyDisplayCard{
-      opacity: .55;
+      opacity: .6;
+      border-style: dashed !important;
+      border-color: rgba(255,255,255,.12) !important;
     }
     #displayGrid.boxView .room.isEmptyDisplayCard:hover{
-      opacity: .75;
+      opacity: .8;
+      border-color: rgba(255,255,255,.22) !important;
+    }
+    #displayGrid.boxView .room.isEmptyDisplayCard::after{
+      content: "+";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 32px;
+      font-weight: 200;
+      color: rgba(255,255,255,.18);
+      pointer-events: none;
+      line-height: 1;
     }
     #displayGrid.boxView.activeDisplayFit .room.hasDoctorBadge{
       padding-bottom:56px;
@@ -903,6 +945,7 @@
     }
     .timerBox.timerRunning{
       box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 10px 22px rgba(0,0,0,.12);
+      border-color: color-mix(in srgb, rgba(34,197,94,.30) 100%, var(--timerBoxBorder, var(--border)));
     }
     .timerBox.timerCleaning{
       border-color: rgba(251,191,36,.45);
@@ -961,7 +1004,7 @@
       margin:0 auto;
     }
     .time.timerRunning{
-      text-shadow: 0 0 14px rgba(34,197,94,.16);
+      text-shadow: 0 0 18px rgba(34,197,94,.30);
     }
     .time.timerCleaning{
       color: #ffffff;
@@ -5194,6 +5237,14 @@ body.checklistOpen .checklistPanel {
   position: relative; z-index: 1; min-height: 1em;
   animation: boardLoadIn .55s cubic-bezier(.4,0,.2,1) .12s both;
 }
+.boardLoadStep {
+  font-size: 11px; font-weight: 400; letter-spacing: .02em;
+  color: rgba(122,143,168,.5); font-style: italic;
+  position: relative; z-index: 1; min-height: 1.3em;
+  text-align: center;
+  transition: opacity .25s ease;
+  animation: boardLoadIn .55s cubic-bezier(.4,0,.2,1) .2s both;
+}
 
 @keyframes boardLoadIn {
   from { opacity: 0; transform: translateY(10px); }
@@ -5236,8 +5287,8 @@ body.checklistOpen .checklistPanel {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 16px;
-  min-height: 42px;
+  padding: 11px 16px;
+  min-height: 44px;
   border-bottom: 1px solid rgba(255,255,255,.04);
 }
 .sxRow:last-child {
@@ -5250,6 +5301,7 @@ body.checklistOpen .checklistPanel {
   flex: 1;
   letter-spacing: 0;
   text-transform: none;
+  line-height: 1.4;
 }
 .sxSlider {
   display: flex;
@@ -5318,15 +5370,15 @@ details.sxSection .settingsCollapsibleBody .sxRow:last-child { border-bottom: no
 
 /* Sub-header inside a merged sxSection — acts as a divider between groups */
 .sxSubHead {
-  padding: 9px 16px 8px;
+  padding: 11px 16px 10px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: rgba(160,185,230,.55);
-  border-top: 1px solid rgba(255,255,255,.07);
+  color: rgba(160,185,230,.60);
+  border-top: 1px solid rgba(255,255,255,.08);
   border-bottom: 1px solid rgba(255,255,255,.05);
-  background: rgba(255,255,255,.018);
+  background: rgba(255,255,255,.022);
 }
 
 /* Color pickers */
