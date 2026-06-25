@@ -1301,3 +1301,94 @@ ul { padding: 0; margin: 0; }
   display: flex; flex-direction: column; gap: 1px;
 }
 .mini-tool-name small { font-size: 11px; color: var(--muted); font-weight: 500; }
+
+/* ============================================================
+   MOBILE POLISH
+   ============================================================ */
+
+/* Restore wrap padding for the full-bleed customize section on tablet/mobile */
+@media (max-width: 940px) {
+  #customize .wrap { padding: 0 40px; }
+}
+
+/* Keep board demo at 2 columns on mobile — prevents rooms stacking into one very tall column */
+@media (max-width: 720px) {
+  .board-demo .bd-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .room { min-height: 150px; }
+  .roomBody { padding: 10px 12px 8px; gap: 6px; }
+  .timer { font-size: 18px; padding: 6px 10px; }
+  .docBadge { width: 44px; height: 44px; }
+  .roomFoot { padding: 0 12px 10px; }
+}
+
+/* Small screens (≤ 640px) */
+@media (max-width: 640px) {
+  .wrap { padding: 0 20px; }
+  #customize .wrap { padding: 0 20px; }
+
+  /* Hero */
+  .hero { padding: 40px 0 0; }
+  .hero h1 { font-size: clamp(28px, 8vw, 44px); margin: 12px 0 18px; }
+  .hero .lede { font-size: 17px; }
+  .hero-microtrust { font-size: 13px; }
+  .hero-cta { gap: 12px; margin: 24px 0 18px; }
+  .hero-cta .btn.primary,
+  .hero-cta .btn.ghost { padding: 14px 22px; font-size: 15px; }
+
+  /* Board demo */
+  .board-demo { padding: 12px; min-height: auto; }
+  .board-badges-row { gap: 8px; }
+  .board-badge { flex: 0 1 calc(50% - 4px); min-width: 0; }
+
+  /* Sections */
+  .section { padding: 52px 0; }
+  .section-head { margin-bottom: 28px; }
+  .section-head h2 { font-size: clamp(22px, 6vw, 34px); margin: 10px 0 10px; }
+  .section-head p { font-size: 16px; }
+
+  /* Testimonials */
+  .testimonial { padding: 24px 20px; }
+  .testimonial-body { font-size: 14px; }
+
+  /* Capture steps */
+  .step { padding: 28px 20px 22px; }
+  .step h3 { font-size: 18px; }
+
+  /* Chrome extension callout */
+  .ext-copy h3 { font-size: 21px; }
+
+  /* Track section */
+  .track-phone-copy h2 { font-size: clamp(22px, 6vw, 36px); }
+  .track-phone-copy p { font-size: 16px; }
+  .track-bullets li { font-size: 15px; }
+
+  /* Pricing */
+  .plan { padding: 32px 20px; }
+  .price-num { font-size: 40px; }
+
+  /* FAQ */
+  .qa-q { padding: 18px 16px; font-size: 15px; }
+  .qa-a p { padding: 0 16px 18px; }
+
+  /* CTA banner */
+  .cta-card { padding: 44px 20px; }
+  .cta-card p { font-size: 16px; }
+
+  /* Footer */
+  .footer { padding: 40px 0 20px; }
+}
+
+/* Hide nav primary CTA on very small screens — it's in the mobile menu */
+@media (max-width: 480px) {
+  .nav-actions > .btn { display: none; }
+}
+
+/* Ultra-narrow (≤ 380px) */
+@media (max-width: 380px) {
+  .wrap { padding: 0 14px; }
+  #customize .wrap { padding: 0 14px; }
+  .hero h1 { font-size: 26px; }
+  .board-badge { padding: 8px 10px; gap: 6px; }
+  .bb-icon { width: 28px; height: 28px; font-size: 14px; }
+  .board-demo .bd-grid { gap: 8px; }
+}
