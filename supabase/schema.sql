@@ -340,6 +340,7 @@ set search_path = public
 as $$
 declare
   new_practice_id uuid;
+  new_invite_code text;
 begin
   if auth.uid() is null then
     raise exception 'You must be signed in to create a practice.';
@@ -361,8 +362,10 @@ begin
     raise exception 'This user already belongs to a practice.';
   end if;
 
-  insert into public.practices (name)
-  values (trim(practice_name))
+  new_invite_code := public.create_unique_practice_invite_code(null);
+
+  insert into public.practices (name, invite_code)
+  values (trim(practice_name), new_invite_code)
   returning id into new_practice_id;
 
   insert into public.profiles (user_id, practice_id, full_name, role)
