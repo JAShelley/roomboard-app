@@ -183,6 +183,24 @@ img { max-width: 100%; display: block; }
 .nav-signin { font-weight: 600; color: var(--teal-600); padding: 9px 12px; border-radius: 9px; }
 [data-theme="dark"] .nav-signin { color: var(--teal-300); }
 .nav-signin:hover { color: var(--teal-700); }
+.nav-actions.is-authed .nav-signin,
+.nav-actions.is-authed > .btn.primary { display: none !important; }
+.nav-practice-badge { display: none; }
+.nav-actions.is-authed .nav-practice-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  max-width: 220px; padding: 8px 14px; border-radius: 10px;
+  font-weight: 600; font-size: 14px; line-height: 1; text-decoration: none;
+  color: var(--teal-700);
+  background: color-mix(in srgb, var(--teal-500) 12%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--teal-500) 38%, var(--line-strong));
+  box-shadow: var(--shadow-sm);
+  transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+.nav-practice-badge:hover { border-color: var(--teal-500); transform: translateY(-1px); box-shadow: 0 8px 20px rgba(2, 132, 199, .22); }
+.nav-practice-badge:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+[data-theme="dark"] .nav-practice-badge { color: var(--teal-300); }
+.nav-practice-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: var(--teal-500); box-shadow: 0 0 0 3px color-mix(in srgb, var(--teal-500) 22%, transparent); }
+.nav-practice-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .menu-btn { display: none; }
 .mobile-menu { display: none; }
 

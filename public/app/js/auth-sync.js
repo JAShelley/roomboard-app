@@ -220,6 +220,20 @@
       // Show clinic profile editor only when logged in
       var profilePanel = $("clinicProfileEditPanel");
       if(profilePanel) profilePanel.hidden = !currentPracticeId;
+      // Cache the practice name so the marketing/landing page can show a
+      // logged-in badge in place of the Sign in / Start free trial buttons.
+      try{
+        var landingBadgeKey = "roomboard.website.practiceBadge.v1";
+        if(currentUserId && currentPracticeName){
+          window.localStorage.setItem(landingBadgeKey, JSON.stringify({
+            name: currentPracticeName,
+            userId: currentUserId,
+            ts: Date.now()
+          }));
+        } else {
+          window.localStorage.removeItem(landingBadgeKey);
+        }
+      }catch(e){}
     }
 
     // ===== Clinic profile editor (lazy load on open) =====
@@ -4210,6 +4224,7 @@
         currentUserFullName = "";
         resetKnownBoardVersion();
         window.__roomboardPracticeId = null;
+        try{ window.localStorage.removeItem("roomboard.website.practiceBadge.v1"); }catch(e){}
         if(typeof window.refreshAccountSettingsForSession === "function") window.refreshAccountSettingsForSession(null);
         if(typeof window.refreshThemePrefsForSession === "function") window.refreshThemePrefsForSession(null);
 	        updateAuthUI(false);

@@ -608,3 +608,73 @@
   }
 
 })();
+
+/* ---------- Logged-in practice badge ----------
+   When a RoomBoard session is active (same-origin localStorage), replace the
+   nav "Sign in" / "Start free trial" buttons with a small box showing the
+   practice name that links straight to the board. */
+(function () {
+  "use strict";
+
+  var AUTH_KEY = "roomboard.website.auth.v1";        // Supabase session (set by the app)
+  var BADGE_KEY = "roomboard.website.practiceBadge.v1"; // { name, userId, ts }
+
+  function readJson(store, key) {
+    try { var raw = store.getItem(key); return raw ? JSON.parse(raw) : null; }
+    catch (e) { return null; }
+  }
+
+  function getSession() {
+    var s = readJson(window.localStorage, AUTH_KEY) || readJson(window.sessionStorage, AUTH_KEY);
+    if (!s) return null;
+    if (s.currentSession) s = s.currentSession; // tolerate older session shapes
+    return s;
+  }
+
+  function isLoggedIn() {
+    var s = getSession();
+    if (!s || !s.access_token) return false;
+    var exp = Number(s.expires_at); // unix seconds
+    if (isFinite(exp) && exp > 0 && exp * 1000 <= Date.now()) return false; // expired
+    return true;
+  }
+
+  function getPracticeName() {
+    var b = readJson(window.localStorage, BADGE_KEY);
+    return b && b.name ? String(b.name).trim() : "";
+  }
+
+  function render() {
+    var actions = document.querySelector(".nav-actions");
+    if (!actions) return;
+
+    var name = getPracticeName();
+    var loggedIn = !!name && isLoggedIn();
+
+    // The Sign in / trial buttons and the badge all set an explicit `display`,
+    // so toggle a container class and let CSS control which one is visible
+    // (relying on the [hidden] attribute would be overridden by those rules).
+    actions.classList.toggle("is-authed", loggedIn);
+
+    if (loggedIn) {
+      var badge = document.getElementById("navPracticeBadge");
+      if (!badge) {
+        badge = document.createElement("a");
+        badge.id = "navPracticeBadge";
+        badge.className = "nav-practice-badge";
+        badge.href = "/app/index.html?next=board";
+        badge.title = "Open your board";
+        badge.innerHTML = '<span class="nav-practice-dot" aria-hidden="true"></span><span class="nav-practice-name"></span>';
+        actions.appendChild(badge);
+      }
+      badge.querySelector(".nav-practice-name").textContent = name;
+    }
+  }
+
+  render();
+
+  // Reflect login/logout that happens in another tab.
+  window.addEventListener("storage", function (e) {
+    if (!e.key || e.key === AUTH_KEY || e.key === BADGE_KEY) render();
+  });
+})();
