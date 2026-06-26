@@ -792,7 +792,8 @@
       var gridRows = roomRows + dividerCount;
       var dividerHeight = dividerCount ? 32 : 0;
       var usableCardHeight = (availableHeight - (dividerCount * dividerHeight) - (Math.max(0, gridRows - 1) * activeGap)) / roomRows;
-      var maxCardHeight = singleActiveRoom ? 520 : (rooms.length <= 4 ? 380 : (rooms.length <= 8 ? 300 : 235));
+      var onlyActive = !!(state && state.settings && state.settings.displayOnlyActive);
+      var maxCardHeight = singleActiveRoom ? 520 : (onlyActive ? 220 : (rooms.length <= 4 ? 380 : (rooms.length <= 8 ? 300 : 235)));
       var minCardHeight = rooms.length <= 4 ? 190 : (rooms.length <= 8 ? 174 : 162);
       var cardMinHeight = clampActiveDisplayFitNumber(usableCardHeight, minCardHeight, maxCardHeight);
       var emptyCardMinHeight = clampActiveDisplayFitNumber(cardMinHeight * 0.66, 126, 152);
