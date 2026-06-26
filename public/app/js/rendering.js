@@ -1387,6 +1387,7 @@
               + '</div>'
               + '<div class="row2 techRowCompact">'
                 + '<div class="field"><label>Initials</label><input data-field="tech" type="text" value="'+escapeHtml(room.tech)+'" placeholder="e.g., AJ" /></div>'
+                + '<div class="drReadyCompact" title="Room ready"><span class="drReadyIcon">🚪</span><div class="switch '+(room.roomReady ? "on" : "")+'" data-action="toggleRoomReady"><div class="knob"></div></div></div>'
                 + '<div class="drReadyCompact" title="Doctor ready"><span class="drReadyIcon">🩺</span><div class="switch '+(room.doctorReady ? "on" : "")+'" data-action="toggleDoctorReady"><div class="knob"></div></div></div>'
               + '</div>'
             + '</div>'
