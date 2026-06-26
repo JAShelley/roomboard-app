@@ -94,19 +94,8 @@
       if(actionsEl) actionsEl.hidden = doneCount === 0;
 
       // All-done banner
-      var list2 = document.getElementById("checklistList");
-      var existingBanner = document.getElementById("checklistAllDoneBanner");
-      if(total > 0 && doneCount === total){
-        if(!existingBanner){
-          var banner = document.createElement("div");
-          banner.id = "checklistAllDoneBanner";
-          banner.className = "checklistAllDone";
-          banner.textContent = "All done — great work!";
-          if(list2 && list2.parentNode) list2.parentNode.insertBefore(banner, list2.nextSibling);
-        }
-      } else {
-        if(existingBanner) existingBanner.remove();
-      }
+      var banner = document.getElementById("checklistAllDoneBanner");
+      if(banner) banner.hidden = !(total > 0 && doneCount === total);
     }
 
     // ---- Drag to reorder ----
