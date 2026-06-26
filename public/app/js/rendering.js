@@ -597,9 +597,9 @@
               + '<div class="time'+(room.needsCleaning ? ' timerCleaning' : (isTimerRunning ? ' timerRunning' : ''))+'" data-timerText data-room-id="'+room.id+'">'+formatTime(computeElapsed(timer))+'</div>'
             + '</div>'
           + '</div>'
-          + (typeof window.buildPatientChecklistDockHtml === "function" ? window.buildPatientChecklistDockHtml(room) : "")
         + '</div>'
         + notesDock
+        + (typeof window.buildPatientChecklistDockHtml === "function" ? window.buildPatientChecklistDockHtml(room) : "")
         + (hasRedoDischarge(room) ? '<button class="roomRedoBtn" data-action="displayRedo" data-room-id="'+room.id+'" title="Redo discharge">↺</button>' : '')
 	        + (displayDoctorInitials ? '<div class="docInitCorner">' + buildDoctorBadgeMarkup(room.doctor, displayDoctorInitials) + '</div>' : '');
 	      return el;

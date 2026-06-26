@@ -916,26 +916,21 @@
     }
 
     /* ===== Per-patient checklist (Advanced) =====
-       Invisible when closed — the grid-template-rows trick only works when
-       .pclPanelInner has zero padding (padding bleeds through at 0fr).
-       All padding lives on .pclPanelContent instead. */
-    .pclDock{
-      /* Bleed to card edges, cancel roomBody's bottom padding */
-      margin: 0 -12px -12px;
-    }
+       pclDock is a direct child of .room (outside roomBody), so it
+       naturally fills the card's full width. .room has overflow:hidden
+       which clips and rounds the bottom corners automatically.
+       The grid-template-rows:0fr trick needs zero padding on pclPanelInner
+       — all padding lives on pclPanelContent so the collapse is truly 0px. */
+    .pclDock{ display:block; }
     .pclPanel{
       display:grid; grid-template-rows:0fr;
       transition: grid-template-rows .32s cubic-bezier(.4,0,.2,1);
-      /* bg + border only visible when open, but harmless at 0 height */
       background: rgba(7,12,24,.90);
-      border-radius: 0 0 var(--radius, 16px) var(--radius, 16px);
     }
     .pclDock.isOpen .pclPanel{ grid-template-rows:1fr; }
-    /* No padding here — keeps element height truly 0 when collapsed */
     .pclPanelInner{ overflow:hidden; min-height:0; }
-    /* Padding lives here so it's clipped by the parent's overflow:hidden */
     .pclPanelContent{
-      padding:12px 12px 14px;
+      padding:12px 14px 14px;
       border-top: 1px solid rgba(255,255,255,.08);
     }
     .pclHeader{
