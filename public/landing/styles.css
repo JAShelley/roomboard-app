@@ -977,6 +977,7 @@ img { max-width: 100%; display: block; }
 .sw.off::after { right: auto; left: 2px; }
 .showcase-copy h2 { font-size: clamp(26px, 3.6vw, 38px); margin-bottom: 16px; }
 .showcase-copy p { color: var(--muted); font-size: 17px; margin-bottom: 22px; }
+.showcase-copy-lead { font-size: 20px; font-weight: 700; margin-bottom: 18px; color: var(--ink); }
 .check-list { display: grid; gap: 12px; }
 .check-list li { list-style: none; display: flex; gap: 11px; align-items: flex-start; font-size: 15px; color: var(--ink-2); }
 .check-list .ci { flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--teal-50); color: var(--teal-600); display: grid; place-items: center; margin-top: 1px; }
