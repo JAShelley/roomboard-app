@@ -820,7 +820,11 @@ img { max-width: 100%; display: block; }
 .device-img-card { padding: 0; overflow: hidden; }
 .device-img-frame {
   height: 210px;
-  background: var(--surface);
+  /* The app screenshots are dark-UI shots. Keep a dark "screen" behind them in
+     both themes so the feathered edge always blends dark-into-dark — otherwise
+     on the light theme the dark image fades into a light card and reads as a
+     heavy vignette. */
+  background: #0b1220;
   border-bottom: 1px solid var(--line);
   overflow: hidden;
 }
@@ -828,8 +832,8 @@ img { max-width: 100%; display: block; }
   width: 100%; height: 100%;
   object-fit: contain;
   display: block;
-  -webkit-mask-image: radial-gradient(ellipse 80% 84% at 50% 50%, black 48%, transparent 100%);
-  mask-image: radial-gradient(ellipse 80% 84% at 50% 50%, black 48%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 92% 96% at 50% 50%, black 78%, transparent 100%);
+  mask-image: radial-gradient(ellipse 92% 96% at 50% 50%, black 78%, transparent 100%);
 }
 .device-img-phone .device-img-frame img {
   object-fit: cover;
