@@ -1288,16 +1288,19 @@
 	        if(!card) return;
 	        holdRemoteUpdates(Math.max(1200, CHANGE_INTERACTION_HOLD_MS || 0));
 	        setDraggedRoomId(card.getAttribute("data-room-id") || card.dataset.roomId, e.dataTransfer);
+	        markRoomDragSource(card);
 	      });
 	      grid.addEventListener("dragend", function(){
 	        clearDraggedRoomId();
+	        clearRoomDragVisuals();
 	      });
 
 	      grid.addEventListener("dragover", function(e){
 	        var card = closestRoomCard(e.target);
-	        if(!card) return;
+	        if(!card){ setRoomDropTargetCard(null); return; }
 	        e.preventDefault();
         try{ e.dataTransfer.dropEffect = "move"; }catch(_){}
+        setRoomDropTargetCard(card);
       });
 
 	      grid.addEventListener("drop", function(e){

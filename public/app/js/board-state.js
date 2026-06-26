@@ -1856,6 +1856,35 @@
 	    function clearDraggedRoomId(){
 	      window.__dragFromRoomId = null;
 	    }
+	    // ----- Drag visuals (match the landing-page demo) -----
+	    // Dim the card being dragged, and give the hovered room a dashed
+	    // "Drop to move here" target — like the example on roomboard.app.
+	    function markRoomDragSource(card){
+	      if(!card) return;
+	      var id = card.getAttribute("data-room-id") || (card.dataset && card.dataset.roomId);
+	      // Defer one tick so the browser captures the native drag image BEFORE
+	      // the source is dimmed (otherwise the floating ghost gets dimmed too).
+	      setTimeout(function(){
+	        if(id && String(window.__dragFromRoomId) === String(id)) card.classList.add("isDragSource");
+	      }, 0);
+	    }
+	    function setRoomDropTargetCard(card){
+	      var id = card ? (card.getAttribute("data-room-id") || (card.dataset && card.dataset.roomId)) : "";
+	      // Never mark the source room as its own drop target.
+	      if(card && id && String(window.__dragFromRoomId) === String(id)) card = null;
+	      var current = document.querySelectorAll(".room.isDropTarget");
+	      for(var i=0; i<current.length; i++){
+	        if(current[i] !== card) current[i].classList.remove("isDropTarget");
+	      }
+	      if(card) card.classList.add("isDropTarget");
+	    }
+	    function clearRoomDragVisuals(){
+	      var els = document.querySelectorAll(".room.isDragSource, .room.isDropTarget");
+	      for(var i=0; i<els.length; i++){
+	        els[i].classList.remove("isDragSource");
+	        els[i].classList.remove("isDropTarget");
+	      }
+	    }
 	    var recentRoomSwapKey = "";
 	    var recentRoomSwapAt = 0;
 	    function swapRoomsById(fromId, toId, options){

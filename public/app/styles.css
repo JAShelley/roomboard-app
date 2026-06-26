@@ -740,6 +740,28 @@
 	    }
 	    .room[draggable="true"]{ cursor: grab; }
 	    .room[draggable="true"]:active{ cursor: grabbing; }
+	    /* Drag-and-drop visuals — match the roomboard.app landing demo */
+	    .room.isDragSource{
+	      opacity:.32;
+	      filter:saturate(.6);
+	      box-shadow:none;
+	    }
+	    .room.isDropTarget{
+	      outline:3px dashed rgba(125,211,252,.95);
+	      outline-offset:-4px;
+	      box-shadow:0 0 0 4px rgba(125,211,252,.18), 0 20px 40px rgba(0,0,0,.45);
+	    }
+	    .room.isDropTarget::after{
+	      content:"Drop to move here";
+	      position:absolute; inset:0; z-index:40;
+	      display:grid; place-items:center;
+	      font-weight:800; font-size:13px; letter-spacing:.04em; text-align:center;
+	      color:#eaf6ff; text-shadow:0 1px 4px rgba(0,0,0,.6);
+	      background:rgba(13,40,66,.42);
+	      -webkit-backdrop-filter:blur(1px); backdrop-filter:blur(1px);
+	      border-radius:var(--radius);
+	      pointer-events:none;
+	    }
 	    #intakeGrid .room:hover,
 	    #displayGrid.boxView .room:hover{
 	      transform: translateY(-3px) scale(1.01);
