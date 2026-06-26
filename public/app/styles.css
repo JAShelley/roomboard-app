@@ -5615,6 +5615,26 @@ body.checklistOpen .checklistPanel {
   background: rgba(255,255,255,.09);
 }
 
+/* Mark all complete */
+.checklistMarkAllBtn {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: rgba(233,238,252,.75);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+  text-align: center;
+}
+.checklistMarkAllBtn:hover {
+  background: rgba(24,176,107,.12);
+  border-color: rgba(24,176,107,.35);
+  color: rgba(24,176,107,.95);
+}
+
 /* Clear done */
 .checklistActions { display: flex; gap: 6px; align-items: center; }
 

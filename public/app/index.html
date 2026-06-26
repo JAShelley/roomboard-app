@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" href="/favicon.png?v=navy2">
 <link rel="apple-touch-icon" href="/favicon.png?v=navy2">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="./styles.css?v=20260626d">
+<link rel="stylesheet" href="./styles.css?v=20260626e">
 <meta property="og:title" content="RoomBoard" data-id="th-modified" ><meta name="description" content="RoomBoard display board website" data-id="th-modified" ><meta property="og:description" content="RoomBoard display board website" data-id="th-modified" ><meta property="og:type" content="website" data-id="th-modified" ></head>
 <body class="displayTabActive"><button aria-label="Back to top" id="toTopBtn" title="Back to top">↑</button>
 <div class="chip" data-state="idle" id="syncPill" title="Sync status">
@@ -88,11 +88,12 @@
 <input class="checklistNewItemInput" id="checklistNewItemInput" placeholder="Add item…" type="text">
 <button class="btn sm primary" id="checklistAddBtn" type="button">Add</button>
 </div>
-<div class="checklistActions" id="checklistActions" hidden>
-  <button class="btn sm" id="clearDoneBtn" type="button">Clear done</button>
-</div>
+<button class="checklistMarkAllBtn" id="markAllDoneBtn" type="button" hidden>Mark all complete</button>
 <ul class="checklistList" id="checklistList"></ul>
 <div class="checklistAllDone" id="checklistAllDoneBanner" hidden>All done — great work!</div>
+<div class="checklistActions" id="checklistActions" hidden>
+  <button class="btn sm" id="clearDoneBtn" type="button" style="width:100%">Clear done</button>
+</div>
 </div>
 </aside>
 <div class="quickAddBackdrop" id="quickAddBackdrop"></div>
@@ -823,7 +824,7 @@ Manage subscription
 <script src="./js/board-state.js?v=20260613b"></script>
 <script src="./js/rendering.js?v=20260624a"></script>
 <script src="./js/settings.js?v=20260617a"></script>
-<script src="./js/checklist.js?v=20260626c"></script>
+<script src="./js/checklist.js?v=20260626d"></script>
 <script src="./js/patient-checklist.js?v=20260626a"></script>
 <script src="./js/auth-sync.js?v=20260625c"></script>
 <script src="./js/ux.js?v=20260606a"></script>

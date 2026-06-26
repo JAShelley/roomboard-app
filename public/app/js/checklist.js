@@ -89,13 +89,19 @@
         }
       }
 
-      // Clear done button
-      var actionsEl = document.getElementById("checklistActions");
-      if(actionsEl) actionsEl.hidden = doneCount === 0;
+      var allDone = total > 0 && doneCount === total;
+
+      // Mark all complete button — show when there are uncompleted items
+      var markAllBtn = document.getElementById("markAllDoneBtn");
+      if(markAllBtn) markAllBtn.hidden = !(total > 0 && !allDone);
 
       // All-done banner
       var banner = document.getElementById("checklistAllDoneBanner");
-      if(banner) banner.hidden = !(total > 0 && doneCount === total);
+      if(banner) banner.hidden = !allDone;
+
+      // Clear done button — below banner, only when there are done items
+      var actionsEl = document.getElementById("checklistActions");
+      if(actionsEl) actionsEl.hidden = doneCount === 0;
     }
 
     // ---- Drag to reorder ----
@@ -208,6 +214,12 @@
       scheduleChecklistSave();
     }
 
+    function markAllDone(){
+      checklistItems.forEach(function(i){ i.done = true; });
+      renderChecklistItems();
+      scheduleChecklistSave();
+    }
+
     function clearDoneItems(){
       checklistItems = checklistItems.filter(function(i){ return !i.done; });
       renderChecklistItems();
@@ -306,6 +318,10 @@
       }
       if(target.id === "clearDoneBtn"){
         clearDoneItems();
+        return;
+      }
+      if(target.id === "markAllDoneBtn"){
+        markAllDone();
         return;
       }
 
