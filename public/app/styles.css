@@ -5216,15 +5216,19 @@ body.settingsPageMode #settingsBackBtn:hover{
     grid-row: 2 / 4;
   }
   body.settingsPageMode .drawer .tabPanel.active{
-    display:grid;
-    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
-    gap:16px;
-    align-items:start;
+    display:block;
+    column-width: 420px;
+    column-gap:16px;
+  }
+  body.settingsPageMode .drawer .tabPanel.active > *{
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    margin:0 0 16px;
   }
   body.settingsPageMode .drawer .tabPanel.active > .card.fullWidth,
   body.settingsPageMode .drawer #tabStats.active > *,
   body.settingsPageMode .drawer #tabAccount.active > * {
-    grid-column: 1 / -1;
+    column-span: all;
   }
 }
 
@@ -5459,12 +5463,12 @@ body.checklistOpen .checklistPanel {
   margin-bottom: 10px;
 }
 .sxHead {
-  padding: 11px 16px 9px;
-  font-size: 11px;
+  padding: 13px 16px 11px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: .08em;
+  letter-spacing: .02em;
   text-transform: uppercase;
-  color: rgba(160,185,230,.65);
+  color: rgba(216,229,255,.94);
   border-bottom: 1px solid rgba(255,255,255,.06);
 }
 .sxRow {
