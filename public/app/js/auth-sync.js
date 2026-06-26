@@ -2871,16 +2871,27 @@
 
     async function loadBoard(practiceId){
       if(!supabase || !practiceId) return false;
-      var boardRes = await supabase
+      var boardReq = supabase
         .from("practice_board_state")
         .select("board_state, updated_at")
         .eq("practice_id", practiceId)
         .maybeSingle();
+      var checklistReq = supabase
+        .from("practice_checklist")
+        .select("items")
+        .eq("practice_id", practiceId)
+        .maybeSingle();
+      var results = await Promise.all([boardReq, checklistReq]);
+      var boardRes = results[0];
+      var checklistRes = results[1];
       if(boardRes.error) throw boardRes.error;
       applyBoardState(boardRes.data && boardRes.data.board_state ? boardRes.data.board_state : {}, {
         applyTheme: false,
         updatedAt: boardRes.data && boardRes.data.updated_at ? boardRes.data.updated_at : null
       });
+      if(checklistRes && !checklistRes.error && typeof window.applyChecklistData === "function"){
+        window.applyChecklistData(checklistRes.data || null);
+      }
       noteBoardActivity("load-board");
       return true;
     }
