@@ -131,14 +131,15 @@
       return d.map(function(it){ return typeof it === "string" ? it : String(it && it.text || ""); }).filter(function(t){ return t && t.trim(); });
     }
     function seedRoomChecklistFromDefault(room){
+      var plan = typeof window.roomboardGetCurrentPlan === "function" ? window.roomboardGetCurrentPlan() : null;
+      var existingLen = Array.isArray(room && room.checklist) ? room.checklist.length : -1;
+      console.log("[PCL seed] called — room:", room && room.id, "existingChecklist:", existingLen, "plan:", plan, "template:", JSON.stringify(state && state.settings && state.settings.defaultPatientChecklist));
       if(!room) return;
       if(Array.isArray(room.checklist) && room.checklist.length) return; // never clobber existing items
       // Base subscribers don't get the Advanced checklist feature, so don't seed.
-      var plan = typeof window.roomboardGetCurrentPlan === "function" ? window.roomboardGetCurrentPlan() : null;
       if(plan && String(plan).indexOf("base") !== -1){ room.checklist = []; return; }
-      var template = getDefaultPatientChecklistTemplate();
-      console.log("[PCL seed] room:", room.id, "template length:", template.length, "defaultPatientChecklist:", JSON.stringify(state && state.settings && state.settings.defaultPatientChecklist));
-      room.checklist = template.map(makeChecklistItem);
+      room.checklist = getDefaultPatientChecklistTemplate().map(makeChecklistItem);
+      console.log("[PCL seed] done — seeded", room.checklist.length, "items");
     }
     window.makeChecklistItem = makeChecklistItem;
     window.seedRoomChecklistFromDefault = seedRoomChecklistFromDefault;
@@ -1833,6 +1834,7 @@
       room.lastDischargeSnapshot = null;
       // Seed the patient checklist from the practice default when this room
       // goes from empty → occupied.
+      console.log("[PCL] saveQuickAdd — hadPatientBefore:", hadPatientBefore, "patientName:", room.patientName);
       if(!hadPatientBefore && room.patientName) seedRoomChecklistFromDefault(room);
 
       var selectedColor = getColorById(room.colorLabelId);
