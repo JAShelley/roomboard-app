@@ -315,7 +315,15 @@
         <span class="cs-badge" style="font-size:13px;padding:6px 14px">iPhone app coming soon</span>
       </div>
       <div class="track-phone-img reveal">
-        <img src="/landing/iphone-app.jpeg" alt="RoomBoard on iPhone" class="phone-mockup">
+        <div class="device-family" role="img" aria-label="RoomBoard running together on iPad, iPhone, and Apple Watch">
+          <div class="df-ipad">
+            <div class="df-ipad-screen"><img src="/landing/ipad-screen.jpeg" alt="RoomBoard on iPad"></div>
+          </div>
+          <div class="df-phone">
+            <div class="df-phone-screen"><img src="/landing/iphone-app.jpeg" alt="RoomBoard on iPhone"></div>
+          </div>
+          <img class="df-watch" src="/landing/watch-app.jpeg" alt="RoomBoard on Apple Watch">
+        </div>
       </div>
     </div>
   </div>
@@ -458,13 +466,26 @@
         <h3>Desktop app <span class="cs-badge">Coming soon</span></h3>
         <p>Native RoomBoard for macOS and Windows, with a tray icon and full-screen wall display.</p>
       </article>
-      <article class="device device-img-card device-img-phone reveal">
-        <div class="device-img-frame">
-          <img src="/landing/iphone-app.jpeg" alt="RoomBoard iPhone app">
+      <article class="device device-phone-card reveal">
+        <div class="phone-stage">
+          <div class="phone-shell is-ios">
+            <div class="phone-screen"><img src="/landing/iphone-app.jpeg" alt="RoomBoard iPhone app"></div>
+          </div>
         </div>
         <h3>iPhone &amp; iPad <span class="cs-badge">Coming soon</span></h3>
         <p>A native iOS app to view rooms, edit on the move, and send quick feedback from anywhere.</p>
       </article>
+      <!-- TODO: restore once android-app.jpeg (clean Android screen capture) is added
+      <article class="device device-phone-card reveal">
+        <div class="phone-stage">
+          <div class="phone-shell is-android">
+            <div class="phone-screen"><img src="/landing/android-app.jpeg" alt="RoomBoard Android app"></div>
+          </div>
+        </div>
+        <h3>Android <span class="cs-badge">Coming soon</span></h3>
+        <p>The same live board on Android phones and tablets — rooms and timers on the go.</p>
+      </article>
+      -->
       <article class="device device-img-card reveal reveal-right">
         <div class="device-img-frame">
           <img src="/landing/watch-app.jpeg" alt="RoomBoard Apple Watch app">
