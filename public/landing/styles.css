@@ -691,7 +691,7 @@ img { max-width: 100%; display: block; }
 
 /* ---------- Product stats strip ---------- */
 .product-stats { padding: 0 0 80px; }
-.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 860px; margin: 0 auto; }
+.stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; max-width: 600px; margin: 0 auto; }
 .stat-card { padding: 40px 28px; border-radius: 20px; border: 1.5px solid var(--line); background: linear-gradient(135deg, var(--surface) 0%, rgba(12,134,127,.06) 100%); text-align: center; transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s ease, border-color .25s; }
 .stat-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(12,134,127,.15); border-color: var(--teal-500); }
 .stat-num { font-size: clamp(42px,5vw,56px); font-weight: 900; color: var(--teal-500,#11a39b); line-height: 1; margin-bottom: 10px; }
