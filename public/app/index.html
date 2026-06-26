@@ -662,24 +662,10 @@ Manage subscription
 <button class="btn sm" id="removePracticeLogoBtn" type="button">Remove logo</button>
 </div>
 </div>
-</section>
-</div>
-<div class="tabPanel" id="tabAlerts">
-<div class="sxSection">
-<div class="sxHead">Timer alerts</div>
-<div class="sxRow sxAlertRow">
-<span class="sxLabel">Alert 1 after<span class="sxLabelNote">seconds elapsed → card color changes</span></span>
-<input class="sxInputNum" id="timerAlert1AtSec" min="0" step="10" type="number">
-<span class="sxAlertBadge">sec</span>
-<input id="timerAlert1Color" type="color">
-</div>
-<div class="sxRow sxAlertRow">
-<span class="sxLabel">Alert 2 after<span class="sxLabelNote">overrides alert 1 color</span></span>
-<input class="sxInputNum" id="timerAlert2AtSec" min="0" step="10" type="number">
-<span class="sxAlertBadge">sec</span>
-<input id="timerAlert2Color" type="color">
-</div>
-<div class="sxSubHead">Actions</div>
+<section class="sxSection">
+<div class="sxHead">Actions</div>
+<div class="settingsCollapsibleBody">
+<div class="sxRowGroup">
 <div class="sxRow">
 <span class="sxLabel">Stopwatch style</span>
 <select id="stopwatchStyle">
@@ -700,6 +686,25 @@ Manage subscription
 <option value="tooth">Tooth + arrow + doorway</option>
 <option value="door">Door only</option>
 </select>
+</div>
+</div>
+</div>
+</section>
+</div>
+<div class="tabPanel" id="tabAlerts">
+<div class="sxSection">
+<div class="sxHead">Timer alerts</div>
+<div class="sxRow sxAlertRow">
+<span class="sxLabel">Alert 1 after<span class="sxLabelNote">seconds elapsed → card color changes</span></span>
+<input class="sxInputNum" id="timerAlert1AtSec" min="0" step="10" type="number">
+<span class="sxAlertBadge">sec</span>
+<input id="timerAlert1Color" type="color">
+</div>
+<div class="sxRow sxAlertRow">
+<span class="sxLabel">Alert 2 after<span class="sxLabelNote">overrides alert 1 color</span></span>
+<input class="sxInputNum" id="timerAlert2AtSec" min="0" step="10" type="number">
+<span class="sxAlertBadge">sec</span>
+<input id="timerAlert2Color" type="color">
 </div>
 </div>
 <details class="sxSection settingsCollapsible" hidden id="stopwatchDiagnosticsPanel">
