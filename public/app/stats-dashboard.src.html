@@ -1393,78 +1393,82 @@
 
     <div class="tabPanel" data-tab-panel="logs" role="tabpanel">
 	    <section class="panel card">
-      <p class="eyebrow">Logs</p>
-      <h2 class="sectionTitle">Session log tools</h2>
-      <p class="muted">Filter room or cleaning sessions, search by room or doctor, spot outliers faster, export what you are reviewing, and remove incorrect entries.</p>
-      <div class="controls" style="margin-top:14px;">
-        <div class="field">
-          <label for="roomLogsType">Log type</label>
-          <select id="roomLogsType">
-            <option value="room">Room sessions</option>
-            <option value="cleaning">Cleaning sessions</option>
-          </select>
+        <div class="toolbar">
+          <div>
+            <p class="eyebrow">Logs</p>
+            <h2 class="sectionTitle">Session history</h2>
+            <p class="sectionSubtitle">Search sessions, spot outliers, export what you're reviewing, and remove incorrect entries.</p>
+          </div>
+          <div class="actions">
+            <button class="primary" id="refreshRoomLogsBtn" type="button">Refresh logs</button>
+          </div>
         </div>
-        <div class="field">
-          <label for="roomLogsStart">Start date</label>
-          <input id="roomLogsStart" type="date"/>
+        <div class="controls logsPrimary" style="margin-top:14px;">
+          <div class="field">
+            <label for="roomLogsType">Log type</label>
+            <select id="roomLogsType">
+              <option value="room">Room sessions</option>
+              <option value="cleaning">Cleaning sessions</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="roomLogsSearch">Search</label>
+            <input id="roomLogsSearch" type="search" placeholder="Room, doctor, or date"/>
+          </div>
         </div>
-        <div class="field">
-          <label for="roomLogsEnd">End date</label>
-          <input id="roomLogsEnd" type="date"/>
+        <details class="disclosure logsFilters" style="margin-top:12px;">
+          <summary><span class="disclosureChevron" aria-hidden="true"></span>More filters</summary>
+          <div class="disclosureBody">
+            <div class="controls">
+              <div class="field">
+                <label for="roomLogsStart">Start date</label>
+                <input id="roomLogsStart" type="date"/>
+              </div>
+              <div class="field">
+                <label for="roomLogsEnd">End date</label>
+                <input id="roomLogsEnd" type="date"/>
+              </div>
+              <div class="field">
+                <label for="roomLogsLimit">Max rows</label>
+                <input id="roomLogsLimit" type="number" min="25" max="500" step="25"/>
+              </div>
+              <div class="field">
+                <label for="roomLogsSort">Sort by</label>
+                <select id="roomLogsSort">
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                  <option value="longest">Longest duration</option>
+                  <option value="shortest">Shortest duration</option>
+                  <option value="room_az">Room A-Z</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="roomLogsOutliers">Show</label>
+                <select id="roomLogsOutliers">
+                  <option value="all">All sessions</option>
+                  <option value="outliers">All outliers</option>
+                  <option value="short">Short outliers</option>
+                  <option value="long">Long outliers</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </details>
+        <div class="actions" style="margin-top:14px;">
+          <button class="ghost" id="selectAllLogsBtn" type="button">Select all shown</button>
+          <button class="danger" id="deleteSelectedLogsBtn" type="button">Delete selected</button>
+          <button class="secondary" id="exportVisibleLogsBtn" type="button">Export visible logs</button>
         </div>
-        <div class="field">
-          <label for="roomLogsLimit">Max rows</label>
-          <input id="roomLogsLimit" type="number" min="25" max="500" step="25"/>
+        <div class="summaryStrip" id="roomLogsSummary">
+          <span class="summaryPill">No logs loaded yet.</span>
         </div>
-        <div class="field">
-          <label for="roomLogsSearch">Search</label>
-          <input id="roomLogsSearch" type="search" placeholder="Room, doctor, or date"/>
+        <div class="miniStatus" id="roomLogsStatus" style="margin-top:12px;">No logs loaded yet.</div>
+        <div class="logList" id="roomLogsList" style="margin-top:16px;">
+          <div class="emptyState">Load logs to view room or cleaning session history.</div>
         </div>
-        <div class="field">
-          <label for="roomLogsSort">Sort by</label>
-          <select id="roomLogsSort">
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-            <option value="longest">Longest duration</option>
-            <option value="shortest">Shortest duration</option>
-            <option value="room_az">Room A-Z</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="roomLogsOutliers">Show</label>
-          <select id="roomLogsOutliers">
-            <option value="all">All sessions</option>
-            <option value="outliers">All outliers</option>
-            <option value="short">Short outliers</option>
-            <option value="long">Long outliers</option>
-          </select>
-        </div>
-      </div>
-      <div class="actions" style="margin-top:14px;">
-        <button class="ghost" id="selectAllLogsBtn" type="button">Select all shown</button>
-        <button class="danger" id="deleteSelectedLogsBtn" type="button">Delete selected</button>
-        <button class="secondary" id="exportVisibleLogsBtn" type="button">Export visible logs</button>
-        <button class="primary" id="refreshRoomLogsBtn" type="button">Refresh logs</button>
-      </div>
-      <div class="summaryStrip" id="roomLogsSummary">
-        <span class="summaryPill">No logs loaded yet.</span>
-      </div>
-      <div class="miniStatus" id="roomLogsStatus" style="margin-top:12px;">No logs loaded yet.</div>
-    </section>
-
-	    <section class="panel card">
-      <div class="toolbar">
-        <div>
-          <p class="eyebrow">History</p>
-          <h2 class="sectionTitle">Logged sessions</h2>
-        </div>
-      </div>
-      <div class="logList" id="roomLogsList">
-        <div class="emptyState">Load logs to view room or cleaning session history.</div>
-	      </div>
-	    </section>
+      </section>
     </div>
-	  </div>
+  </div>
 </div>
 
 <script>
