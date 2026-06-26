@@ -1022,68 +1022,165 @@
         inset 0 0 0 1px color-mix(in srgb, var(--timerAlert2Color, #fb7185) 44%, transparent),
         0 0 0 1px color-mix(in srgb, var(--timerAlert2Color, #fb7185) 20%, transparent);
     }
-    html[data-stopwatch-style="minimal"] .timerBox{
-      padding:8px 0 4px;
+    /* ── Minimal: no chrome, pure airy typography ─────────────────── */
+    html[data-stopwatch-style="minimal"] .timerBox,
+    html[data-stopwatch-style="minimal"] .timerBox.timerRunning,
+    html[data-stopwatch-style="minimal"] .timerBox.timerCleaning{
+      padding:2px 0;
+      border:0;
       border-radius:0;
-      border-width:0 0 1px 0;
       background:transparent;
       box-shadow:none;
     }
     html[data-stopwatch-style="minimal"] .timerBox .muted{
       text-transform:uppercase;
-      letter-spacing:.12em;
+      letter-spacing:.18em;
       font-size:10px;
-      opacity:.8;
+      opacity:.7;
     }
     html[data-stopwatch-style="minimal"] .time{
-      font-size: calc(var(--fontTimer) + 4px);
-      letter-spacing: 1.2px;
+      font-size: calc(var(--fontTimer) + 7px);
+      font-weight:300;
+      letter-spacing: 2.5px;
     }
+
+    /* ── Glass: frosted translucent glassmorphism ─────────────────── */
     html[data-stopwatch-style="glass"] .timerBox{
-      padding:12px 14px;
-      border-radius:18px;
-      border-color: rgba(255,255,255,.28);
-      background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.08));
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 18px 34px rgba(0,0,0,.18);
-      backdrop-filter: blur(14px);
+      padding:12px 16px;
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,.32);
+      background: linear-gradient(155deg, rgba(255,255,255,.24), rgba(255,255,255,.05));
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.38),
+        inset 0 0 22px rgba(255,255,255,.06),
+        0 20px 42px rgba(0,0,0,.30);
+      -webkit-backdrop-filter: blur(18px) saturate(150%);
+      backdrop-filter: blur(18px) saturate(150%);
+    }
+    html[data-stopwatch-style="glass"] .timerBox .muted{
+      font-size:10px;
+      letter-spacing:.1em;
+      opacity:.85;
     }
     html[data-stopwatch-style="glass"] .time{
       letter-spacing: 1px;
-      text-shadow: 0 6px 20px rgba(0,0,0,.18);
+      text-shadow: 0 2px 12px rgba(0,0,0,.35);
     }
+
+    /* ── Scoreboard: black LED panel with dot-matrix + neon digits ── */
     html[data-stopwatch-style="scoreboard"] .timerBox{
-      padding:12px 14px;
-      border-radius:12px;
-      border-color: rgba(15,23,42,.8);
-      background: linear-gradient(180deg, rgba(2,6,23,.94), rgba(15,23,42,.94));
-      box-shadow: inset 0 0 0 2px rgba(255,255,255,.03), inset 0 -8px 16px rgba(0,0,0,.35);
+      padding:13px 16px;
+      border-radius:10px;
+      border:2px solid #05080f;
+      background:
+        radial-gradient(rgba(255,255,255,.045) 1px, transparent 1.6px) 0 0 / 7px 7px,
+        linear-gradient(180deg, #060a13, #0a0f1c);
+      box-shadow:
+        inset 0 2px 7px rgba(0,0,0,.85),
+        inset 0 0 0 1px rgba(57,255,140,.06),
+        0 6px 18px rgba(0,0,0,.45);
     }
     html[data-stopwatch-style="scoreboard"] .timerBox .muted{
-      color: rgba(148,163,184,.86);
+      color: rgba(57,255,140,.55);
       text-transform:uppercase;
-      letter-spacing:.12em;
+      letter-spacing:.16em;
       font-size:10px;
     }
     html[data-stopwatch-style="scoreboard"] .time{
-      color:#86efac;
-      letter-spacing: 1.4px;
-      text-shadow: 0 0 18px rgba(34,197,94,.28);
+      color:#39ff8c;
+      font-weight:700;
+      letter-spacing: 3px;
+      text-shadow: 0 0 4px rgba(57,255,140,.9), 0 0 16px rgba(57,255,140,.45);
     }
+
+    /* ── Pill: bright accent capsule, like a live status chip ─────── */
     html[data-stopwatch-style="pill"] .timerBox{
-      padding:8px 14px;
+      padding:7px 20px;
       border-radius:999px;
-      border-color: rgba(255,255,255,.16);
-      background: linear-gradient(90deg, rgba(15,23,42,.76), rgba(30,41,59,.9));
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+      border:1px solid rgba(129,140,248,.6);
+      background: linear-gradient(135deg, rgba(99,102,241,.96), rgba(168,85,247,.94));
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.28),
+        0 10px 24px rgba(99,102,241,.38);
     }
     html[data-stopwatch-style="pill"] .timerBox .muted{
+      color: rgba(255,255,255,.78);
       font-size:10px;
       text-transform:uppercase;
       letter-spacing:.1em;
     }
     html[data-stopwatch-style="pill"] .time{
+      color:#ffffff;
+      font-weight:700;
+      letter-spacing: .6px;
+      text-shadow: 0 1px 6px rgba(49,46,129,.5);
+    }
+
+    /* ── Neon: glowing neon-tube outline, like a bar sign ─────────── */
+    html[data-stopwatch-style="neon"] .timerBox{
+      padding:10px 16px;
+      border-radius:14px;
+      border:1.5px solid rgba(56,189,248,.9);
+      background: rgba(7,11,22,.55);
+      box-shadow:
+        0 0 0 1px rgba(56,189,248,.22),
+        0 0 12px rgba(56,189,248,.55),
+        inset 0 0 14px rgba(56,189,248,.22);
+    }
+    html[data-stopwatch-style="neon"] .timerBox .muted{
+      color: rgba(125,211,252,.8);
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      font-size:10px;
+    }
+    html[data-stopwatch-style="neon"] .time{
+      color:#e3f7ff;
+      letter-spacing: 2px;
+      text-shadow: 0 0 6px rgba(56,189,248,.95), 0 0 16px rgba(56,189,248,.6);
+    }
+
+    /* ── Paper: light cream ticket stub with inked digits ─────────── */
+    html[data-stopwatch-style="paper"] .timerBox{
+      padding:10px 16px;
+      border-radius:8px;
+      border:1px dashed rgba(120,90,40,.5);
+      background: linear-gradient(180deg, #fbf6ea, #f0e6cd);
+      box-shadow: inset 0 0 0 4px rgba(255,255,255,.45), 0 8px 18px rgba(0,0,0,.30);
+    }
+    html[data-stopwatch-style="paper"] .timerBox .muted{
+      color: rgba(90,70,40,.7);
+      text-transform:uppercase;
+      letter-spacing:.16em;
+      font-size:10px;
+    }
+    html[data-stopwatch-style="paper"] .time{
+      color:#3a2c14;
+      letter-spacing: 1.5px;
+      text-shadow:none;
+    }
+
+    /* ── Embossed: digits carved into a brushed metal panel ───────── */
+    html[data-stopwatch-style="embossed"] .timerBox{
+      padding:12px 16px;
+      border-radius:14px;
+      border:1px solid rgba(0,0,0,.5);
+      background: linear-gradient(180deg, #2b303b, #191c25);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.12),
+        inset 0 -2px 6px rgba(0,0,0,.5),
+        0 8px 18px rgba(0,0,0,.35);
+    }
+    html[data-stopwatch-style="embossed"] .timerBox .muted{
+      color: rgba(200,205,215,.5);
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      font-size:10px;
+      text-shadow: 0 1px 0 rgba(255,255,255,.08);
+    }
+    html[data-stopwatch-style="embossed"] .time{
+      color:#9aa3b2;
       letter-spacing: 1px;
-      font-size: calc(var(--fontTimer) + 1px);
+      text-shadow: 0 -1px 1px rgba(0,0,0,.75), 0 1px 0 rgba(255,255,255,.14);
     }
 
     /* Intake */
