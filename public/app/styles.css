@@ -657,6 +657,14 @@
     #displayGrid .activeDoctorDivider .docInitBadge[data-shape="star"],
     #displayGrid .activeDoctorDivider .docInitBadge[data-shape="flower"],
     #displayGrid .activeDoctorDivider .docInitBadge[data-shape="flower2"],
+    #displayGrid .activeDoctorDivider .docInitBadge[data-shape="paw"],
+    #displayGrid .activeDoctorDivider .docInitBadge[data-shape="diamond"],
+    #displayGrid .activeDoctorDivider .docInitBadge[data-shape="pentagon"],
+    #displayGrid .activeDoctorDivider .docInitBadge[data-shape="shield"],
+    #displayGrid .activeDoctorDivider .docInitBadge[data-shape="cross"],
+    #displayGrid .activeDoctorDivider .docInitBadge[data-shape="heart"],
+    #displayGrid .activeDoctorDivider .docInitBadge[data-shape="squircle"],
+    #displayGrid .activeDoctorDivider .docInitBadge[data-shape="pin"],
     #displayGrid .activeDoctorDivider .docInitBadge[data-shape="turtle"]{
       min-width:40px;
       width:40px;
@@ -666,6 +674,7 @@
     #displayGrid .activeDoctorDivider .docInitBadge[data-shape="hexagon"],
     #displayGrid .activeDoctorDivider .docInitBadge[data-shape="crab"],
     #displayGrid .activeDoctorDivider .docInitBadge[data-shape="bulldog"],
+    #displayGrid .activeDoctorDivider .docInitBadge[data-shape="bone"],
     #displayGrid .activeDoctorDivider .docInitBadge[data-shape="strawberry"]{
       min-width:48px;
       width:48px;
@@ -3455,7 +3464,7 @@
 	      border-radius: 0;
 	      border-color: transparent;
 	      clip-path: polygon(50% 3%, 4% 97%, 96% 97%);
-	      padding: calc(8px * var(--doctorInitBadgeScale)) calc(7px * var(--doctorInitBadgeScale)) 0;
+	      padding: calc(5px * var(--doctorInitBadgeScale)) calc(7px * var(--doctorInitBadgeScale)) calc(4px * var(--doctorInitBadgeScale));
 	      font-size: calc(var(--doctorInitBadgeFontSize) * var(--doctorInitBadgeScale) * .78);
 	      letter-spacing: 0;
 	      box-shadow:
@@ -3642,6 +3651,157 @@
 	    }
 	    .docInitBadge[data-shape="turtle"]::before{
 	      display:none;
+	    }
+	    .docInitBadge[data-shape="paw"]{
+	      min-width: calc(46px * var(--doctorInitBadgeScale));
+	      width: calc(46px * var(--doctorInitBadgeScale));
+	      height: calc(44px * var(--doctorInitBadgeScale));
+	      border-color: transparent;
+	      padding: calc(7px * var(--doctorInitBadgeScale)) calc(4px * var(--doctorInitBadgeScale)) calc(1px * var(--doctorInitBadgeScale));
+	      font-size: calc(var(--doctorInitBadgeFontSize) * var(--doctorInitBadgeScale) * .58);
+	      letter-spacing: 0;
+	      background: var(--doctorBadgeBg, var(--doctorInitBadgeBg, rgba(11,18,32,.35)));
+	      -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Cg fill=%27black%27%3E%3Cellipse cx=%2750%27 cy=%2758%27 rx=%2728%27 ry=%2724%27/%3E%3Ccircle cx=%2726%27 cy=%2732%27 r=%2711%27/%3E%3Ccircle cx=%2743%27 cy=%2721%27 r=%2711%27/%3E%3Ccircle cx=%2761%27 cy=%2721%27 r=%2711%27/%3E%3Ccircle cx=%2779%27 cy=%2733%27 r=%2711%27/%3E%3C/g%3E%3C/svg%3E");
+	      mask-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Cg fill=%27black%27%3E%3Cellipse cx=%2750%27 cy=%2758%27 rx=%2728%27 ry=%2724%27/%3E%3Ccircle cx=%2726%27 cy=%2732%27 r=%2711%27/%3E%3Ccircle cx=%2743%27 cy=%2721%27 r=%2711%27/%3E%3Ccircle cx=%2761%27 cy=%2721%27 r=%2711%27/%3E%3Ccircle cx=%2779%27 cy=%2733%27 r=%2711%27/%3E%3C/g%3E%3C/svg%3E");
+	      -webkit-mask-repeat: no-repeat;
+	      mask-repeat: no-repeat;
+	      -webkit-mask-position: center;
+	      mask-position: center;
+	      -webkit-mask-size: contain;
+	      mask-size: contain;
+	      box-shadow: 0 6px 18px rgba(0,0,0,.18);
+	    }
+	    .docInitBadge[data-shape="paw"]::before{
+	      display:none;
+	    }
+	    .docInitBadge[data-shape="bone"]{
+	      min-width: calc(60px * var(--doctorInitBadgeScale));
+	      width: calc(60px * var(--doctorInitBadgeScale));
+	      height: calc(44px * var(--doctorInitBadgeScale));
+	      border-color: transparent;
+	      padding: calc(2px * var(--doctorInitBadgeScale)) calc(8px * var(--doctorInitBadgeScale));
+	      font-size: calc(var(--doctorInitBadgeFontSize) * var(--doctorInitBadgeScale) * .62);
+	      letter-spacing: 0;
+	      background: var(--doctorBadgeBg, var(--doctorInitBadgeBg, rgba(11,18,32,.35)));
+	      -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 112 84%27%3E%3Cg fill=%27black%27%3E%3Crect x=%2718%27 y=%2722%27 width=%2776%27 height=%2740%27 rx=%2710%27/%3E%3Ccircle cx=%2724%27 cy=%2728%27 r=%2716%27/%3E%3Ccircle cx=%2724%27 cy=%2756%27 r=%2716%27/%3E%3Ccircle cx=%2788%27 cy=%2728%27 r=%2716%27/%3E%3Ccircle cx=%2788%27 cy=%2756%27 r=%2716%27/%3E%3C/g%3E%3C/svg%3E");
+	      mask-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 112 84%27%3E%3Cg fill=%27black%27%3E%3Crect x=%2718%27 y=%2722%27 width=%2776%27 height=%2740%27 rx=%2710%27/%3E%3Ccircle cx=%2724%27 cy=%2728%27 r=%2716%27/%3E%3Ccircle cx=%2724%27 cy=%2756%27 r=%2716%27/%3E%3Ccircle cx=%2788%27 cy=%2728%27 r=%2716%27/%3E%3Ccircle cx=%2788%27 cy=%2756%27 r=%2716%27/%3E%3C/g%3E%3C/svg%3E");
+	      -webkit-mask-repeat: no-repeat;
+	      mask-repeat: no-repeat;
+	      -webkit-mask-position: center;
+	      mask-position: center;
+	      -webkit-mask-size: contain;
+	      mask-size: contain;
+	      box-shadow: 0 6px 18px rgba(0,0,0,.18);
+	    }
+	    .docInitBadge[data-shape="bone"]::before{
+	      display:none;
+	    }
+	    .docInitBadge[data-shape="diamond"]{
+	      min-width: calc(50px * var(--doctorInitBadgeScale));
+	      width: calc(50px * var(--doctorInitBadgeScale));
+	      height: calc(46px * var(--doctorInitBadgeScale));
+	      border-radius: 0;
+	      border-color: transparent;
+	      clip-path: polygon(50% 2%, 98% 50%, 50% 98%, 2% 50%);
+	      padding: 0 calc(6px * var(--doctorInitBadgeScale));
+	      font-size: calc(var(--doctorInitBadgeFontSize) * var(--doctorInitBadgeScale) * .6);
+	      letter-spacing: 0;
+	      box-shadow:
+          inset 0 0 0 1px var(--doctorBadgeBorder, var(--doctorInitBadgeBorder, rgba(255,255,255,.18))),
+          0 6px 18px rgba(0,0,0,.18);
+	    }
+	    .docInitBadge[data-shape="pentagon"]{
+	      min-width: calc(50px * var(--doctorInitBadgeScale));
+	      width: calc(50px * var(--doctorInitBadgeScale));
+	      height: calc(47px * var(--doctorInitBadgeScale));
+	      border-radius: 0;
+	      border-color: transparent;
+	      clip-path: polygon(50% 1%, 99% 39%, 80% 99%, 20% 99%, 1% 39%);
+	      padding: calc(3px * var(--doctorInitBadgeScale)) calc(6px * var(--doctorInitBadgeScale)) calc(1px * var(--doctorInitBadgeScale));
+	      font-size: calc(var(--doctorInitBadgeFontSize) * var(--doctorInitBadgeScale) * .6);
+	      letter-spacing: 0;
+	      box-shadow:
+          inset 0 0 0 1px var(--doctorBadgeBorder, var(--doctorInitBadgeBorder, rgba(255,255,255,.18))),
+          0 6px 18px rgba(0,0,0,.18);
+	    }
+	    .docInitBadge[data-shape="cross"]{
+	      min-width: calc(48px * var(--doctorInitBadgeScale));
+	      width: calc(48px * var(--doctorInitBadgeScale));
+	      height: calc(48px * var(--doctorInitBadgeScale));
+	      border-radius: 0;
+	      border-color: transparent;
+	      clip-path: polygon(28% 0, 72% 0, 72% 28%, 100% 28%, 100% 72%, 72% 72%, 72% 100%, 28% 100%, 28% 72%, 0 72%, 0 28%, 28% 28%);
+	      padding: 0 calc(2px * var(--doctorInitBadgeScale));
+	      font-size: calc(var(--doctorInitBadgeFontSize) * var(--doctorInitBadgeScale) * .54);
+	      letter-spacing: 0;
+	      box-shadow:
+          inset 0 0 0 1px var(--doctorBadgeBorder, var(--doctorInitBadgeBorder, rgba(255,255,255,.18))),
+          0 6px 18px rgba(0,0,0,.18);
+	    }
+	    .docInitBadge[data-shape="squircle"]{
+	      min-width: calc(50px * var(--doctorInitBadgeScale));
+	      width: calc(50px * var(--doctorInitBadgeScale));
+	      height: calc(42px * var(--doctorInitBadgeScale));
+	      border-radius: calc(16px * var(--doctorInitBadgeScale));
+	    }
+	    .docInitBadge[data-shape="capsule"]{
+	      min-width: calc(58px * var(--doctorInitBadgeScale));
+	      height: calc(34px * var(--doctorInitBadgeScale));
+	      border-radius: 999px;
+	    }
+	    .docInitBadge[data-shape="shield"]{
+	      min-width: calc(48px * var(--doctorInitBadgeScale));
+	      width: calc(48px * var(--doctorInitBadgeScale));
+	      height: calc(50px * var(--doctorInitBadgeScale));
+	      border-color: transparent;
+	      padding: 0 calc(6px * var(--doctorInitBadgeScale));
+	      font-size: calc(var(--doctorInitBadgeFontSize) * var(--doctorInitBadgeScale) * .6);
+	      letter-spacing: 0;
+	      -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Cpath fill=%27black%27 d=%27M50 6L88 20L88 52C88 78 70 90 50 96C30 90 12 78 12 52L12 20Z%27/%3E%3C/svg%3E");
+	      mask-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Cpath fill=%27black%27 d=%27M50 6L88 20L88 52C88 78 70 90 50 96C30 90 12 78 12 52L12 20Z%27/%3E%3C/svg%3E");
+	      -webkit-mask-repeat: no-repeat;
+	      mask-repeat: no-repeat;
+	      -webkit-mask-position: center;
+	      mask-position: center;
+	      -webkit-mask-size: contain;
+	      mask-size: contain;
+	      box-shadow: 0 6px 18px rgba(0,0,0,.18);
+	    }
+	    .docInitBadge[data-shape="heart"]{
+	      min-width: calc(50px * var(--doctorInitBadgeScale));
+	      width: calc(50px * var(--doctorInitBadgeScale));
+	      height: calc(46px * var(--doctorInitBadgeScale));
+	      border-color: transparent;
+	      padding: 0 calc(6px * var(--doctorInitBadgeScale)) calc(6px * var(--doctorInitBadgeScale));
+	      font-size: calc(var(--doctorInitBadgeFontSize) * var(--doctorInitBadgeScale) * .54);
+	      letter-spacing: 0;
+	      -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Cpath fill=%27black%27 d=%27M50 84C16 60 8 40 8 26C8 12 20 6 30 6C40 6 47 13 50 20C53 13 60 6 70 6C80 6 92 12 92 26C92 40 84 60 50 84Z%27/%3E%3C/svg%3E");
+	      mask-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Cpath fill=%27black%27 d=%27M50 84C16 60 8 40 8 26C8 12 20 6 30 6C40 6 47 13 50 20C53 13 60 6 70 6C80 6 92 12 92 26C92 40 84 60 50 84Z%27/%3E%3C/svg%3E");
+	      -webkit-mask-repeat: no-repeat;
+	      mask-repeat: no-repeat;
+	      -webkit-mask-position: center;
+	      mask-position: center;
+	      -webkit-mask-size: contain;
+	      mask-size: contain;
+	      box-shadow: 0 6px 18px rgba(0,0,0,.18);
+	    }
+	    .docInitBadge[data-shape="pin"]{
+	      min-width: calc(42px * var(--doctorInitBadgeScale));
+	      width: calc(42px * var(--doctorInitBadgeScale));
+	      height: calc(50px * var(--doctorInitBadgeScale));
+	      border-color: transparent;
+	      padding: 0 calc(4px * var(--doctorInitBadgeScale)) calc(12px * var(--doctorInitBadgeScale));
+	      font-size: calc(var(--doctorInitBadgeFontSize) * var(--doctorInitBadgeScale) * .56);
+	      letter-spacing: 0;
+	      -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 120%27%3E%3Cpath fill=%27black%27 d=%27M50 116C30 86 12 70 12 42A38 38 0 1 1 88 42C88 70 70 86 50 116Z%27/%3E%3C/svg%3E");
+	      mask-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 120%27%3E%3Cpath fill=%27black%27 d=%27M50 116C30 86 12 70 12 42A38 38 0 1 1 88 42C88 70 70 86 50 116Z%27/%3E%3C/svg%3E");
+	      -webkit-mask-repeat: no-repeat;
+	      mask-repeat: no-repeat;
+	      -webkit-mask-position: center;
+	      mask-position: center;
+	      -webkit-mask-size: contain;
+	      mask-size: contain;
+	      box-shadow: 0 6px 18px rgba(0,0,0,.18);
 	    }
     .room .docInitCorner{
       position:absolute;
@@ -5306,6 +5466,7 @@ body.settingsPageMode #settingsBackBtn:hover{
     margin:0 0 16px;
   }
   body.settingsPageMode .drawer .tabPanel.active > .card.fullWidth,
+  body.settingsPageMode .drawer .tabPanel.active > .fullWidth,
   body.settingsPageMode .drawer #tabStats.active > *,
   body.settingsPageMode .drawer #tabAccount.active > * {
     column-span: all;

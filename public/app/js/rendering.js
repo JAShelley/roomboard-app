@@ -2141,6 +2141,14 @@
 		              +   '<option value="star"' + (badgeStyle.shape === "star" ? ' selected' : '') + '>Star</option>'
 	              +   '<option value="hexagon"' + (badgeStyle.shape === "hexagon" ? ' selected' : '') + '>Hexagon</option>'
 	              +   '<option value="circle"' + (badgeStyle.shape === "circle" ? ' selected' : '') + '>Circle</option>'
+	              +   '<option value="diamond"' + (badgeStyle.shape === "diamond" ? ' selected' : '') + '>Diamond</option>'
+	              +   '<option value="pentagon"' + (badgeStyle.shape === "pentagon" ? ' selected' : '') + '>Pentagon</option>'
+	              +   '<option value="squircle"' + (badgeStyle.shape === "squircle" ? ' selected' : '') + '>Squircle</option>'
+	              +   '<option value="shield"' + (badgeStyle.shape === "shield" ? ' selected' : '') + '>Shield</option>'
+	              +   '<option value="cross"' + (badgeStyle.shape === "cross" ? ' selected' : '') + '>Medical cross</option>'
+	              +   '<option value="capsule"' + (badgeStyle.shape === "capsule" ? ' selected' : '') + '>Capsule</option>'
+	              +   '<option value="heart"' + (badgeStyle.shape === "heart" ? ' selected' : '') + '>Heart</option>'
+	              +   '<option value="pin"' + (badgeStyle.shape === "pin" ? ' selected' : '') + '>Map pin</option>'
 	              +   '<option value="crab"' + (badgeStyle.shape === "crab" ? ' selected' : '') + '>Crab</option>'
 	              +   '<option value="bulldog"' + (badgeStyle.shape === "bulldog" ? ' selected' : '') + '>Bulldog</option>'
 	              +   '<option value="flower"' + (badgeStyle.shape === "flower" ? ' selected' : '') + '>Flower</option>'
@@ -2148,6 +2156,8 @@
 	              +   '<option value="golfball"' + (badgeStyle.shape === "golfball" ? ' selected' : '') + '>Golf Ball</option>'
 	              +   '<option value="strawberry"' + (badgeStyle.shape === "strawberry" ? ' selected' : '') + '>Strawberry</option>'
 	              +   '<option value="turtle"' + (badgeStyle.shape === "turtle" ? ' selected' : '') + '>Turtle</option>'
+	              +   '<option value="paw"' + (badgeStyle.shape === "paw" ? ' selected' : '') + '>Paw print</option>'
+	              +   '<option value="bone"' + (badgeStyle.shape === "bone" ? ' selected' : '') + '>Bone</option>'
 	              + '</select>'
 	              + '<button class="btn sm" type="button" title="Reset badge style">Reset</button>';
 	            var controls = row.querySelectorAll("input, select");

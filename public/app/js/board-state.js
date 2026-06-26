@@ -597,7 +597,7 @@
 
 	    function normalizeDoctorBadgeShape(shape){
 	      var value = String(shape || "").trim().toLowerCase();
-	      if(value === "triangle" || value === "star" || value === "hexagon" || value === "circle" || value === "crab" || value === "bulldog" || value === "flower" || value === "flower2" || value === "turtle" || value === "golfball" || value === "strawberry") return value;
+	      if(value === "triangle" || value === "star" || value === "hexagon" || value === "circle" || value === "crab" || value === "bulldog" || value === "flower" || value === "flower2" || value === "turtle" || value === "golfball" || value === "strawberry" || value === "paw" || value === "bone" || value === "diamond" || value === "pentagon" || value === "shield" || value === "squircle" || value === "cross" || value === "capsule" || value === "heart" || value === "pin") return value;
 	      return "square";
 	    }
 
