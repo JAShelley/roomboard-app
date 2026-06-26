@@ -11,7 +11,8 @@
       "name": "landing",
       "runtimeExecutable": "/usr/bin/python3",
       "runtimeArgs": ["/tmp/serve-roomboard-landing.py"],
-      "port": 4000
+      "port": 4000,
+      "autoPort": true
     },
     {
       "name": "app-static",
