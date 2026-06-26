@@ -253,7 +253,7 @@
       if (r.state === "active") { el.style.setProperty("--c", ty.c); el.style.color = readableText(ty.c); }
       var dischargeBtn = "";
       if (r.state === "active") {
-        dischargeBtn = '<button class="roomDischargeBtn" data-discharge title="Discharge patient">🐾 Discharge</button>';
+        dischargeBtn = '<button class="roomDischargeBtn" data-discharge title="Discharge patient">🚪 Discharge</button>';
       } else if (r.state === "cleaning") {
         dischargeBtn = '<button class="roomDischargeBtn cleaning" data-discharge title="Mark room clean">🧹 Mark clean</button>';
       }
