@@ -2621,6 +2621,10 @@
 		        displayFontColor: String(sourceSettings.displayFontColor || "#e8eefc"),
 		        displayMutedColor: String(sourceSettings.displayMutedColor || "#a9b6d3"),
 		        cardTextMode: String(sourceSettings.cardTextMode || "auto")
+		        // NOTE: cardStyle is intentionally NOT shared. Like displayLayout,
+		        // it is a per-device/per-window preference (see WINDOW_UI_SETTING_KEYS).
+		        // Including it here let any other device's sync overwrite this
+		        // screen's choice on every board update (e.g. snapping back to Compact).
 		      };
 		    }
 
@@ -2657,6 +2661,8 @@
 		      if(sharedUi.displayFontColor != null) targetState.settings.displayFontColor = String(sharedUi.displayFontColor || "#e8eefc");
 		      if(sharedUi.displayMutedColor != null) targetState.settings.displayMutedColor = String(sharedUi.displayMutedColor || "#a9b6d3");
 		      if(sharedUi.cardTextMode != null) targetState.settings.cardTextMode = String(sharedUi.cardTextMode || "auto");
+		      // cardStyle intentionally not applied from shared payload — it is a
+		      // per-device preference (matches displayLayout). See buildSharedBoardUiPayload.
 		    }
 
 	    function buildBoardStatePayload(){

@@ -1022,6 +1022,83 @@
         inset 0 0 0 1px color-mix(in srgb, var(--timerAlert2Color, #fb7185) 44%, transparent),
         0 0 0 1px color-mix(in srgb, var(--timerAlert2Color, #fb7185) 20%, transparent);
     }
+
+    /* ══ Card layout variants ════════════════════════════════════════
+       Selected via Settings → Card layout (state.settings.cardStyle),
+       applied as #displayGrid[data-card-style]. CSS-only restyling of
+       the standard .room card — no markup changes. */
+
+    /* Compact: tighter spacing + smaller type, more cards per screen.
+       Descendant rules are scoped through .room so they reliably outweigh
+       the base #displayGrid.boxView .room … rules (equal specificity loses
+       on source order otherwise). */
+    #displayGrid.boxView[data-card-style="compact"] .room{
+      min-height: 140px;
+    }
+    #displayGrid.boxView[data-card-style="compact"] .room .roomTop{
+      padding: 3px 7px;
+    }
+    #displayGrid.boxView[data-card-style="compact"] .room .roomBody{
+      padding: 7px 8px;
+      gap: 4px;
+    }
+    #displayGrid.boxView[data-card-style="compact"] .room .summary.roomInfoLine{
+      gap: 4px;
+      font-size: calc(var(--fontDisplay) * 0.9);
+    }
+    #displayGrid.boxView[data-card-style="compact"] .room .timerBox{
+      padding: 6px 8px;
+      border-radius: 10px;
+    }
+    #displayGrid.boxView[data-card-style="compact"] .room .time{
+      font-size: calc(var(--fontTimer) * 0.92);
+    }
+
+    /* Big timer: the clock is the hero; supporting info shrinks. */
+    #displayGrid.boxView[data-card-style="bigTimer"] .room .summary.roomInfoLine{
+      font-size: calc(var(--fontDisplay) * 0.85);
+      opacity: .92;
+    }
+    #displayGrid.boxView[data-card-style="bigTimer"] .room .roomBody{
+      gap: 8px;
+    }
+    #displayGrid.boxView[data-card-style="bigTimer"] .room .timerBox{
+      padding: 14px 12px;
+    }
+    #displayGrid.boxView[data-card-style="bigTimer"] .room .time{
+      font-size: calc(var(--fontTimer) * 1.85);
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    /* Minimal: neutral surface, type colour shown as a left accent bar.
+       The JS render path skips the colour fill for this style, so these
+       neutral backgrounds win without fighting an inline style. */
+    #displayGrid.boxView[data-card-style="minimal"] .room:not(.cleaning){
+      border: 1px solid var(--border);
+      border-left: 7px solid var(--roomAccent, var(--border));
+      background:
+        linear-gradient(90deg, color-mix(in srgb, var(--roomAccent) 14%, transparent), transparent 38%),
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+    }
+
+    /* High contrast: bolder borders + heavier text for at-a-distance reading. */
+    #displayGrid.boxView[data-card-style="highContrast"] .room:not(.cleaning){
+      border-width: 2px;
+      border-top-width: 5px;
+    }
+    #displayGrid.boxView[data-card-style="highContrast"] .room .roomName,
+    #displayGrid.boxView[data-card-style="highContrast"] .room .summary.roomInfoLine{
+      font-weight: 800;
+    }
+    #displayGrid.boxView[data-card-style="highContrast"] .room .timerBox{
+      border-width: 2px;
+    }
+    #displayGrid.boxView[data-card-style="highContrast"] .room .time{
+      font-weight: 700;
+      text-shadow: 0 1px 2px rgba(0,0,0,.45);
+    }
+
     /* ── Minimal: no chrome, pure airy typography ─────────────────── */
     html[data-stopwatch-style="minimal"] .timerBox,
     html[data-stopwatch-style="minimal"] .timerBox.timerRunning,
@@ -2240,6 +2317,67 @@
     .drawer #themePresetHelp{
       min-height:38px;
     }
+
+    /* ══ Card layout picker (visual diagram tiles) ════════════════════ */
+    .drawer .cardLayoutGrid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:12px;
+    }
+    .drawer .cardLayoutBtn{
+      display:flex;
+      flex-direction:column;
+      align-items:stretch;
+      gap:12px;
+      padding:14px !important;
+      border-radius:20px !important;
+      border:1px solid var(--settingsBorder) !important;
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03)) !important;
+      box-shadow: none !important;
+      text-align:left;
+      cursor:pointer;
+      color: var(--settingsText) !important;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+    }
+    .drawer .cardLayoutBtn:hover{
+      transform: translateY(-2px);
+      border-color: rgba(125, 211, 252, .30) !important;
+    }
+    .drawer .cardLayoutBtn.active{
+      border-color: rgba(125, 211, 252, .44) !important;
+      background: linear-gradient(180deg, rgba(91, 140, 255, .18), rgba(125, 211, 252, .08)) !important;
+      box-shadow: 0 18px 34px rgba(25, 59, 121, .22) !important;
+    }
+    .drawer .cardLayoutPreview{
+      display:block;
+      padding:10px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(8, 16, 32, .55);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .drawer .cardLayoutPreview svg{
+      display:block;
+      width:100%;
+      height:auto;
+    }
+    .drawer .cardLayoutText{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width:0;
+    }
+    .drawer .cardLayoutName{
+      font-size:15px;
+      font-weight:700;
+      color: var(--settingsText) !important;
+    }
+    .drawer .cardLayoutDesc{
+      color: var(--settingsMuted) !important;
+      line-height:1.4;
+      font-size:13px;
+    }
+
     .drawer .toggle{
       padding:16px;
       border-radius:20px;

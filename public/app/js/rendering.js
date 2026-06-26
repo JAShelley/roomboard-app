@@ -574,6 +574,11 @@
         el.style.borderColor = "";
         el.style.background = "";
         el.style.removeProperty("--roomAccent");
+      } else if((state.settings.cardStyle || "original") === "minimal"){
+        // Minimal: neutral surface with the type colour shown as a left accent
+        // bar (handled in CSS via --roomAccent). Leave background/text to the
+        // theme defaults — no full-colour fill, no contrast override.
+        el.style.setProperty("--roomAccent", effectiveColor);
       } else {
         el.style.borderColor = effectiveColor + "55";
         el.style.setProperty("--roomAccent", effectiveColor);
@@ -965,6 +970,7 @@
       grid.classList.toggle("mobileQuickViewGrid", renderMode === "quick" || renderMode === "mobilecards");
       grid.classList.toggle("activeDoctorGrouped", groupByDoctor);
       grid.dataset.layout = renderMode;
+      grid.dataset.cardStyle = state.settings.cardStyle || "original";
       grid.dataset.roomCount = String(displayRooms.length);
       rememberDisplayStructure(grid, displayRooms, renderMode);
 
@@ -1786,6 +1792,8 @@
       if($("displayFontColor")) $("displayFontColor").value = state.settings.displayFontColor || "#e8eefc";
       if($("displayMutedColor")) $("displayMutedColor").value = state.settings.displayMutedColor || "#a9b6d3";
       if($("cardTextMode")) $("cardTextMode").value = state.settings.cardTextMode || "auto";
+      if($("cardStyle")) $("cardStyle").value = state.settings.cardStyle || "original";
+      if(typeof renderCardLayoutGrid === "function") renderCardLayoutGrid();
       if($("fontBase")) $("fontBase").value = state.settings.fontBase || 14;
       if($("fontCard")) $("fontCard").value = state.settings.fontCard || 14;
       if($("fontDisplay")) $("fontDisplay").value = state.settings.fontDisplay || 14;

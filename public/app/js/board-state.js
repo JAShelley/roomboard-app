@@ -160,6 +160,7 @@
       stopwatchStyle: "classic",
       highlightDoctor: "",
       cardTextMode: "auto",
+      cardStyle: "original",
       showRoomCardPatient: true,
       showRoomCardType: true,
       showRoomCardDoctor: true,
@@ -331,7 +332,8 @@
 	      "displaySortMode",
 			      "stopwatchStyle",
 			      "highlightDoctor",
-			      "cardTextMode"
+			      "cardTextMode",
+			      "cardStyle"
 	    ];
     var WINDOW_APPEARANCE_SETTING_KEYS = [
       "displayCols",
@@ -356,7 +358,8 @@
 	      "displaySortMode",
 	      "stopwatchStyle",
 	      "highlightDoctor",
-	      "cardTextMode"
+	      "cardTextMode",
+	      "cardStyle"
 	    ];
     var ACCOUNT_LOCAL_SETTING_DEFAULTS = {
       displayCols: 4,
@@ -382,7 +385,8 @@
 			      displaySortMode: "room",
 			      stopwatchStyle: "classic",
 			      highlightDoctor: "",
-			      cardTextMode: "auto"
+			      cardTextMode: "auto",
+			      cardStyle: "original"
 	    };
     var activeAccountSettingsScope = "guest";
     var accountSettingsState = null;

@@ -7,6 +7,118 @@
       if(card) card.scrollIntoView({ behavior: "smooth" });
     });
 
+    // ===== Card layout picker (visual diagrams) =====
+    // Each option carries a small SVG mock of the layout it represents.
+    // The grid drives the hidden <select id="cardStyle">, so the existing
+    // commit/persist/render wiring stays unchanged.
+    var CARD_LAYOUT_OPTIONS = [
+      {
+        id: "original",
+        label: "Original",
+        desc: "Roomy cards with full spacing.",
+        svg: '<svg viewBox="0 0 140 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+          + '<rect x="12" y="9" width="116" height="78" rx="12" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.14)"/>'
+          + '<rect x="20" y="9" width="100" height="6" rx="3" fill="rgba(125,211,252,.75)"/>'
+          + '<rect x="24" y="27" width="44" height="9" rx="4.5" fill="rgba(243,247,255,.88)"/>'
+          + '<circle cx="114" cy="31" r="6" fill="rgba(255,255,255,.30)"/>'
+          + '<rect x="24" y="45" width="78" height="6" rx="3" fill="rgba(159,175,206,.70)"/>'
+          + '<rect x="24" y="61" width="92" height="16" rx="6" fill="rgba(125,211,252,.16)" stroke="rgba(125,211,252,.45)"/>'
+          + '</svg>'
+      },
+      {
+        id: "compact",
+        label: "Compact",
+        desc: "Tighter cards — more fit on screen.",
+        svg: '<svg viewBox="0 0 140 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+          + '<rect x="12" y="8" width="116" height="38" rx="9" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.14)"/>'
+          + '<rect x="18" y="8" width="104" height="5" rx="2.5" fill="rgba(125,211,252,.75)"/>'
+          + '<rect x="22" y="20" width="38" height="7" rx="3.5" fill="rgba(243,247,255,.88)"/>'
+          + '<rect x="22" y="32" width="50" height="5" rx="2.5" fill="rgba(159,175,206,.70)"/>'
+          + '<rect x="86" y="22" width="34" height="14" rx="5" fill="rgba(125,211,252,.16)" stroke="rgba(125,211,252,.45)"/>'
+          + '<rect x="12" y="50" width="116" height="38" rx="9" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.14)"/>'
+          + '<rect x="18" y="50" width="104" height="5" rx="2.5" fill="rgba(125,211,252,.75)"/>'
+          + '<rect x="22" y="62" width="38" height="7" rx="3.5" fill="rgba(243,247,255,.88)"/>'
+          + '<rect x="22" y="74" width="50" height="5" rx="2.5" fill="rgba(159,175,206,.70)"/>'
+          + '<rect x="86" y="64" width="34" height="14" rx="5" fill="rgba(125,211,252,.16)" stroke="rgba(125,211,252,.45)"/>'
+          + '</svg>'
+      },
+      {
+        id: "bigTimer",
+        label: "Big timer",
+        desc: "Giant clock — readable across the room.",
+        svg: '<svg viewBox="0 0 140 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+          + '<rect x="12" y="9" width="116" height="78" rx="12" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.14)"/>'
+          + '<rect x="20" y="9" width="100" height="6" rx="3" fill="rgba(125,211,252,.75)"/>'
+          + '<rect x="24" y="25" width="40" height="6" rx="3" fill="rgba(159,175,206,.70)"/>'
+          + '<rect x="24" y="39" width="92" height="40" rx="9" fill="rgba(125,211,252,.16)" stroke="rgba(125,211,252,.5)"/>'
+          + '<rect x="40" y="54" width="60" height="11" rx="3" fill="rgba(125,211,252,.9)"/>'
+          + '</svg>'
+      },
+      {
+        id: "minimal",
+        label: "Minimal",
+        desc: "Neutral card, colour as a left bar.",
+        svg: '<svg viewBox="0 0 140 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+          + '<rect x="12" y="9" width="116" height="78" rx="12" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.12)"/>'
+          + '<rect x="12" y="9" width="6" height="78" rx="3" fill="rgba(125,211,252,.85)"/>'
+          + '<rect x="30" y="28" width="46" height="9" rx="4.5" fill="rgba(243,247,255,.85)"/>'
+          + '<rect x="30" y="46" width="74" height="6" rx="3" fill="rgba(159,175,206,.60)"/>'
+          + '<rect x="30" y="61" width="58" height="13" rx="5" fill="none" stroke="rgba(159,175,206,.50)"/>'
+          + '</svg>'
+      },
+      {
+        id: "highContrast",
+        label: "High contrast",
+        desc: "Bold borders and text for visibility.",
+        svg: '<svg viewBox="0 0 140 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+          + '<rect x="12" y="9" width="116" height="78" rx="12" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.55)" stroke-width="2.5"/>'
+          + '<rect x="20" y="9" width="100" height="8" rx="4" fill="rgba(125,211,252,.9)"/>'
+          + '<rect x="24" y="26" width="50" height="12" rx="4" fill="rgba(255,255,255,.95)"/>'
+          + '<circle cx="114" cy="32" r="6" fill="rgba(255,255,255,.50)"/>'
+          + '<rect x="24" y="46" width="82" height="8" rx="3" fill="rgba(255,255,255,.80)"/>'
+          + '<rect x="24" y="62" width="92" height="16" rx="5" fill="rgba(125,211,252,.20)" stroke="rgba(125,211,252,.75)" stroke-width="2"/>'
+          + '</svg>'
+      }
+    ];
+
+    function renderCardLayoutGrid(){
+      var grid = document.getElementById("cardLayoutGrid");
+      if(!grid) return;
+      var current = (state && state.settings && state.settings.cardStyle) || "original";
+      grid.innerHTML = CARD_LAYOUT_OPTIONS.map(function(o){
+        var active = (o.id === current);
+        return '<button type="button" class="cardLayoutBtn' + (active ? " active" : "") + '"'
+          + ' data-card-layout="' + o.id + '" role="radio" aria-checked="' + (active ? "true" : "false") + '">'
+          + '<span class="cardLayoutPreview">' + o.svg + '</span>'
+          + '<span class="cardLayoutText">'
+            + '<span class="cardLayoutName">' + o.label + '</span>'
+            + '<span class="cardLayoutDesc">' + o.desc + '</span>'
+          + '</span>'
+        + '</button>';
+      }).join("");
+    }
+
+    document.addEventListener("click", function(e){
+      var btn = e.target && e.target.closest ? e.target.closest(".cardLayoutBtn") : null;
+      if(!btn) return;
+      var val = btn.getAttribute("data-card-layout");
+      if(!val) return;
+      // Reflect selection immediately (commit/render below is async).
+      var grid = btn.closest(".cardLayoutGrid");
+      if(grid){
+        [].forEach.call(grid.querySelectorAll(".cardLayoutBtn"), function(b){
+          var on = (b === btn);
+          b.classList.toggle("active", on);
+          b.setAttribute("aria-checked", on ? "true" : "false");
+        });
+      }
+      var sel = document.getElementById("cardStyle");
+      if(sel && sel.value !== val){
+        sel.value = val;
+        sel.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    });
+
     function refreshAdvancedPlanGating(){
       var plan = typeof window.roomboardGetCurrentPlan === "function" ? window.roomboardGetCurrentPlan() : null;
       var isBase = !!(plan && plan.indexOf("base") !== -1);
@@ -1134,6 +1246,7 @@
       state.settings.displayFontColor = $("displayFontColor").value || "#e8eefc";
       state.settings.displayMutedColor = $("displayMutedColor").value || "#a9b6d3";
       if($("cardTextMode")) state.settings.cardTextMode = $("cardTextMode").value || "auto";
+      if($("cardStyle")) state.settings.cardStyle = $("cardStyle").value || "original";
       persistWindowUiSettings();
       persistAccountUiSettings();
       if(supabase && currentPracticeId) scheduleRemoteSave("board", { immediate: !!options.flush });
@@ -1419,6 +1532,11 @@
     });
     if($("cardTextMode")){
       $("cardTextMode").addEventListener("change", function(){
+        scheduleDisplayColorAutosave(0);
+      });
+    }
+    if($("cardStyle")){
+      $("cardStyle").addEventListener("change", function(){
         scheduleDisplayColorAutosave(0);
       });
     }
