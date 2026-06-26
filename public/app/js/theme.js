@@ -431,6 +431,51 @@
     return themePrefsState;
   }
 
+  // The active theme is per-window/tab. It lives in sessionStorage (which is
+  // scoped to a single tab and survives reloads, but never crosses tabs or
+  // syncs to the account), so changing the look in one window leaves every
+  // other window — and the saved default — untouched.
+  const WINDOW_THEME_STORAGE_PREFIX = "roomboard.website.windowTheme.v1";
+
+  function getWindowThemeStorageKey(scope){
+    return WINDOW_THEME_STORAGE_PREFIX + "." + (scope || "guest");
+  }
+
+  function readWindowThemeOverride(scope){
+    try{
+      const raw = sessionStorage.getItem(getWindowThemeStorageKey(scope));
+      return isThemePresetName(raw) ? raw : null;
+    }catch(e){
+      return null;
+    }
+  }
+
+  function writeWindowThemeOverride(scope, name){
+    try{
+      if(isThemePresetName(name)) sessionStorage.setItem(getWindowThemeStorageKey(scope), name);
+      else sessionStorage.removeItem(getWindowThemeStorageKey(scope));
+    }catch(e){}
+  }
+
+  // What this window should actually render: its own override if one was
+  // chosen here, otherwise the account-wide default (what every fresh login
+  // and new window starts on).
+  function getActiveThemeName(){
+    const override = readWindowThemeOverride(activeThemePrefsScope);
+    if(override) return override;
+    return getSavedThemeDefaultPreset();
+  }
+
+  function setWindowThemePreset(preset){
+    const p = isThemePresetName(preset) ? preset : getSavedThemeDefaultPreset();
+    writeWindowThemeOverride(activeThemePrefsScope, p);
+    return p;
+  }
+
+  function clearWindowThemePreset(){
+    writeWindowThemeOverride(activeThemePrefsScope, null);
+  }
+
   function persistThemePrefs(){
     if(!themePrefsState) themePrefsState = normalizeThemePrefs(null);
     writeStoredThemePrefs(activeThemePrefsScope, themePrefsState);
@@ -499,11 +544,7 @@
   }
 
   function applyCurrentTheme(){
-    const settings = getThemeSettings();
-    const current = isThemePresetName(settings.themePreset)
-      ? settings.themePreset
-      : (isThemePresetName(settings.themeDefaultPreset) ? settings.themeDefaultPreset : THEME_DEFAULT_PRESET);
-    const applied = applyThemePreset(current);
+    const applied = applyThemePreset(getActiveThemeName());
     reapplyDisplayStylingAfterTheme();
     return applied;
   }
@@ -515,27 +556,19 @@
   }
 
   function getSavedThemePreset(){
-    // If a theme was explicitly chosen before, use it. Otherwise fall back to the user-selected default.
-    const settings = getThemeSettings();
-    const preset = settings.themePreset;
-    if(isThemePresetName(preset)) return preset;
-    return getSavedThemeDefaultPreset();
-  }
-
-  function saveThemePreset(preset){
-    const p = isThemePresetName(preset) ? preset : THEME_DEFAULT_PRESET;
-    const theme = THEME_PRESETS[p] || THEME_PRESETS[THEME_DEFAULT_PRESET];
-    const settings = getThemeSettings();
-    settings.themePreset = p;
-    settings.bgColor = theme.bg;
-    themePrefsState = normalizeThemePrefs(settings);
-    persistThemePrefs();
+    // The active theme is window/tab-specific (see getActiveThemeName).
+    return getActiveThemeName();
   }
 
   function saveThemeDefaultPreset(preset){
     const p = isThemePresetName(preset) ? preset : THEME_DEFAULT_PRESET;
+    const theme = THEME_PRESETS[p] || THEME_PRESETS[THEME_DEFAULT_PRESET];
     const settings = getThemeSettings();
     settings.themeDefaultPreset = p;
+    // Keep the persisted/remote "active" pinned to the default so it never
+    // carries a single window's choice across tabs or devices.
+    settings.themePreset = p;
+    settings.bgColor = theme.bg;
     themePrefsState = normalizeThemePrefs(settings);
     persistThemePrefs();
   }
@@ -588,7 +621,10 @@
     if(defSel) defSel.value = defp;
     renderThemePresetGrid(current, defp);
     if(help && THEME_PRESETS[current]){
-      help.textContent = THEME_PRESETS[current].description + (current === defp ? " This preset is also your default." : "");
+      const windowNote = current === defp
+        ? " Applied to this window; it's also your default for new windows."
+        : " Applied to this window only — your default stays " + (THEME_PRESETS[defp] ? THEME_PRESETS[defp].label : defp) + ".";
+      help.textContent = THEME_PRESETS[current].description + windowNote;
     }
   }
 
@@ -597,7 +633,6 @@
     const sel = document.getElementById("themePreset");
     const defSel = document.getElementById("themeDefaultPreset");
     const resetBtn = document.getElementById("resetThemeBtn");
-    const makeDefaultBtn = document.getElementById("makeDefaultThemeBtn");
     const presetGrid = document.getElementById("themePresetGrid");
     if(!sel) return;
 
@@ -610,58 +645,56 @@
     applyCurrentTheme();
     syncThemeUI(current, savedDefault);
 
-    sel.addEventListener("change", ()=>{
-      const p = sel.value;
+    // Picking a theme here (dropdown or preset grid) only restyles THIS
+    // window/tab — it never touches the saved default.
+    function applyWindowTheme(p){
+      if(!isThemePresetName(p)) return;
+      setWindowThemePreset(p);
       applyThemePreset(p);
       reapplyDisplayStylingAfterTheme();
-      saveThemePreset(p);
-      syncThemeUI(p, defSel ? defSel.value : savedDefault);
-      if(typeof toast === "function") toast("Theme saved.");
-    });
-
-    if(defSel){
-      defSel.addEventListener("change", ()=>{
-        const p = defSel.value;
-        saveThemeDefaultPreset(p);
-        syncThemeUI(sel.value, p);
-        if(typeof toast === "function") toast("Default theme saved.");
-      });
+      sel.value = p;
+      syncThemeUI(p, defSel ? defSel.value : getSavedThemeDefaultPreset());
+      if(typeof toast === "function") toast("Theme applied to this window.");
     }
+
+    sel.addEventListener("change", ()=>{ applyWindowTheme(sel.value); });
 
     if(presetGrid){
       presetGrid.addEventListener("click", (e)=>{
         const btn = e.target && e.target.closest ? e.target.closest(".themePresetBtn") : null;
         if(!btn) return;
-        const p = btn.getAttribute("data-theme");
-        if(!isThemePresetName(p)) return;
-        sel.value = p;
-        applyThemePreset(p);
-        reapplyDisplayStylingAfterTheme();
-        saveThemePreset(p);
-        syncThemeUI(p, defSel ? defSel.value : savedDefault);
-        if(typeof toast === "function") toast("Theme saved.");
+        applyWindowTheme(btn.getAttribute("data-theme"));
       });
     }
 
-    if(makeDefaultBtn && defSel){
-      makeDefaultBtn.addEventListener("click", ()=>{
-        defSel.value = sel.value;
-        saveThemeDefaultPreset(sel.value);
-        syncThemeUI(sel.value, sel.value);
-        if(typeof toast === "function") toast("Default theme updated.");
+    // The default is the only persisted theme, and the dropdown is the only
+    // way to change it. If this window hasn't picked its own theme, it's
+    // showing the default, so update the live view too.
+    if(defSel){
+      defSel.addEventListener("change", ()=>{
+        const p = defSel.value;
+        saveThemeDefaultPreset(p);
+        const hadOverride = !!readWindowThemeOverride(activeThemePrefsScope);
+        if(!hadOverride){
+          applyThemePreset(p);
+          reapplyDisplayStylingAfterTheme();
+          sel.value = p;
+        }
+        syncThemeUI(getActiveThemeName(), p);
+        if(typeof toast === "function") toast("Default theme saved.");
       });
     }
 
     if(resetBtn){
       resetBtn.addEventListener("click", ()=>{
-        // Reset only the current theme choice back to the default theme
+        // Drop this window's override so it follows the saved default again.
+        clearWindowThemePreset();
         const d = getSavedThemeDefaultPreset();
-        sel.value = d;
         applyThemePreset(d);
         reapplyDisplayStylingAfterTheme();
-        saveThemePreset(d);
+        sel.value = d;
         syncThemeUI(d, d);
-        if(typeof toast === "function") toast("Theme reset.");
+        if(typeof toast === "function") toast("This window reset to the default theme.");
       });
     }
   }
@@ -669,7 +702,7 @@
     const settings = ensureThemePrefsLoaded(getThemeScopeFromSession(sessionLike));
     applyCurrentTheme();
     reapplyDisplayStylingAfterTheme();
-    syncThemeUI(settings.themePreset, settings.themeDefaultPreset);
+    syncThemeUI(getActiveThemeName(), settings.themeDefaultPreset);
     return settings;
   };
   window.applyCurrentTheme = applyCurrentTheme;
