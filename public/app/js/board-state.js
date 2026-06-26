@@ -1778,6 +1778,7 @@
             + '<div class="field"><label>Type</label><select id="quickAddColorLabelId">'+colorOptions+'</select></div>'
             + '<div class="field"><label>Doctor</label><select id="quickAddDoctor">'+doctorOptions+'</select></div>'
             + '<div class="field"><label>Tech</label><input id="quickAddTech" type="text" value="'+escapeHtml(draft.tech)+'" placeholder="e.g., Alex" /></div>'
+            + '<div class="field"><label>Room ready</label><div class="toggle"><div><div style="font-weight:700;">Room ready</div><div class="muted">Patient ready in room</div></div><div class="switch '+(draft.roomReady ? 'on' : '')+'" data-action="toggleQuickAddRoomReady" id="quickAddRoomReadySwitch"><div class="knob"></div></div></div></div>'
             + '<div class="field"><label>Doctor ready</label><div class="toggle"><div><div style="font-weight:700;">Doctor ready</div><div class="muted">Doctor ready to go in</div></div><div class="switch '+(draft.doctorReady ? 'on' : '')+'" data-action="toggleQuickAddDoctorReady" id="quickAddDoctorReadySwitch"><div class="knob"></div></div></div></div>'
 	            + '<div class="field"><label>Quick notes</label>'+quickNoteDropdown+'</div>'
 	            + '<div class="field quickAddTimerField"><label>' + escapeHtml(timerLabel) + '</label><div class="quickAddTimerSummary"><div class="quickAddTimerCurrent"><strong>' + escapeHtml(formatTime(timerDisplayMs)) + '</strong><span class="muted">' + (draft.timerDirty ? 'Will update on save' : ('Current ' + timerLabel.toLowerCase())) + '</span></div><button class="btn sm" data-action="toggleQuickAddTimerAdjust" type="button">' + (quickAddTimerAdjustOpen ? 'Hide' : 'Adjust') + '</button></div>' + timerAdjustControls + '</div>'
@@ -1788,6 +1789,7 @@
             + '<button class="btn sm primary" data-action="saveQuickAdd" type="button">Save to room</button>'
           + '</div>'
         + '</div>';
+      setQuickAddSwitchState("quickAddRoomReadySwitch", !!draft.roomReady);
       setQuickAddSwitchState("quickAddDoctorReadySwitch", !!draft.doctorReady);
 
       if(shouldFocusPatient){
