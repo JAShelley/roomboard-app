@@ -76,7 +76,38 @@
     }
     window.flushChecklistSave = flushChecklistSave;
 
+    // ===== Advanced-plan gating =====
+    // The checklist is an Advanced-only feature. Base subscribers can't open it.
+    function checklistIsGated(){
+      var plan = typeof window.roomboardGetCurrentPlan === "function" ? window.roomboardGetCurrentPlan() : null;
+      return !!(plan && String(plan).indexOf("base") !== -1);
+    }
+
+    function promptChecklistUpgrade(){
+      if(typeof window.toast === "function") window.toast("The checklist is an Advanced plan feature. Upgrade in Settings → Clinic.");
+      if(typeof window.openRoomBoardSettingsDrawer === "function"){
+        window.openRoomBoardSettingsDrawer();
+        if(typeof window.activateRoomBoardSettingsTab === "function") window.activateRoomBoardSettingsTab("tabAccount");
+        var card = document.getElementById("billingCard");
+        if(card) setTimeout(function(){ card.scrollIntoView({ behavior: "smooth" }); }, 140);
+      }
+    }
+
+    // Reflect plan state on the header button and close the panel if a user
+    // loses access (e.g. downgrade or plan refresh). Called from the central
+    // refreshAdvancedPlanGating() hook in settings.js.
+    window.refreshChecklistGate = function(){
+      var btn = document.getElementById("checklistBtn");
+      var gated = checklistIsGated();
+      if(btn){
+        btn.classList.toggle("isPlanGated", gated);
+        btn.setAttribute("title", gated ? "Checklist · Advanced plan" : "Open checklist");
+      }
+      if(gated && checklistPanelOpen) closeChecklist();
+    };
+
     function openChecklist(){
+      if(checklistIsGated()){ promptChecklistUpgrade(); return; }
       document.body.classList.add("checklistOpen");
       checklistPanelOpen = true;
       var input = document.getElementById("checklistNewItemInput");
@@ -134,3 +165,6 @@
         input.value = "";
       }
     });
+
+    // Reflect plan gating on load (billing status refresh re-runs this too).
+    try{ window.refreshChecklistGate(); }catch(e){}

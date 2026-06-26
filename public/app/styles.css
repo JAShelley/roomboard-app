@@ -5905,3 +5905,22 @@ details.sxSection[open] > summary { border-bottom: 1px solid rgba(255,255,255,.0
   vertical-align: middle;
   line-height: 1.4;
 }
+
+/* Advanced-only header icon (checklist) — small lock corner badge */
+.headerIconBtn.isPlanGated {
+  position: relative;
+  opacity: .85;
+}
+.headerIconBtn.isPlanGated::after {
+  content: "";
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #e6a23c;
+  border: 1.5px solid var(--headerBg, #0e1a2e);
+  box-shadow: 0 0 0 1px rgba(230,162,60,.5);
+  pointer-events: none;
+}

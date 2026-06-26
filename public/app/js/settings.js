@@ -160,6 +160,9 @@
         }
       }
 
+      // ── Checklist (header button) ──
+      if(typeof window.refreshChecklistGate === "function") window.refreshChecklistGate();
+
       // ── Stats tab button badge ──
       var statsTabBtn = document.querySelector("[data-tab='tabStats']");
       if(statsTabBtn){
