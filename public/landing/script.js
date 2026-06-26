@@ -205,7 +205,7 @@
       workin:    { label: "Work-In",   c: "#f59e0b" }
     };
     // Doctor -> animal badge + initials, like the real board (turtle "LS").
-    var BASE = "../public/roomboard/";
+    var BASE = "/app/";
     var DOCS = {
       "Dr. Maro":   { img: BASE + "seaturtle-badge.png", init: "JM" },
       "Dr. Reyes":  { img: BASE + "strawberry-badge.png", init: "AR" },
@@ -220,7 +220,7 @@
       { name: "Room 1", patient: "R. Patel",  doc: "Dr. Maro",   type: "exam",      secs: 72 * 60 + 14, state: "active", note: "BP 140/90 — refill Lisinopril ready at front desk" },
       { name: "Room 2", patient: "J. Nguyen", doc: "Dr. Reyes",  type: "followup",  secs: 24 * 60 + 8,  state: "active", note: "Follow-up: knee MRI results. Patient anxious — take extra time." },
       { name: "Room 3", patient: "M. Ortiz",  doc: "Dr. Reyes",  type: "procedure", secs: 8 * 60 + 33,  state: "active", note: "Allergic to penicillin. Consent signed. Pre-procedure vitals done." },
-      { name: "Room 4", patient: "",          doc: "",           type: "exam",      secs: 0,            state: "empty",  note: "" },
+      { name: "Room 4", patient: "",          doc: "",           type: "exam",      secs: 14 * 60 + 22, state: "cleaning", note: "" },
       { name: "Room 5", patient: "C. Wells",  doc: "Dr. Park",   type: "consult",   secs: 31 * 60 + 47, state: "active", note: "Spanish interpreter requested. Family member present." },
       { name: "Room 6", patient: "D. Flynn",  doc: "Dr. Park",   type: "workin",    secs: 7 * 60 + 19,  state: "active", note: "Walk-in: chest tightness. Vitals taken, EKG ordered." }
     ];
