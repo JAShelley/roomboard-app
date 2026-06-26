@@ -1749,41 +1749,47 @@
       });
     }
 
-	    $("applyLayoutBtn").addEventListener("click", function(){
-      var btn = this;
-      runLockedAction("settings.apply-layout", function(){
-        return commitLayoutSettings({ force: true, flush: true, announce: true });
-      }, { el: btn, busyLabel: "Saving…", cooldownMs: 250 });
-    });
+    if($("applyLayoutBtn")){
+      $("applyLayoutBtn").addEventListener("click", function(){
+        var btn = this;
+        runLockedAction("settings.apply-layout", function(){
+          return commitLayoutSettings({ force: true, flush: true, announce: true });
+        }, { el: btn, busyLabel: "Saving…", cooldownMs: 250 });
+      });
+    }
     
-	    $("applyTimerAlertBtn").addEventListener("click", function(){
+    if($("applyTimerAlertBtn")){
+      $("applyTimerAlertBtn").addEventListener("click", function(){
         var btn = this;
         runLockedAction("settings.apply-alerts", function(){
-	        return commitTimerAlertSettings({ force: true, flush: true, announce: true });
+          return commitTimerAlertSettings({ force: true, flush: true, announce: true });
         }, { el: btn, busyLabel: "Saving…", cooldownMs: 250 });
-	    });
-	    if($("applyMobileQuickViewBtn")){
-	      $("applyMobileQuickViewBtn").addEventListener("click", function(){
-	        var btn = this;
-	        runLockedAction("settings.apply-mobile-quick-view", function(){
-	          return commitMobileQuickViewSettings({ force: true, flush: true, announce: true });
-	        }, { el: btn, busyLabel: "Saving…", cooldownMs: 250 });
-	      });
-	    }
-
-	    $("applyFontsBtn").addEventListener("click", function(){
+      });
+    }
+    if($("applyMobileQuickViewBtn")){
+      $("applyMobileQuickViewBtn").addEventListener("click", function(){
+        var btn = this;
+        runLockedAction("settings.apply-mobile-quick-view", function(){
+          return commitMobileQuickViewSettings({ force: true, flush: true, announce: true });
+        }, { el: btn, busyLabel: "Saving…", cooldownMs: 250 });
+      });
+    }
+    if($("applyFontsBtn")){
+      $("applyFontsBtn").addEventListener("click", function(){
         var btn = this;
         runLockedAction("settings.apply-fonts", function(){
-	        return commitFontSettings({ force: true, flush: true, announce: true });
+          return commitFontSettings({ force: true, flush: true, announce: true });
         }, { el: btn, busyLabel: "Saving…", cooldownMs: 250 });
-	    });
-
-    $("applyDisplayColorsBtn").addEventListener("click", function(){
-      var btn = this;
-      runLockedAction("settings.apply-display-colors", function(){
-        return commitDisplayColorSettings({ flush: true, announce: true });
-      }, { el: btn, busyLabel: "Saving…", cooldownMs: 250 });
-    });
+      });
+    }
+    if($("applyDisplayColorsBtn")){
+      $("applyDisplayColorsBtn").addEventListener("click", function(){
+        var btn = this;
+        runLockedAction("settings.apply-display-colors", function(){
+          return commitDisplayColorSettings({ flush: true, announce: true });
+        }, { el: btn, busyLabel: "Saving…", cooldownMs: 250 });
+      });
+    }
     if($("applyPracticeNameColorBtn")){
       $("applyPracticeNameColorBtn").addEventListener("click", function(){
         var btn = this;
