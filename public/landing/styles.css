@@ -1173,7 +1173,7 @@ ul { padding: 0; margin: 0; }
 @media (max-width: 720px) {
   .nav-links { display: none; }
   .menu-btn { display: grid; }
-  .nav-signin { display: none; }
+  .nav-signin { font-size: 14px; padding: 7px 12px; }
   .device-family { font-size: 7.4px; }
   .section { padding: 70px 0; }
   .features-grid { grid-template-columns: 1fr; }
