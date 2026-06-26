@@ -44,7 +44,7 @@
 	<button aria-label="Add or edit a room from Display" class="iconBtn headerIconBtn addHeaderBtn" id="openQuickAddBtn" title="Add or edit a room from Display" type="button">+</button>
 	<button aria-label="Toggle mobile quick view" class="iconBtn headerIconBtn mobileQuickViewHeaderBtn" id="toggleMobileQuickViewBtn" title="Toggle mobile quick view" type="button"><span aria-hidden="true" class="headerPhoneIcon"></span></button>
 	<button aria-label="Enter full screen" class="iconBtn headerIconBtn" id="fullscreenBtn" title="Enter full screen" type="button">⤢</button>
-	<button aria-label="Open checklist" class="iconBtn headerIconBtn" id="checklistBtn" title="Open checklist" type="button">☑</button>
+	<button aria-label="Open checklist" class="iconBtn headerIconBtn" id="checklistBtn" title="Open checklist" type="button">☑<span class="checklistBtnBadge" id="checklistBtnBadge" hidden></span></button>
 	<button aria-label="Toggle grid/list" class="iconBtn headerIconBtn" id="viewToggleBtn" title="Toggle grid/list" type="button">▦</button>
 	<button aria-label="Open settings" class="iconBtn headerIconBtn" id="openSettingsBtn" title="Open settings" type="button">⚙</button>
 	</div>
@@ -75,13 +75,21 @@
 <div class="checklistBackdrop" id="checklistBackdrop"></div>
 <aside aria-label="Checklist" class="checklistPanel" id="checklistPanel">
 <div class="checklistPanelHeader">
-<h2>Checklist</h2>
-<button class="btn sm" id="closeChecklistBtn" type="button">Close</button>
+  <div class="checklistPanelHeaderTop">
+    <h2>Checklist <span class="checklistHeaderCount" id="checklistHeaderCount"></span></h2>
+    <button class="btn sm" id="closeChecklistBtn" type="button">Close</button>
+  </div>
+  <div class="checklistProgressBar" id="checklistProgressBar">
+    <div class="checklistProgressFill" id="checklistProgressFill"></div>
+  </div>
 </div>
 <div class="checklistPanelBody" id="checklistPanelBody">
 <div class="checklistAddRow">
 <input class="checklistNewItemInput" id="checklistNewItemInput" placeholder="Add item…" type="text">
 <button class="btn sm primary" id="checklistAddBtn" type="button">Add</button>
+</div>
+<div class="checklistActions" id="checklistActions" hidden>
+  <button class="btn sm" id="clearDoneBtn" type="button">Clear done</button>
 </div>
 <ul class="checklistList" id="checklistList"></ul>
 </div>
@@ -814,7 +822,7 @@ Manage subscription
 <script src="./js/board-state.js?v=20260613b"></script>
 <script src="./js/rendering.js?v=20260624a"></script>
 <script src="./js/settings.js?v=20260617a"></script>
-<script src="./js/checklist.js?v=20260625a"></script>
+<script src="./js/checklist.js?v=20260626b"></script>
 <script src="./js/patient-checklist.js?v=20260626a"></script>
 <script src="./js/auth-sync.js?v=20260625c"></script>
 <script src="./js/ux.js?v=20260606a"></script>
