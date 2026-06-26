@@ -818,32 +818,51 @@ img { max-width: 100%; display: block; }
 
 /* Device family — iPad + iPhone + Apple Watch running RoomBoard together.
    Sized in em off the container font-size so the whole group scales as one. */
-.device-family { position: relative; font-size: 10px; width: 44em; height: 37em; flex: none; }
+.device-family { position: relative; font-size: 10px; width: 44em; height: 36em; flex: none; }
 .device-family::after {
-  content: ""; position: absolute; left: 8%; right: 6%; bottom: 1.4em; height: 3.4em;
-  background: radial-gradient(ellipse at center, rgba(2,8,20,.30), transparent 70%);
-  filter: blur(2px); z-index: 0;
+  content: ""; position: absolute; left: 10%; right: 8%; bottom: 1.2em; height: 2.8em;
+  background: radial-gradient(ellipse at center, rgba(2,8,20,.22), transparent 72%);
+  filter: blur(3px); z-index: 0;
 }
 .df-ipad {
   position: absolute; top: 0; left: 2.5em; width: 38em; z-index: 1;
-  background: #0c0d10; padding: .9em; border-radius: 2em;
-  box-shadow: 0 3em 6em rgba(2,8,20,.34), 0 0 0 1px rgba(255,255,255,.05), inset 0 0 0 1px rgba(255,255,255,.07);
+  background: #0a0a0c; padding: .55em; border-radius: 1.5em;
+  box-shadow: 0 2.6em 5.4em rgba(2,8,20,.22), 0 0 0 1px rgba(255,255,255,.06), inset 0 0 0 1px rgba(255,255,255,.06);
 }
-.df-ipad-screen { border-radius: 1.1em; overflow: hidden; background: #000; }
+.df-ipad-screen { border-radius: 1.05em; overflow: hidden; background: #000; }
 .df-ipad-screen img { display: block; width: 100%; height: auto; }
 .df-phone {
-  position: absolute; bottom: 0; right: 0; width: 12em; z-index: 3;
-  background: #0c0d10; padding: .5em; border-radius: 2.4em;
-  box-shadow: 0 2.4em 4.6em rgba(2,8,20,.44), 0 0 0 1px rgba(255,255,255,.06), inset 0 0 0 1px rgba(255,255,255,.08);
+  position: absolute; bottom: 0; right: 0; width: 11.6em; z-index: 3;
+  background: #0a0a0c; padding: .32em; border-radius: 2.6em;
+  box-shadow: 0 2em 4em rgba(2,8,20,.30), 0 0 0 1px rgba(255,255,255,.07), inset 0 0 0 1px rgba(255,255,255,.08);
 }
-.df-phone-screen { border-radius: 2em; overflow: hidden; background: #000; }
+.df-phone-screen { border-radius: 2.3em; overflow: hidden; background: #000; }
 .df-phone-screen img { display: block; width: 100%; height: auto; }
-.df-watch {
-  position: absolute; bottom: .2em; left: 0; width: 9.6em; z-index: 3; display: block;
-  filter: drop-shadow(0 1.8em 3em rgba(2,8,20,.44));
-  -webkit-mask-image: radial-gradient(circle at 50% 47%, #000 54%, transparent 70%);
-  mask-image: radial-gradient(circle at 50% 47%, #000 54%, transparent 70%);
+/* Apple Watch mockup — case + crown + side button + sport-band stubs */
+.df-watch { position: absolute; bottom: 1.6em; left: .4em; width: 9em; aspect-ratio: 40 / 45; z-index: 3; }
+.df-watch-case {
+  position: absolute; inset: 0; z-index: 2; border-radius: 2.7em;
+  background: linear-gradient(155deg, #34373d 0%, #1a1c20 38%, #0b0c0e 100%);
+  box-shadow: 0 1.6em 2.8em rgba(2,8,20,.34), inset 0 0 0 1px rgba(255,255,255,.13);
 }
+.df-watch-screen { position: absolute; inset: .42em; border-radius: 2.35em; overflow: hidden; background: #000; }
+.df-watch-screen img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+.df-watch-crown {
+  position: absolute; right: -.32em; top: 31%; width: .62em; height: 1.5em; border-radius: .24em; z-index: 1;
+  background: linear-gradient(90deg, #4a4d53, #14151a);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.16), inset 0 .5em .6em rgba(0,0,0,.5);
+}
+.df-watch-btn {
+  position: absolute; right: -.18em; top: 52%; width: .34em; height: 2em; border-radius: .2em; z-index: 1;
+  background: linear-gradient(90deg, #303338, #0e0f12);
+}
+.df-watch-band {
+  position: absolute; left: 50%; transform: translateX(-50%); width: 66%; z-index: 0;
+  background: linear-gradient(180deg, #23262b, #131418);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+}
+.df-watch-band-top { top: -1.4em; height: 2.4em; border-radius: 1.1em 1.1em .35em .35em; }
+.df-watch-band-bottom { bottom: -1.4em; height: 2.4em; border-radius: .35em .35em 1.1em 1.1em; }
 
 /* ---------- Device image cards (iPhone & Watch) ---------- */
 .device-img-card { padding: 0; overflow: hidden; }
@@ -883,22 +902,22 @@ img { max-width: 100%; display: block; }
   border-bottom: 1px solid var(--line);
 }
 .phone-shell {
-  position: relative; width: 172px; flex: none;
-  background: #0c0d10; padding: 8px 8px 0;
-  border-radius: 36px 36px 0 0;
-  box-shadow: 0 16px 36px rgba(2, 8, 20, .32);
+  position: relative; width: 164px; flex: none;
+  background: #0b0b0d; padding: 4px 4px 0;
+  border-radius: 40px 40px 0 0;
+  box-shadow: 0 12px 28px rgba(2, 8, 20, .22);
 }
 .phone-shell::after {
-  /* subtle bezel highlight */
+  /* thin bezel rim so the edge reads in both themes */
   content: ""; position: absolute; inset: 0; border-radius: inherit;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06); pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); pointer-events: none;
 }
-.phone-shell.is-android { width: 168px; border-radius: 26px 26px 0 0; padding: 7px 7px 0; }
+.phone-shell.is-android { width: 162px; border-radius: 30px 30px 0 0; padding: 4px 4px 0; }
 .phone-screen {
   position: relative; overflow: hidden; background: #000;
-  border-radius: 28px 28px 0 0;
+  border-radius: 37px 37px 0 0;
 }
-.phone-shell.is-android .phone-screen { border-radius: 19px 19px 0 0; }
+.phone-shell.is-android .phone-screen { border-radius: 27px 27px 0 0; }
 .phone-screen img { display: block; width: 100%; height: auto; }
 .device-phone-card:hover .phone-shell { transform: translateY(-2px); transition: transform .3s cubic-bezier(0.22,1,0.36,1); }
 
