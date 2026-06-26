@@ -334,6 +334,33 @@ img { max-width: 100%; display: block; }
   100% { filter: brightness(1); }
 }
 
+/* Drag a patient card onto another room to move / swap them */
+.bd-grid:not(.list-view) .room:not(.empty):not(.cleaning) { cursor: grab; }
+.bd-grid.drag-active .room { cursor: grabbing; }
+.room.dragging { opacity: .32; filter: saturate(.6); transform: none !important; box-shadow: none; }
+.room.drop-target {
+  outline: 3px dashed rgba(125,211,252,.95);
+  outline-offset: -4px;
+  box-shadow: 0 0 0 4px rgba(125,211,252,.18), 0 20px 40px rgba(0,0,0,.45);
+}
+.room.drop-target::after {
+  content: "Drop to move here";
+  position: absolute; inset: 0; z-index: 30;
+  display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 800; font-size: 13px; letter-spacing: .04em;
+  color: #eaf6ff; text-shadow: 0 1px 4px rgba(0,0,0,.6);
+  background: rgba(13,40,66,.42); backdrop-filter: blur(1px);
+  border-radius: 16px;
+}
+.drag-ghost {
+  position: fixed; left: 0; top: 0; z-index: 9999; margin: 0;
+  pointer-events: none; opacity: .97;
+  border-radius: 18px;
+  box-shadow: 0 30px 70px rgba(0,0,0,.55);
+  will-change: transform;
+}
+.drag-ghost .noteDock, .drag-ghost .notePopover { display: none !important; }
+
 /* ONLY ACTIVE toggle: on state (teal like real app) */
 .bd-toggle { cursor: pointer; transition: border-color .2s, box-shadow .2s; }
 .bd-toggle.on { border-color: rgba(125,211,252,.42); box-shadow: 0 0 0 1px rgba(125,211,252,.16); }
@@ -989,8 +1016,8 @@ ul { padding: 0; margin: 0; }
 /* ---------- Trust bar ---------- */
 .trustbar { padding: 26px 0 4px; }
 .trustbar-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
-  list-style: none; margin: 0 auto; padding: 18px; max-width: 1180px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  list-style: none; margin: 0 auto; padding: 18px; max-width: 960px;
   background: var(--surface); border: 1.5px solid var(--line);
   border-radius: var(--radius); box-shadow: var(--shadow-sm);
 }

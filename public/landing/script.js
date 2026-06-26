@@ -377,6 +377,7 @@
       var typeKeys = Object.keys(TYPES);
       var flips = 0;
       setInterval(function () {
+        if (dragState && dragState.started) return; // don't reshuffle mid-drag
         var r = rooms[flips % rooms.length];
         flips++;
         if (r.state === "empty") {
@@ -433,6 +434,8 @@
 
     /* Click a room to cycle its state (also handles noteDock + notePopover) */
     grid.addEventListener("click", function (e) {
+      /* A drag just finished — swallow the click it would otherwise fire */
+      if (suppressClick) { suppressClick = false; return; }
       /* noteDock: toggle that room's note popover */
       var dock = e.target.closest(".noteDock");
       if (dock) {
@@ -479,6 +482,127 @@
     /* Note input handler removed — notes are display-only in the demo */
     grid.addEventListener("input", function (e) {
       if (!e.target.classList.contains("notePopoverInput")) return;
+    });
+
+    /* ---------- Drag a patient card onto another room to move / swap ---------- */
+    var dragState = null;      // { name, startX, startY, started, srcEl, ghost, offX, offY, pointerId }
+    var suppressClick = false; // true right after a drag, so the trailing click is ignored
+    var DRAG_THRESHOLD = 6;    // px before a press becomes a drag (so taps still cycle state)
+
+    function roomByName(name) { return rooms.find(function (r) { return r.name === name; }); }
+
+    function cardUnder(x, y) {
+      var els = document.elementsFromPoint(x, y);
+      for (var i = 0; i < els.length; i++) {
+        var c = els[i].closest ? els[i].closest(".room") : null;
+        if (c && c.parentNode === grid) return c;
+      }
+      return null;
+    }
+
+    function clearDropTarget() {
+      var prev = grid.querySelector(".room.drop-target");
+      if (prev) prev.classList.remove("drop-target");
+    }
+
+    function flashRoom(name) {
+      var el = grid.querySelector('[data-room="' + name + '"]');
+      if (!el) return;
+      el.classList.add("click-flash");
+      setTimeout(function () { el.classList.remove("click-flash"); }, 380);
+    }
+
+    function swapOccupants(a, b) {
+      ["patient", "doc", "type", "secs", "state", "note"].forEach(function (k) {
+        var tmp = a[k]; a[k] = b[k]; b[k] = tmp;
+      });
+    }
+
+    function endDrag(removeGhost) {
+      if (dragState) {
+        if (removeGhost && dragState.ghost && dragState.ghost.parentNode) {
+          dragState.ghost.parentNode.removeChild(dragState.ghost);
+        }
+        if (dragState.srcEl) dragState.srcEl.classList.remove("dragging");
+      }
+      clearDropTarget();
+      grid.classList.remove("drag-active");
+      dragState = null;
+    }
+
+    function startDrag(e) {
+      dragState.started = true;
+      closeAllNotePopovers();
+      var card = dragState.srcEl;
+      var rect = card.getBoundingClientRect();
+      var ghost = card.cloneNode(true);
+      ghost.classList.add("drag-ghost");
+      ghost.style.width = rect.width + "px";
+      ghost.style.height = rect.height + "px";
+      dragState.offX = dragState.startX - rect.left;
+      dragState.offY = dragState.startY - rect.top;
+      document.body.appendChild(ghost);
+      dragState.ghost = ghost;
+      moveGhost(e.clientX, e.clientY);
+      card.classList.add("dragging");
+      grid.classList.add("drag-active");
+      hideTryHint();
+    }
+
+    function moveGhost(x, y) {
+      if (!dragState || !dragState.ghost) return;
+      dragState.ghost.style.transform =
+        "translate(" + (x - dragState.offX) + "px," + (y - dragState.offY) + "px) rotate(2deg) scale(1.03)";
+    }
+
+    grid.addEventListener("pointerdown", function (e) {
+      if (e.button != null && e.button > 0) return; // primary button / touch only
+      if (isListView) return;                        // grid views only
+      if (e.target.closest(".noteDock")) return;     // let notes open normally
+      var card = e.target.closest(".room");
+      if (!card || card.parentNode !== grid) return;
+      var room = roomByName(card.getAttribute("data-room"));
+      if (!room || room.state !== "active") return;  // only occupied rooms are draggable
+      dragState = {
+        name: room.name, startX: e.clientX, startY: e.clientY,
+        started: false, srcEl: card, pointerId: e.pointerId
+      };
+    });
+
+    window.addEventListener("pointermove", function (e) {
+      if (!dragState) return;
+      if (!dragState.started) {
+        if (Math.abs(e.clientX - dragState.startX) < DRAG_THRESHOLD &&
+            Math.abs(e.clientY - dragState.startY) < DRAG_THRESHOLD) return;
+        startDrag(e);
+      }
+      moveGhost(e.clientX, e.clientY);
+      clearDropTarget();
+      var tgt = cardUnder(e.clientX, e.clientY);
+      if (tgt && tgt !== dragState.srcEl) tgt.classList.add("drop-target");
+    }, { passive: true });
+
+    window.addEventListener("pointerup", function (e) {
+      if (!dragState) return;
+      if (!dragState.started) { dragState = null; return; } // a tap → let click cycle state
+      var srcName = dragState.name;
+      var tgtEl = cardUnder(e.clientX, e.clientY);
+      var srcRoom = roomByName(srcName);
+      var tgtRoom = (tgtEl && tgtEl !== dragState.srcEl) ? roomByName(tgtEl.getAttribute("data-room")) : null;
+      endDrag(true);
+      suppressClick = true; // a real drag happened — cancel the click that follows
+      if (srcRoom && tgtRoom) {
+        swapOccupants(srcRoom, tgtRoom);
+        if (onlyActive) { renderGrouped(); } else { render(); }
+        flashRoom(srcRoom.name);
+        flashRoom(tgtRoom.name);
+        updateActiveCount();
+      }
+    });
+
+    window.addEventListener("pointercancel", function () {
+      if (dragState && dragState.started) endDrag(true);
+      else dragState = null;
     });
 
     /* "+" button: add patient to first empty room, shake if none available */

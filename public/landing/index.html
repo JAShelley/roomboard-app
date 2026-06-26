@@ -115,7 +115,7 @@
           </div>
         </div>
       </div>
-      <p class="bd-try-hint" id="bdTryHint">Click any room to change its status</p>
+      <p class="bd-try-hint" id="bdTryHint">Click a room to change status — or drag a patient card onto another room to move them</p>
     </div>
 
     <!-- Feature callout badges — sit below the board, outside the window -->
@@ -233,6 +233,39 @@
         <p>Add a patient, swap a room, note a delay — all without leaving the display. Everything syncs to every screen in less than a second.</p>
       </article>
 
+    </div>
+  </div>
+</section>
+
+<!-- ===================== DRAG TO MOVE ===================== -->
+<section class="section move-section" id="move">
+  <div class="wrap showcase move-showcase">
+    <div class="move-visual reveal reveal-left">
+      <div class="move-stage" aria-hidden="true">
+        <div class="move-slot move-slot-a"><span class="move-slot-label">Room 1</span></div>
+        <div class="move-slot move-slot-b"><span class="move-slot-label">Room 3</span></div>
+        <div class="move-card">
+          <span class="move-card-name">R. Patel</span>
+          <span class="move-card-sub">Procedure · Dr. Maro</span>
+          <span class="move-card-timer">08:33</span>
+        </div>
+        <span class="move-cursor" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="#fff" stroke="#0b1220" stroke-width="1.4" stroke-linejoin="round"><path d="M4 3l7 17 2.2-6.4L20 11 4 3z"/></svg>
+        </span>
+        <span class="move-synced">Synced to every screen</span>
+      </div>
+    </div>
+    <div class="move-copy reveal reveal-right">
+      <span class="eyebrow">Made for rooms in motion</span>
+      <h2>Switch rooms in a single drag</h2>
+      <p>Patient bumped to a different exam room? Don't retype anything or hunt for the right card. Grab the patient and drop them on the new room — every screen in the clinic updates in under a second.</p>
+      <ul class="check-list">
+        <li><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Move a patient from triage to an open exam room in one drag</li>
+        <li><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Drop onto an occupied room to swap two patients instantly</li>
+        <li><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Timers, notes, and provider badges follow the patient automatically</li>
+        <li><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Perfect for clinics that shuffle patients between rooms all day</li>
+      </ul>
+      <a class="btn ghost move-cta" href="#demo">Try it on the live board ↑</a>
     </div>
   </div>
 </section>
