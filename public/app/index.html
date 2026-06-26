@@ -777,22 +777,7 @@ Manage subscription
 </details>
 </div>
 <div class="tabPanel" id="tabStats">
-<div class="sxSection">
-<div class="sxStatsHead">
-<span class="sxStatsHeadTitle">Room &amp; Cleaning Analytics</span>
-<div class="sxStatsHeadControls">
-<select class="statsRangeSelect" id="statsRangeSelect">
-<option value="7">Last 7 days</option>
-<option value="30" selected>Last 30 days</option>
-<option value="90">Last 90 days</option>
-</select>
-<button class="btn sm primary" id="loadStatsBtn" type="button">Load</button>
-</div>
-</div>
-<div class="statsSummaryRow" hidden id="statsSummaryRow"></div>
-<div hidden id="statsRoomChart"></div>
-<div class="muted sxStatsStatus" id="statsStatusLine">Click "Load" to pull your clinic's session data.</div>
-</div>
+<div id="statsViewerRoot"></div>
 </div>
 <div class="tabPanel" id="tabUtilities">
 <div class="sxSection">
@@ -911,7 +896,8 @@ Manage subscription
 <script src="./js/ux.js?v=20260606a"></script>
 <script src="./js/theme.js?v=20260517d"></script>
 <script src="./js/desktop-capture-panel.js?v=20260606a"></script>
-<script src="./js/stats.js?v=20260621a"></script>
+<script src="./js/stats-dashboard.js?v=20260625a"></script>
+<script src="./js/stats.js?v=20260625a"></script>
 <script src="./js/standalone-flow.js?v=20260625h"></script>
 <script src="./js/init.js?v=20260517c"></script>
 </body>
