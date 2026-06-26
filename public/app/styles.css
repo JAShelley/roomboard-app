@@ -2997,6 +2997,13 @@
       gap:0px;
       /* reserve space so sticky header never covers first room row */
       padding-top: 0px;
+      /* Fill the display area. Without this the grid shrinks to its content
+         width inside the centered #displayWrap flex parent, leaving a narrow
+         column floating in the middle (which also forces the room-name marquee
+         to clip names). align-self:stretch makes it fill the height too. */
+      width: 100%;
+      max-width: 1600px;
+      align-self: stretch;
     }
     #displayGrid.listView .activeDoctorDivider{
       flex:0 0 auto;
@@ -3014,7 +3021,10 @@
       position:relative;
       padding:4px 8px;
       border-radius:0px;
-      min-height:0;
+      /* Grow rows to share the available height evenly so the list fills the
+         screen instead of bunching up small at the top. */
+      flex:1 1 0;
+      min-height:38px;
       display:flex;
       align-items:center;
       justify-content:space-between;
