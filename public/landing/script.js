@@ -143,12 +143,17 @@
   }
 
   var clinicPills = document.querySelectorAll(".bbp-clinic-pill");
+  var bbpLogo = document.getElementById("bbpLogo");
   if (clinicPills.length && bbpName) {
     clinicPills.forEach(function (pill) {
       pill.addEventListener("click", function () {
         clinicPills.forEach(function (p) { p.classList.remove("active"); });
         pill.classList.add("active");
         bbpName.textContent = pill.getAttribute("data-name");
+        if (bbpLogo) {
+          var logo = pill.querySelector("svg");
+          if (logo) bbpLogo.innerHTML = logo.outerHTML;
+        }
       });
     });
   }
@@ -246,7 +251,7 @@
       el.setAttribute("data-room", r.name);
       el.setAttribute("data-type", r.type || "");
       if (r.state === "active") { el.style.setProperty("--c", ty.c); el.style.color = readableText(ty.c); }
-      var icons = '<span class="roomIcons">🐾 ↪ ▤</span>';
+      var icons = '<span class="roomIcons">🐾 ➡️ 🚪</span>';
       var top = '<div class="roomTop"><span class="roomName">' + esc(r.name) + '</span>' + icons + '</div>';
       var body;
       var noteRow = "";
@@ -259,8 +264,8 @@
           + '<div class="wbCell" style="opacity:.3">Empty</div>'
           + '<div class="wbCell"></div>'
           + '<div class="wbCell"></div>'
-          + '<div class="wbCell wbTm" data-wb-timer>' + fmt(0) + '</div>'
           + '<div class="wbCell"></div>'
+          + '<div class="wbCell wbTm" data-wb-timer>' + fmt(0) + '</div>'
           + '</div>';
       } else if (r.state === "cleaning") {
         body = '<div class="roomBody"><span class="roomCleanPill">NEEDS TO BE CLEANED</span>'
@@ -270,8 +275,8 @@
           + '<div class="wbCell wbCellTy" style="color:#fbbf24">Cleaning</div>'
           + '<div class="wbCell"></div>'
           + '<div class="wbCell"></div>'
-          + '<div class="wbCell wbTm warn" data-wb-timer>' + fmt(r.secs) + '</div>'
           + '<div class="wbCell"></div>'
+          + '<div class="wbCell wbTm warn" data-wb-timer>' + fmt(r.secs) + '</div>'
           + '</div>';
       } else {
         var d = DOCS[r.doc] || { img: BASE + "seaturtle-badge.png", init: "DR" };
@@ -293,8 +298,8 @@
           + '<div class="wbCell wbCellPt">' + esc(r.patient) + '</div>'
           + '<div class="wbCell wbCellTy">' + esc(ty.label) + '</div>'
           + '<div class="wbCell wbCellDr"><span class="wbDocInit">' + esc(d.init) + '</span>' + esc(r.doc) + '</div>'
-          + '<div class="wbCell wbTm' + (alert ? " alert" : (warn ? " warn" : "")) + '" data-wb-timer>' + fmt(r.secs) + '</div>'
           + '<div class="wbCell wbCellNote' + (r.note ? '' : ' empty') + '">' + (r.note ? esc(r.note) : '—') + '</div>'
+          + '<div class="wbCell wbTm' + (alert ? " alert" : (warn ? " warn" : "")) + '" data-wb-timer>' + fmt(r.secs) + '</div>'
           + '</div>';
       }
       el.innerHTML = top + body + noteRow + wbRow;
