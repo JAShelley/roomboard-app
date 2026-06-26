@@ -934,7 +934,7 @@
       display:grid; grid-template-rows:0fr;
       transition: grid-template-rows .34s cubic-bezier(.4,0,.2,1);
       background: rgba(7,12,24,.92);
-      border: 1px solid rgba(255,255,255,.10);
+      border: 1px solid transparent;
       border-top: none;
       border-radius: 0 0 var(--radius, 16px) var(--radius, 16px);
       box-shadow: 0 16px 40px rgba(0,0,0,.38);
