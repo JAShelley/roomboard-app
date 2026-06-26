@@ -219,7 +219,10 @@
       }
       // Show clinic profile editor only when logged in
       var profilePanel = $("clinicProfileEditPanel");
-      if(profilePanel) profilePanel.hidden = !currentPracticeId;
+      if(profilePanel){
+        profilePanel.hidden = !currentPracticeId;
+        if(currentPracticeId) populateClinicProfileEdit();
+      }
       // Cache the practice name so the marketing/landing page can show a
       // logged-in badge in place of the Sign in / Start free trial buttons.
       try{
@@ -251,10 +254,8 @@
           var s = $("editPracticeSpecialty"); if(s) s.value = d.specialty || "General Practice";
         });
     }
-    // Load clinic profile when the collapsible opens
-    document.addEventListener("toggle", function(e){
-      if(e.target && e.target.id === "clinicProfileEditPanel") populateClinicProfileEdit();
-    }, true);
+    // Clinic profile is now an always-open section; it's populated when shown
+    // (see updateAuthChrome) rather than on a <details> toggle.
     window.roomboardPopulateClinicProfileEdit = populateClinicProfileEdit;
 
     function saveClinicProfile(){

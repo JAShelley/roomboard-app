@@ -2481,9 +2481,6 @@
       background: rgba(251, 113, 133, .16) !important;
     }
     .drawer .settingsCollapsible{
-      border:1px solid rgba(168,191,255,.14);
-      border-radius:18px;
-      background: rgba(6, 12, 24, .26);
       overflow:hidden;
     }
     .drawer .settingsCollapsible summary{
@@ -2550,7 +2547,6 @@
       display:flex;
       flex-direction:column;
       gap:14px;
-      border-top:1px solid rgba(168,191,255,.08);
     }
     .drawer .feedbackChecklist{
       display:flex;
@@ -5540,7 +5536,7 @@ details.sxSection > summary {
 }
 details.sxSection > summary::-webkit-details-marker { display: none; }
 details.sxSection[open] > summary { border-bottom: 1px solid rgba(255,255,255,.06); }
-details.sxSection .settingsCollapsibleBody .sxRow:last-child { border-bottom: none; }
+.settingsCollapsibleBody .sxRow:last-child { border-bottom: none; }
 
 /* Tab buttons: remove small subtitle now that tabs have no <small> */
 .tabs .tabBtn small { display: none; }

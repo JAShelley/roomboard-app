@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" href="/favicon.png?v=navy2">
 <link rel="apple-touch-icon" href="/favicon.png?v=navy2">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="./styles.css?v=20260625b">
+<link rel="stylesheet" href="./styles.css?v=20260625c">
 <meta property="og:title" content="RoomBoard" data-id="th-modified" ><meta name="description" content="RoomBoard display board website" data-id="th-modified" ><meta property="og:description" content="RoomBoard display board website" data-id="th-modified" ><meta property="og:type" content="website" data-id="th-modified" ></head>
 <body class="displayTabActive"><button aria-label="Back to top" id="toTopBtn" title="Back to top">↑</button>
 <div class="chip" data-state="idle" id="syncPill" title="Sync status">
@@ -234,14 +234,8 @@
 <div class="sxContextLine" id="clinicContextLine">Not connected to a clinic yet.</div>
 </div>
 </div>
-<details class="sxSection settingsCollapsible" id="clinicProfileEditPanel" hidden>
-<summary>
-<span class="settingsCollapsibleCopy">
-<strong>Edit clinic profile</strong>
-<small>Update your clinic name, contact info, and specialty.</small>
-</span>
-<span aria-hidden="true" class="settingsCollapsibleHint"></span>
-</summary>
+<section class="sxSection" id="clinicProfileEditPanel" hidden>
+<div class="sxHead">Edit clinic profile</div>
 <div class="settingsCollapsibleBody">
 <div class="miniRow">
 <div class="field">
@@ -280,7 +274,7 @@
 <span id="clinicProfileSaveStatus" style="font-size:13px; color:var(--settingsMuted);"></span>
 </div>
 </div>
-</details>
+</section>
 <div class="sxSection billingCard" id="billingCard" hidden>
 <div class="sxHead">Subscription</div>
 <div class="billingStatus">
@@ -317,15 +311,10 @@ Manage subscription
 <button class="billingRefreshBtn" id="billingRefreshBtn" type="button">Refresh</button>
 </div>
 </div>
-<details class="sxSection settingsCollapsible" id="joinPracticePanel">
-<summary>
-<span class="settingsCollapsibleCopy">
-<strong id="joinPracticePanelLabel">Join existing clinic</strong>
-<small id="joinPracticePanelHelp">If your clinic already has RoomBoard, create your user here with the clinic invite code.</small>
-</span>
-<span aria-hidden="true" class="settingsCollapsibleHint"></span>
-</summary>
+<section class="sxSection" id="joinPracticePanel">
+<div class="sxHead" id="joinPracticePanelLabel">Join existing clinic</div>
 <div class="settingsCollapsibleBody">
+<div class="muted sxCardNote" id="joinPracticePanelHelp">If your clinic already has RoomBoard, create your user here with the clinic invite code.</div>
 <div class="miniRow" id="joinPracticeFields">
 <div class="field">
 <label>Full name</label>
@@ -359,15 +348,9 @@ Manage subscription
 </div>
 <div class="muted" hidden id="practiceInviteCodeStatus">Only clinic admins can see and rotate the invite code.</div>
 </div>
-</details>
-<details class="sxSection settingsCollapsible" id="feedbackPanel">
-<summary>
-<span class="settingsCollapsibleCopy">
-<strong>Team feedback</strong>
-<small>Notes and checklist items shared with your team.</small>
-</span>
-<span aria-hidden="true" class="settingsCollapsibleHint"></span>
-</summary>
+</section>
+<section class="sxSection" id="feedbackPanel">
+<div class="sxHead">Team feedback</div>
 <div class="settingsCollapsibleBody">
 <textarea class="sxFeedbackTextarea" id="feedbackInput" placeholder="Example: Too many clicks to update a room. Or: We love the Quick Add workflow and want more tools like that."></textarea>
 <div class="actions">
@@ -376,17 +359,11 @@ Manage subscription
 <div class="feedbackChecklist" id="feedbackChecklist"></div>
 <div class="muted sxFeedbackStatus" id="feedbackStatusLine">Checklist items are saved on this computer so the team can check them off and remove them later.</div>
 </div>
-</details>
+</section>
 </div>
 <div class="tabPanel" id="tabRooms">
-<details class="sxSection settingsCollapsible" open>
-<summary>
-<span class="settingsCollapsibleCopy">
-<strong>Rooms</strong>
-<small>Add and manage your clinic rooms.</small>
-</span>
-<span aria-hidden="true" class="settingsCollapsibleHint"></span>
-</summary>
+<section class="sxSection">
+<div class="sxHead">Rooms</div>
 <div class="settingsCollapsibleBody">
 <div class="sxAddRow">
 <input id="newRoomName" placeholder="e.g., Room 10" type="text" style="flex:1;">
@@ -394,15 +371,9 @@ Manage subscription
 </div>
 <div id="roomsList" style="padding:0 16px 4px;"></div>
 </div>
-</details>
-<details class="sxSection settingsCollapsible">
-<summary>
-<span class="settingsCollapsibleCopy">
-<strong>Types &amp; color labels</strong>
-<small>Custom status colors for patient rooms.</small>
-</span>
-<span aria-hidden="true" class="settingsCollapsibleHint"></span>
-</summary>
+</section>
+<section class="sxSection">
+<div class="sxHead">Types &amp; color labels</div>
 <div class="settingsCollapsibleBody">
 <div class="sxAddRow">
 <input id="newColorTitle" placeholder="e.g., Waiting" type="text" style="flex:1;">
@@ -415,15 +386,9 @@ Manage subscription
 </div>
 <div id="colorsList" style="padding:0 16px 4px;"></div>
 </div>
-</details>
-<details class="sxSection settingsCollapsible">
-<summary>
-<span class="settingsCollapsibleCopy">
-<strong>Quick notes</strong>
-<small>Shortcut notes available clinic-wide on any room.</small>
-</span>
-<span aria-hidden="true" class="settingsCollapsibleHint"></span>
-</summary>
+</section>
+<section class="sxSection">
+<div class="sxHead">Quick notes</div>
 <div class="settingsCollapsibleBody">
 <div class="sxAddRow">
 <input id="newQuickNoteLabel" placeholder="e.g., Needs translator" type="text" style="flex:1;">
@@ -431,15 +396,9 @@ Manage subscription
 </div>
 <div id="quickNotesList" style="padding:0 16px 4px;"></div>
 </div>
-</details>
-<details class="sxSection settingsCollapsible">
-<summary>
-<span class="settingsCollapsibleCopy">
-<strong>Doctors</strong>
-<small>Manage doctor names and initials for room assignment.</small>
-</span>
-<span aria-hidden="true" class="settingsCollapsibleHint"></span>
-</summary>
+</section>
+<section class="sxSection">
+<div class="sxHead">Doctors</div>
 <div class="settingsCollapsibleBody">
 <div class="sxAddRow">
 <input id="newDoctorName" placeholder="e.g., Dr. Smith" type="text" style="flex:1;">
@@ -449,15 +408,9 @@ Manage subscription
 <div class="sxSubHead">Doctor initials</div>
 <div id="doctorInitialsList" style="padding:0 16px 8px;"></div>
 </div>
-</details>
-<details class="sxSection settingsCollapsible" id="doctorBadgeStylesPanel">
-<summary>
-<span class="settingsCollapsibleCopy">
-<strong>Doctor badge style</strong>
-<small>Clinic-wide customization for badge size, color, text, and shape.</small>
-</span>
-<span aria-hidden="true" class="settingsCollapsibleHint"></span>
-</summary>
+</section>
+<section class="sxSection" id="doctorBadgeStylesPanel">
+<div class="sxHead">Doctor badge style</div>
 <div class="settingsCollapsibleBody">
 <div class="sxRow">
 <span class="sxLabel">Badge size</span>
@@ -483,17 +436,11 @@ Manage subscription
 </div>
 <div id="doctorBadgeStylesList" style="padding:0 16px 8px;"></div>
 </div>
-</details>
+</section>
 </div>
 <div class="tabPanel" id="tabAppearance">
-<details class="sxSection settingsCollapsible" open>
-<summary>
-<span class="settingsCollapsibleCopy">
-<strong>Theme presets</strong>
-<small>Choose a theme or set your clinic default.</small>
-</span>
-<span aria-hidden="true" class="settingsCollapsibleHint"></span>
-</summary>
+<section class="sxSection">
+<div class="sxHead">Theme presets</div>
 <div class="settingsCollapsibleBody">
 <div class="themePresetGrid" id="themePresetGrid"></div>
 <div class="sxRowGroup">
@@ -514,15 +461,9 @@ Manage subscription
 <button class="btn sm" id="makeDefaultThemeBtn" type="button">Make current default</button>
 </div>
 </div>
-</details>
-<details class="sxSection settingsCollapsible">
-<summary>
-<span class="settingsCollapsibleCopy">
-<strong>Display layout</strong>
-<small>Columns, rows, card scale, and line spacing.</small>
-</span>
-<span aria-hidden="true" class="settingsCollapsibleHint"></span>
-</summary>
+</section>
+<section class="sxSection">
+<div class="sxHead">Display layout</div>
 <div class="settingsCollapsibleBody">
 <div class="sxRowGroup">
 <div class="sxRow">
@@ -549,15 +490,9 @@ Manage subscription
 </div>
 </div>
 </div>
-</details>
-<details class="sxSection settingsCollapsible">
-<summary>
-<span class="settingsCollapsibleCopy">
-<strong>Room card fields</strong>
-<small>Show or hide individual fields on each room card.</small>
-</span>
-<span aria-hidden="true" class="settingsCollapsibleHint"></span>
-</summary>
+</section>
+<section class="sxSection">
+<div class="sxHead">Room card fields</div>
 <div class="settingsCollapsibleBody">
 <div class="sxRowGroup">
 <div class="sxRow"><span class="sxLabel">Patient name</span><input checked id="showRoomCardPatient" type="checkbox"></div>
@@ -570,15 +505,9 @@ Manage subscription
 <div class="sxRow"><span class="sxLabel">Status notes</span><input checked id="showRoomCardStatusNotes" type="checkbox"></div>
 </div>
 </div>
-</details>
-<details class="sxSection settingsCollapsible">
-<summary>
-<span class="settingsCollapsibleCopy">
-<strong>Fonts</strong>
-<small>Base, card, display, timer, and input font sizes.</small>
-</span>
-<span aria-hidden="true" class="settingsCollapsibleHint"></span>
-</summary>
+</section>
+<section class="sxSection">
+<div class="sxHead">Fonts</div>
 <div class="settingsCollapsibleBody">
 <div class="sxRowGroup">
 <div class="sxRow">
@@ -603,15 +532,9 @@ Manage subscription
 </div>
 </div>
 </div>
-</details>
-<details class="sxSection settingsCollapsible">
-<summary>
-<span class="settingsCollapsibleCopy">
-<strong>Display colors</strong>
-<small>Font color, muted text, card text contrast, and doctor highlight.</small>
-</span>
-<span aria-hidden="true" class="settingsCollapsibleHint"></span>
-</summary>
+</section>
+<section class="sxSection">
+<div class="sxHead">Display colors</div>
 <div class="settingsCollapsibleBody">
 <div class="sxRowGroup">
 <div class="sxRow">
@@ -638,15 +561,9 @@ Manage subscription
 </div>
 </div>
 </div>
-</details>
-<details class="sxSection settingsCollapsible">
-<summary>
-<span class="settingsCollapsibleCopy">
-<strong>Card layout</strong>
-<small>Choose how room cards are arranged on the display board.</small>
-</span>
-<span aria-hidden="true" class="settingsCollapsibleHint"></span>
-</summary>
+</section>
+<section class="sxSection">
+<div class="sxHead">Card layout</div>
 <div class="settingsCollapsibleBody">
 <div class="cardLayoutGrid" id="cardLayoutGrid" role="radiogroup" aria-label="Card layout"></div>
 <select id="cardStyle" style="display:none" aria-hidden="true" tabindex="-1">
@@ -657,15 +574,9 @@ Manage subscription
 <option value="highContrast">High contrast</option>
 </select>
 </div>
-</details>
-<details class="sxSection settingsCollapsible mobileOnlySettingsCard">
-<summary>
-<span class="settingsCollapsibleCopy">
-<strong>Mobile quick view</strong>
-<small>Columns, tile gap, and font sizes for the mobile overlay.</small>
-</span>
-<span aria-hidden="true" class="settingsCollapsibleHint"></span>
-</summary>
+</section>
+<section class="sxSection mobileOnlySettingsCard">
+<div class="sxHead">Mobile quick view</div>
 <div class="settingsCollapsibleBody">
 <div class="sxRowGroup">
 <div class="sxRow">
@@ -692,15 +603,9 @@ Manage subscription
 </div>
 </div>
 </div>
-</details>
-<details class="sxSection settingsCollapsible" id="headerBrandingPanel">
-<summary>
-<span class="settingsCollapsibleCopy">
-<strong>Header branding</strong>
-<small>Clinic-wide branding for the header name badge and logo.</small>
-</span>
-<span aria-hidden="true" class="settingsCollapsibleHint"></span>
-</summary>
+</section>
+<section class="sxSection" id="headerBrandingPanel">
+<div class="sxHead">Header branding</div>
 <div class="settingsCollapsibleBody">
 <div class="sxRowGroup">
 <div class="sxRow">
@@ -736,7 +641,7 @@ Manage subscription
 <button class="btn sm" id="removePracticeLogoBtn" type="button">Remove logo</button>
 </div>
 </div>
-</details>
+</section>
 </div>
 <div class="tabPanel" id="tabAlerts">
 <div class="sxSection">
@@ -856,14 +761,8 @@ Manage subscription
 </div>
 <input accept=".json,application/json" hidden id="importClinicConfigFile" type="file">
 </div>
-<details class="sxSection settingsCollapsible" id="settingsScopesBox">
-<summary>
-<span class="settingsCollapsibleCopy">
-<strong>Save model</strong>
-<small>See which changes stay in this window, save as defaults, or affect the whole clinic.</small>
-</span>
-<span aria-hidden="true" class="settingsCollapsibleHint"></span>
-</summary>
+<section class="sxSection" id="settingsScopesBox">
+<div class="sxHead">Save model</div>
 <div class="settingsCollapsibleBody">
 <div class="muted sxCardNote">RoomBoard separates settings by where they should apply so changes are easier to trust.</div>
 <div class="scopeLegend">
@@ -886,22 +785,16 @@ Manage subscription
 </div>
 </div>
 </div>
-</details>
-<details class="sxSection settingsCollapsible" id="settingsHealthCard">
-<summary>
-<span class="settingsCollapsibleCopy">
-<strong>Save check</strong>
-<small>See whether RoomBoard notices any risky or incomplete settings before saving.</small>
-</span>
-<span aria-hidden="true" class="settingsCollapsibleHint"></span>
-</summary>
+</section>
+<section class="sxSection" id="settingsHealthCard">
+<div class="sxHead">Save check</div>
 <div class="settingsCollapsibleBody">
 <div class="muted" id="settingsHealthSummary">RoomBoard checks your settings before it saves them, kind of like a spell-check for setup changes.</div>
 <ul class="settingsHealthList isOk" id="settingsHealthList">
 <li>Everything looks good right now.</li>
 </ul>
 </div>
-</details>
+</section>
 </div>
 </div>
 </aside>
@@ -911,7 +804,7 @@ Manage subscription
 <script src="./js/rendering.js?v=20260624a"></script>
 <script src="./js/settings.js?v=20260617a"></script>
 <script src="./js/checklist.js?v=20260625a"></script>
-<script src="./js/auth-sync.js?v=20260625b"></script>
+<script src="./js/auth-sync.js?v=20260625c"></script>
 <script src="./js/ux.js?v=20260606a"></script>
 <script src="./js/theme.js?v=20260517d"></script>
 <script src="./js/desktop-capture-panel.js?v=20260606a"></script>
