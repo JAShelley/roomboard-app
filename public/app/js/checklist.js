@@ -37,7 +37,7 @@
       var sorted = active.concat(done);
 
       if(!sorted.length){
-        list.innerHTML = '<li class="checklistEmpty">No items yet. Add one above.</li>';
+        list.innerHTML = '<li class="checklistEmpty">No items yet — add one above.</li>';
       } else {
         list.innerHTML = sorted.map(function(item, sortIdx){
           var realIdx = checklistItems.indexOf(item);
@@ -92,6 +92,21 @@
       // Clear done button
       var actionsEl = document.getElementById("checklistActions");
       if(actionsEl) actionsEl.hidden = doneCount === 0;
+
+      // All-done banner
+      var list2 = document.getElementById("checklistList");
+      var existingBanner = document.getElementById("checklistAllDoneBanner");
+      if(total > 0 && doneCount === total){
+        if(!existingBanner){
+          var banner = document.createElement("div");
+          banner.id = "checklistAllDoneBanner";
+          banner.className = "checklistAllDone";
+          banner.textContent = "All done — great work!";
+          if(list2 && list2.parentNode) list2.parentNode.insertBefore(banner, list2.nextSibling);
+        }
+      } else {
+        if(existingBanner) existingBanner.remove();
+      }
     }
 
     // ---- Drag to reorder ----
