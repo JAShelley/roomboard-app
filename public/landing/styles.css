@@ -689,6 +689,29 @@ img { max-width: 100%; display: block; }
 .feature p { color: var(--muted); font-size: 15px; line-height: 1.6; }
 .feature.span2 { grid-column: span 2; }
 
+/* ---------- Client reviews ---------- */
+.reviews-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1080px; margin: 0 auto; }
+.review {
+  display: flex; flex-direction: column; gap: 16px;
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius); padding: 28px;
+  box-shadow: var(--shadow-sm); text-align: left;
+  transition: transform .3s cubic-bezier(.22, 1, .36, 1), box-shadow .3s ease, border-color .25s;
+}
+.review:hover { transform: translateY(-5px); box-shadow: 0 16px 40px rgba(2, 132, 199, .14); border-color: var(--teal-500); }
+.review-stars { color: #f5b50a; font-size: 17px; letter-spacing: 2px; }
+.review-quote { color: var(--ink-2); font-size: 15.5px; line-height: 1.62; font-weight: 500; flex: 1; }
+.review-author { display: flex; align-items: center; gap: 12px; margin-top: 4px; padding-top: 16px; border-top: 1px solid var(--line); }
+.review-avatar {
+  flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 800; font-size: 14px; color: #fff;
+  background: linear-gradient(135deg, var(--teal-500), var(--teal-600));
+}
+.review-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.review-meta strong { font-size: 14.5px; font-weight: 700; color: var(--ink); }
+.review-meta small { font-size: 12.5px; color: var(--muted); }
+.reviews-cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px; margin: 40px auto 0; color: var(--muted); font-size: 15.5px; font-weight: 600; }
+@media (max-width: 900px) { .reviews-grid { grid-template-columns: 1fr; max-width: 520px; } }
+
 /* ---------- Drag-to-move showcase ---------- */
 .move-section { background: linear-gradient(180deg, var(--surface) 0%, color-mix(in srgb, var(--teal-50) 32%, var(--surface)) 100%); }
 .move-copy h2 { font-size: clamp(26px, 3.6vw, 38px); margin-bottom: 16px; }
