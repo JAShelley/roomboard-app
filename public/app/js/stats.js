@@ -1312,6 +1312,57 @@
     renderInsightList(insights.slice(0, 7));
   }
 
+  function renderOverviewTrend(roomRows){
+    var el = $("overviewTrend");
+    if(!el) return;
+    var range = getStatsRange();
+    var days = [];
+    var cursor = new Date(range.start.getTime());
+    var endExclusive = new Date(range.end.getTime() + 24 * 3600 * 1000);
+    while(cursor.getTime() < endExclusive.getTime() && days.length < 400){
+      days.push({ key: cursor.getFullYear() + "-" + (cursor.getMonth() + 1) + "-" + cursor.getDate(), date: new Date(cursor.getTime()), count: 0 });
+      cursor = new Date(cursor.getTime() + 24 * 3600 * 1000);
+    }
+    var idx = {};
+    days.forEach(function(d){ idx[d.key] = d; });
+    (roomRows || []).forEach(function(r){
+      var dt = new Date(r.started_at);
+      if(isNaN(dt.getTime())) return;
+      var k = dt.getFullYear() + "-" + (dt.getMonth() + 1) + "-" + dt.getDate();
+      if(idx[k]) idx[k].count++;
+    });
+    if(!days.length || !days.some(function(d){ return d.count > 0; })){
+      el.className = "overviewTrendBody muted";
+      el.textContent = "No visits in this range.";
+      return;
+    }
+    el.className = "overviewTrendBody";
+    var W = 920, H = 120, padL = 8, padR = 8, padT = 12, padB = 20;
+    var innerW = W - padL - padR, innerH = H - padT - padB;
+    var maxC = days.reduce(function(m, d){ return Math.max(m, d.count); }, 0) || 1;
+    function xFor(i){ return days.length === 1 ? (padL + innerW / 2) : (padL + innerW * i / (days.length - 1)); }
+    function yFor(c){ return padT + innerH - (c / maxC) * innerH; }
+    var line = "", areaPath = "M " + xFor(0) + " " + (padT + innerH);
+    days.forEach(function(d, i){
+      line += (i ? " L " : "M ") + xFor(i) + " " + yFor(d.count);
+      areaPath += " L " + xFor(i) + " " + yFor(d.count);
+    });
+    areaPath += " L " + xFor(days.length - 1) + " " + (padT + innerH) + " Z";
+    var first = days[0].date.toLocaleDateString([], { month: "short", day: "numeric" });
+    var last = days[days.length - 1].date.toLocaleDateString([], { month: "short", day: "numeric" });
+    var baseY = padT + innerH;
+    el.innerHTML =
+      '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="120" role="img" aria-label="Visits per day">'
+      + '<defs><linearGradient id="ovTrendGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8" stop-opacity=".30"></stop><stop offset="100%" stop-color="#38bdf8" stop-opacity="0"></stop></linearGradient></defs>'
+      + '<line class="chartGridLine" x1="' + padL + '" y1="' + baseY + '" x2="' + (W - padR) + '" y2="' + baseY + '"></line>'
+      + '<path d="' + areaPath + '" fill="url(#ovTrendGrad)"></path>'
+      + '<path d="' + line + '" fill="none" stroke="#38bdf8" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path>'
+      + '<text class="chartAxisText" x="' + padL + '" y="' + (H - 4) + '" text-anchor="start">' + escapeHtml(first) + '</text>'
+      + '<text class="chartAxisText" x="' + (W - padR) + '" y="' + (H - 4) + '" text-anchor="end">' + escapeHtml(last) + '</text>'
+      + '<text class="chartAxisText" x="' + (W - padR) + '" y="' + (padT + 2) + '" text-anchor="end">peak ' + escapeHtml(String(maxC)) + '</text>'
+      + '</svg>';
+  }
+
   function renderStats(roomRows, cleaningRows){
     roomRows = roomRows || [];
     cleaningRows = cleaningRows || [];
@@ -1331,6 +1382,8 @@
     var statsRoomRows = filterRowsByDurationRules(filteredRoomRows, averageRules);
     var statsAllRoomRows = filterRowsByDurationRules(roomRows, averageRules);
     var statsCleaningRows = filterRowsByDurationRules(cleaningRows, averageRules);
+
+    renderOverviewTrend(statsAllRoomRows);
 
     var rawTrendRoomDur = filteredRoomRows.map(function(r){ return Number(r.duration_ms || 0); }).filter(function(v){ return isFinite(v) && v >= 0; });
     var roomDur = statsRoomRows.map(function(r){ return Number(r.duration_ms || 0); }).filter(function(v){ return isFinite(v) && v >= 0; });
@@ -1862,6 +1915,11 @@
     $all("#analyticsTabs .tabButton").forEach(function(btn){
       btn.addEventListener("click", function(){
         setActiveAnalyticsTab(btn.getAttribute("data-tab") || "dashboard", true);
+      });
+    });
+    $all("[data-goto-tab]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        setActiveAnalyticsTab(btn.getAttribute("data-goto-tab") || "dashboard", true);
       });
     });
 

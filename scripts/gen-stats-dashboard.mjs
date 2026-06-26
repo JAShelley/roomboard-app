@@ -1,11 +1,12 @@
-// Generates public/app/js/stats-dashboard.js from the standalone analytics viewer
-// (public/stats-viewer/index.html). The in-app Stats tab renders that markup + CSS inside a
-// Shadow DOM (see public/app/js/stats.js), so the two stay visually in sync.
+// Generates public/app/js/stats-dashboard.js from the in-app dashboard source
+// (public/app/stats-dashboard.src.html). The in-app Stats tab renders that markup + CSS inside a
+// Shadow DOM (see public/app/js/stats.js).
 //
 // Run with:  node scripts/gen-stats-dashboard.mjs
 //
-// The standalone viewer remains the source of truth for the dashboard's look. Re-run this after
-// changing public/stats-viewer/index.html. Do not hand-edit public/app/js/stats-dashboard.js.
+// The in-app dashboard is intentionally a calmer "Overview" and is decoupled from the dense
+// standalone viewer (public/stats-viewer/index.html) — edit stats-dashboard.src.html for the
+// in-app layout. Do not hand-edit public/app/js/stats-dashboard.js.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -13,7 +14,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
-const SRC = path.join(ROOT, "public/stats-viewer/index.html");
+const SRC = path.join(ROOT, "public/app/stats-dashboard.src.html");
 const OUT = path.join(ROOT, "public/app/js/stats-dashboard.js");
 
 const content = fs.readFileSync(SRC, "utf8");

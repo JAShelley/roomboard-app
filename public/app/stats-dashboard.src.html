@@ -1,0 +1,3643 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Vet Room Board Analytics</title>
+<style>
+  :root{
+    --bg:#07111f;
+    --bg-2:#0b1628;
+    --panel:#0f1b31;
+    --panel-2:#13233d;
+    --panel-3:#0b1527;
+    --line:rgba(148,163,184,.18);
+    --text:#e7edf7;
+    --muted:#8ea0bb;
+    --accent:#5eead4;
+    --accent-2:#38bdf8;
+    --accent-3:#fbbf24;
+    --danger:#fb7185;
+    --warning:#fbbf24;
+    --success:#34d399;
+    --shadow:0 24px 70px rgba(1,8,18,.45);
+    --radius:20px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:"Avenir Next","Segoe UI",sans-serif;
+    color:var(--text);
+    overflow-x:hidden;
+    background:
+      radial-gradient(circle at top left, rgba(56,189,248,.18), transparent 28%),
+      radial-gradient(circle at top right, rgba(94,234,212,.10), transparent 22%),
+      linear-gradient(180deg, #08101c 0%, var(--bg) 42%, #040914 100%);
+  }
+  a{color:inherit}
+  .shell{
+    max-width:1240px;
+    margin:0 auto;
+    padding:28px 18px 48px;
+  }
+  .hero{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:18px;
+    margin-bottom:18px;
+  }
+  h1{
+    margin:0;
+    font-size:clamp(2.1rem, 5vw, 3.8rem);
+    line-height:.95;
+    letter-spacing:-.04em;
+  }
+  .sub{
+    margin:10px 0 0;
+    max-width:760px;
+    color:var(--muted);
+    font-size:1rem;
+  }
+  .status{
+    margin-top:14px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 14px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:rgba(15,27,49,.72);
+    color:var(--muted);
+  }
+  .status::before{
+    content:"";
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 18px rgba(94,234,212,.8);
+  }
+  .linkBtn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:12px 18px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:rgba(19,35,61,.72);
+    text-decoration:none;
+    color:var(--text);
+    white-space:nowrap;
+  }
+  .panel{
+    background:linear-gradient(180deg, rgba(19,35,61,.92), rgba(11,21,39,.92));
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(14px);
+  }
+  .card{ padding:20px; }
+  .stack{ display:grid; gap:18px; }
+  .accessPanel{
+    display:grid;
+    grid-template-columns:minmax(220px, .82fr) minmax(360px, 1fr) auto;
+    gap:14px;
+    align-items:end;
+  }
+  .accessPanel .loginGrid{
+    margin-top:0 !important;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+  .accessPanel .actions{
+    margin-top:0 !important;
+    justify-content:flex-end;
+  }
+  .tabBar{
+    position:sticky;
+    top:10px;
+    z-index:20;
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:8px;
+    padding:8px;
+    border-radius:18px;
+    border:1px solid rgba(148,163,184,.16);
+    background:rgba(6,13,26,.82);
+    box-shadow:0 18px 48px rgba(1,8,18,.34);
+    backdrop-filter:blur(16px);
+  }
+  .tabButton{
+    min-width:0;
+    padding:11px 12px;
+    border-radius:14px;
+    border:1px solid transparent;
+    background:transparent;
+    color:var(--muted);
+    font-weight:800;
+    white-space:nowrap;
+  }
+  .tabButton.active{
+    color:#04111f;
+    background:linear-gradient(135deg, var(--accent), var(--accent-2));
+    border-color:transparent;
+    box-shadow:0 10px 28px rgba(56,189,248,.16);
+  }
+  .tabPanel{
+    display:none;
+    gap:18px;
+  }
+  .tabPanel.active{
+    display:grid;
+  }
+  .dashboardSummary{
+    display:grid;
+    gap:18px;
+  }
+  .dashboardSummary .toolbar{ order:1; margin-bottom:0; }
+  .dashboardSummary .dashboardMetrics{ order:2; margin-top:0 !important; }
+  .dashboardSummary .controls{
+    order:3;
+    padding-top:16px;
+    border-top:1px solid rgba(148,163,184,.12);
+  }
+  .trendControls{
+    margin-top:14px;
+    padding:16px;
+    border-radius:18px;
+    border:1px solid rgba(148,163,184,.14);
+    background:rgba(6,13,26,.34);
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+  }
+  .trendControls .fieldWide{
+    grid-column:1/-1;
+  }
+  .eyebrow{
+    margin:0 0 8px;
+    color:var(--accent);
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    font-size:.75rem;
+    font-weight:800;
+  }
+  .sectionTitle{
+    margin:0 0 6px;
+    font-size:1.15rem;
+  }
+  .sectionSubtitle{
+    margin:0;
+    color:var(--muted);
+    font-size:.95rem;
+  }
+  .muted{ color:var(--muted); }
+  .loginGrid,
+  .controls{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+    gap:14px;
+    align-items:end;
+  }
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    min-width:0;
+  }
+  .fieldWide{
+    grid-column:1/-1;
+  }
+  label{
+    font-size:.8rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+    font-weight:700;
+  }
+  input, select{
+    width:100%;
+    padding:12px 14px;
+    border-radius:14px;
+    border:1px solid rgba(148,163,184,.16);
+    background:rgba(6,13,26,.72);
+    color:var(--text);
+    font:inherit;
+    outline:none;
+  }
+  input::placeholder{ color:rgba(142,160,187,.8); }
+  input:focus, select:focus{
+    border-color:rgba(94,234,212,.45);
+    box-shadow:0 0 0 4px rgba(94,234,212,.10);
+  }
+  .actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  button{
+    border:0;
+    border-radius:999px;
+    padding:12px 18px;
+    font:inherit;
+    cursor:pointer;
+    transition:transform .12s ease, opacity .12s ease, background .12s ease;
+  }
+  button:hover{ transform:translateY(-1px); }
+  button:disabled{
+    cursor:not-allowed;
+    opacity:.6;
+    transform:none;
+  }
+  .primary{
+    background:linear-gradient(135deg, var(--accent), var(--accent-2));
+    color:#04111f;
+    font-weight:800;
+  }
+  .secondary{
+    background:rgba(94,234,212,.10);
+    color:var(--accent);
+    border:1px solid rgba(94,234,212,.18);
+  }
+  .ghost{
+    background:rgba(255,255,255,.03);
+    color:var(--text);
+    border:1px solid var(--line);
+  }
+  .danger{
+    background:rgba(251,113,133,.12);
+    color:#ffb5c1;
+    border:1px solid rgba(251,113,133,.22);
+  }
+  .pillRow{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .pillBtn{
+    padding:10px 14px;
+    border-radius:999px;
+    border:1px solid rgba(148,163,184,.14);
+    background:rgba(6,13,26,.54);
+    color:var(--muted);
+    font-size:.92rem;
+  }
+  .pillBtn.active{
+    color:#04111f;
+    background:linear-gradient(135deg, var(--accent), var(--accent-2));
+    border-color:transparent;
+    font-weight:800;
+  }
+  .trendDayControl{
+    display:grid;
+    gap:10px;
+  }
+  .trendDayPresets{
+    gap:8px;
+  }
+  .weekdayGrid{
+    display:grid;
+    grid-template-columns:repeat(7, minmax(0, 1fr));
+    gap:8px;
+  }
+  .dayToggle{
+    min-width:0;
+    min-height:44px;
+    padding:9px 8px;
+    border-radius:14px;
+    border:1px solid rgba(148,163,184,.14);
+    background:rgba(6,13,26,.46);
+    color:var(--muted);
+    font-size:.88rem;
+    font-weight:800;
+  }
+  .dayToggle.active{
+    color:#04111f;
+    background:linear-gradient(135deg, #fbbf24, #5eead4 54%, #38bdf8);
+    border-color:transparent;
+    box-shadow:0 10px 24px rgba(56,189,248,.14);
+  }
+  .dayToggle:focus-visible,
+  .pillBtn:focus-visible{
+    outline:2px solid rgba(94,234,212,.7);
+    outline-offset:2px;
+  }
+  .averageRuleGrid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:12px;
+  }
+  .statsGrid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+    gap:16px;
+  }
+  .dashboardMetrics{
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+  }
+  .metricCard{
+    padding:15px;
+    border-radius:16px;
+    border:1px solid rgba(148,163,184,.14);
+    background:rgba(6,13,26,.52);
+    min-height:96px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:6px;
+  }
+  .metricCard strong{
+    color:var(--muted);
+    font-size:.74rem;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  .metricCard span{
+    font-size:1.28rem;
+    font-weight:800;
+    letter-spacing:-.02em;
+    color:var(--text);
+  }
+  .metricCard em{
+    font-style:normal;
+    color:var(--muted);
+    font-size:.85rem;
+  }
+  .dashboardMetrics .metricCard{
+    min-height:128px;
+    padding:18px;
+  }
+  .dashboardMetrics .metricCard span{
+    font-size:1.86rem;
+    line-height:1.05;
+  }
+  .dashboardMetrics .metricCard:nth-child(1),
+  .dashboardMetrics .metricCard:nth-child(3),
+  .dashboardMetrics .metricCard:nth-child(11),
+  .dashboardMetrics .metricCard:nth-child(12){
+    background:linear-gradient(180deg, rgba(56,189,248,.13), rgba(6,13,26,.50));
+    border-color:rgba(56,189,248,.22);
+  }
+  .dashboardMetrics .metricCard:nth-child(1) span,
+  .dashboardMetrics .metricCard:nth-child(3) span,
+  .dashboardMetrics .metricCard:nth-child(11) span,
+  .dashboardMetrics .metricCard:nth-child(12) span{
+    font-size:2.2rem;
+  }
+  .metricCard.success{
+    border-color:rgba(52,211,153,.24);
+    background:linear-gradient(180deg, rgba(52,211,153,.10), rgba(6,13,26,.46));
+  }
+  .metricCard.warn{
+    border-color:rgba(251,191,36,.28);
+    background:linear-gradient(180deg, rgba(251,191,36,.10), rgba(6,13,26,.46));
+  }
+  .opsSettingsGrid{
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+  }
+  .opsDashboard{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) minmax(320px, .72fr);
+    gap:18px;
+    align-items:start;
+  }
+  .opsStack{
+    display:grid;
+    gap:18px;
+  }
+  .barList,
+  .insightList{
+    display:grid;
+    gap:10px;
+  }
+  .barRow{
+    display:grid;
+    gap:8px;
+    padding:12px;
+    border-radius:16px;
+    border:1px solid rgba(148,163,184,.14);
+    background:rgba(6,13,26,.36);
+  }
+  .barMeta{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    color:var(--muted);
+    font-size:.9rem;
+  }
+  .barMeta strong{
+    color:var(--text);
+    overflow-wrap:anywhere;
+  }
+  .barTrack{
+    position:relative;
+    height:10px;
+    border-radius:999px;
+    overflow:hidden;
+    background:rgba(148,163,184,.16);
+  }
+  .barFill{
+    position:absolute;
+    inset:0 auto 0 0;
+    width:0;
+    min-width:2px;
+    border-radius:inherit;
+    background:linear-gradient(90deg, var(--accent), var(--accent-2));
+  }
+  .barFill.warn{ background:linear-gradient(90deg, #fbbf24, #fb7185); }
+  .barFill.success{ background:linear-gradient(90deg, #34d399, #5eead4); }
+  .insightItem{
+    padding:13px 14px;
+    border-radius:16px;
+    border:1px solid rgba(148,163,184,.14);
+    background:rgba(6,13,26,.40);
+  }
+  .insightItem strong{
+    display:block;
+    margin-bottom:5px;
+  }
+  .insightItem span{
+    display:block;
+    color:var(--muted);
+    font-size:.92rem;
+    line-height:1.35;
+  }
+  .insightItem.success{ border-color:rgba(52,211,153,.22); }
+  .insightItem.warn{ border-color:rgba(251,191,36,.25); }
+  .insightItem.danger{ border-color:rgba(251,113,133,.26); }
+  .chartPanel{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) 320px;
+    gap:18px;
+    align-items:start;
+  }
+  .chartWrap{
+    position:relative;
+    border:1px solid rgba(148,163,184,.16);
+    border-radius:18px;
+    background:
+      linear-gradient(180deg, rgba(15,27,49,.64), rgba(6,13,26,.34)),
+      rgba(6,13,26,.42);
+    padding:18px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .chartLegend{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:12px;
+    color:var(--muted);
+    font-size:.86rem;
+  }
+  .legendKey{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 9px;
+    border-radius:999px;
+    border:1px solid rgba(148,163,184,.12);
+    background:rgba(6,13,26,.32);
+  }
+  .legendSwatch{
+    width:9px;
+    height:9px;
+    border-radius:999px;
+    box-shadow:0 0 18px currentColor;
+  }
+  .chartTooltip{
+    position:absolute;
+    pointer-events:none;
+    min-width:160px;
+    max-width:240px;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid rgba(148,163,184,.18);
+    background:rgba(7,17,31,.96);
+    color:var(--text);
+    box-shadow:0 18px 40px rgba(1,8,18,.4);
+    font-size:.88rem;
+    line-height:1.35;
+    opacity:0;
+    transform:translateY(4px);
+    transition:opacity .12s ease, transform .12s ease;
+    z-index:5;
+  }
+  .chartTooltip.show{
+    opacity:1;
+    transform:translateY(0);
+  }
+  .highlights{
+    display:grid;
+    gap:10px;
+  }
+  .highlightItem{
+    padding:14px;
+    border-radius:16px;
+    border:1px solid rgba(148,163,184,.14);
+    background:rgba(6,13,26,.42);
+  }
+  .highlightItem strong{
+    display:block;
+    color:var(--muted);
+    font-size:.74rem;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    margin-bottom:6px;
+  }
+  .highlightItem span{
+    display:block;
+    font-size:1rem;
+    font-weight:700;
+  }
+  .split{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);
+    gap:18px;
+  }
+  .inset{
+    padding:16px;
+    border-radius:18px;
+    border:1px solid rgba(148,163,184,.14);
+    background:rgba(6,13,26,.42);
+  }
+  .tableWrap{
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+    border:1px solid rgba(148,163,184,.14);
+    border-radius:16px;
+    background:rgba(6,13,26,.36);
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+  }
+  #trendChart{
+    min-height:300px;
+  }
+  #trendChart svg{
+    display:block;
+    overflow:visible;
+  }
+  .chartGridLine{
+    stroke:rgba(148,163,184,.12);
+    stroke-width:1;
+  }
+  .chartAxisLine{
+    stroke:rgba(148,163,184,.28);
+    stroke-width:1;
+  }
+  .chartAxisText{
+    fill:rgba(226,232,240,.68);
+    font-size:11px;
+    font-weight:700;
+  }
+  .chartPath{
+    filter:drop-shadow(0 6px 10px rgba(1,8,18,.28));
+  }
+  .chartPoint{
+    transition:r .12s ease, stroke-width .12s ease;
+  }
+  .chartPoint:hover{
+    r:6.5;
+    stroke-width:3;
+  }
+  th, td{
+    padding:13px 10px;
+    border-bottom:1px solid var(--line);
+    text-align:left;
+    vertical-align:top;
+    overflow-wrap:anywhere;
+  }
+  th{
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    font-size:.78rem;
+    font-weight:700;
+  }
+  td.numeric, th.numeric{
+    text-align:right;
+    white-space:nowrap;
+  }
+  tr:last-child td{ border-bottom:0; }
+  .toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:end;
+    gap:12px;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+  }
+  .summaryStrip{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:12px;
+  }
+  .summaryPill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 12px;
+    border-radius:999px;
+    border:1px solid rgba(148,163,184,.14);
+    background:rgba(6,13,26,.42);
+    color:var(--muted);
+    font-size:.9rem;
+  }
+  .summaryPill strong{
+    color:var(--text);
+    font-size:.92rem;
+  }
+  .logList{
+    display:grid;
+    gap:12px;
+  }
+  .logItem{
+    display:flex;
+    justify-content:space-between;
+    gap:14px;
+    align-items:center;
+    padding:14px 16px;
+    border-radius:16px;
+    border:1px solid var(--line);
+    background:rgba(6,13,26,.52);
+  }
+  .logItem.selected{
+    border-color:rgba(94,234,212,.35);
+    box-shadow:0 0 0 1px rgba(94,234,212,.18) inset;
+  }
+  .logSelect{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    min-width:0;
+    flex:1 1 auto;
+  }
+  .logCheck{
+    width:18px;
+    height:18px;
+    accent-color:#5eead4;
+    flex:0 0 auto;
+    margin-top:4px;
+  }
+  .logMain{
+    min-width:0;
+    display:grid;
+    gap:6px;
+  }
+  .logTitle{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+  }
+  .logName{
+    font-weight:800;
+    letter-spacing:-.01em;
+  }
+  .logBadge{
+    display:inline-flex;
+    align-items:center;
+    padding:5px 10px;
+    border-radius:999px;
+    background:rgba(56,189,248,.12);
+    color:#9ddcff;
+    border:1px solid rgba(56,189,248,.18);
+    font-size:.83rem;
+  }
+  .logBadge.success{
+    color:#b9ffe9;
+    background:rgba(52,211,153,.12);
+    border-color:rgba(52,211,153,.18);
+  }
+  .logBadge.warn{
+    color:#ffd98a;
+    background:rgba(251,191,36,.10);
+    border-color:rgba(251,191,36,.16);
+  }
+  .logBadge.danger{
+    color:#ffb5c1;
+    background:rgba(251,113,133,.10);
+    border-color:rgba(251,113,133,.16);
+  }
+  .logMeta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px 14px;
+    color:var(--muted);
+    font-size:.92rem;
+  }
+  .logActions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .miniStatus{
+    color:var(--muted);
+    font-size:.92rem;
+  }
+  .emptyState{
+    padding:20px;
+    border-radius:16px;
+    border:1px dashed rgba(148,163,184,.18);
+    color:var(--muted);
+    background:rgba(6,13,26,.28);
+  }
+  @media (max-width: 1080px){
+	    .chartPanel,
+	    .opsDashboard{ grid-template-columns:1fr; }
+	    .dashboardMetrics{ grid-template-columns:repeat(3, minmax(0, 1fr)); }
+    .accessPanel,
+    .trendControls{ grid-template-columns:1fr 1fr; }
+	  }
+  @media (max-width: 900px){
+	    .hero{
+	      flex-direction:column;
+	      align-items:stretch;
+	    }
+    .accessPanel,
+    .accessPanel .loginGrid,
+    .trendControls{
+      grid-template-columns:1fr;
+    }
+    .accessPanel .actions{
+      justify-content:stretch;
+    }
+	    .split{grid-template-columns:1fr}
+	  }
+  @media (max-width: 720px){
+    .shell{ padding:18px 12px 34px; }
+    .card{ padding:16px; }
+    .hero{ gap:14px; }
+    h1{
+      font-size:clamp(2rem, 10vw, 2.8rem);
+      line-height:1;
+    }
+    .sub{
+      max-width:none;
+      font-size:.96rem;
+    }
+    .status{
+      width:100%;
+      justify-content:flex-start;
+    }
+	    .loginGrid,
+	    .controls{
+	      grid-template-columns:1fr;
+	    }
+	    .tabBar{
+	      position:static;
+	      grid-template-columns:repeat(2, minmax(0, 1fr));
+	    }
+    .pillRow{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:8px;
+    }
+    .trendDayPresets{
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+    }
+    .weekdayGrid{
+      grid-template-columns:repeat(4, minmax(0, 1fr));
+    }
+    .averageRuleGrid{
+      grid-template-columns:1fr;
+    }
+    .opsSettingsGrid{
+      grid-template-columns:1fr;
+    }
+    .pillBtn{
+      width:100%;
+      min-height:46px;
+      white-space:normal;
+      justify-content:center;
+    }
+    .dayToggle{
+      width:100%;
+    }
+	    .statsGrid{
+	      grid-template-columns:repeat(2, minmax(0, 1fr));
+	      gap:12px;
+	    }
+	    .dashboardMetrics{
+	      grid-template-columns:repeat(2, minmax(0, 1fr));
+	    }
+	    .metricCard{
+	      min-height:0;
+	      padding:14px 12px;
+	    }
+	    .metricCard span,
+	    .dashboardMetrics .metricCard span,
+	    .dashboardMetrics .metricCard:nth-child(1) span,
+	    .dashboardMetrics .metricCard:nth-child(3) span,
+	    .dashboardMetrics .metricCard:nth-child(11) span,
+	    .dashboardMetrics .metricCard:nth-child(12) span{ font-size:1.12rem; }
+    .metricCard em{ font-size:.8rem; }
+    .chartWrap{ padding:12px; }
+    #trendChart{
+      overflow-x:auto;
+      overflow-y:hidden;
+      -webkit-overflow-scrolling:touch;
+      padding-bottom:4px;
+    }
+    #trendChart svg{ min-width:640px; }
+    .chartTooltip{ display:none; }
+    .summaryStrip{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:8px;
+    }
+    .summaryPill{
+      width:100%;
+      justify-content:space-between;
+    }
+    .actions, .toolbar{align-items:stretch}
+    button, .linkBtn{
+      width:100%;
+      min-height:48px;
+    }
+    input, select{ min-height:48px; }
+    .logItem{flex-direction:column; align-items:flex-start}
+    .logSelect{ width:100%; }
+    .logMeta{
+      display:grid;
+      gap:6px;
+    }
+    .logActions{width:100%}
+    .logActions button{width:100%}
+    .tableWrap{
+      overflow:visible;
+      border:0;
+      background:transparent;
+    }
+    .tableWrap table,
+    .tableWrap thead,
+    .tableWrap tbody,
+    .tableWrap tr,
+    .tableWrap th,
+    .tableWrap td{
+      display:block;
+      width:100%;
+    }
+    .tableWrap thead{
+      position:absolute;
+      width:1px;
+      height:1px;
+      padding:0;
+      margin:-1px;
+      overflow:hidden;
+      clip:rect(0, 0, 0, 0);
+      white-space:nowrap;
+      border:0;
+    }
+    .tableWrap tbody{
+      display:grid;
+      gap:12px;
+    }
+    .tableWrap tr{
+      border:1px solid rgba(148,163,184,.14);
+      border-radius:16px;
+      background:rgba(6,13,26,.42);
+      overflow:hidden;
+    }
+    .tableWrap td{
+      display:grid;
+      grid-template-columns:minmax(0, 1fr) auto;
+      gap:12px;
+      align-items:start;
+      padding:10px 14px;
+      text-align:left;
+    }
+    .tableWrap td::before{
+      content:attr(data-label);
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      font-size:.72rem;
+      font-weight:700;
+    }
+    .tableWrap td.numeric{ text-align:left; }
+    .tableWrap td:first-child{
+      color:var(--text);
+      font-weight:800;
+    }
+    .tableWrap td[colspan]{
+      display:block;
+      padding:14px;
+    }
+    .tableWrap td[colspan]::before{ content:none; }
+  }
+	  @media (max-width: 480px){
+	    .pillRow,
+	    .summaryStrip,
+	    .tabBar,
+	    .dashboardMetrics{
+	      grid-template-columns:1fr;
+	    }
+	  }
+
+  /* ===== Calm Overview layout (in-app Stats) ===== */
+  .overviewSummary{ display:grid; gap:16px; }
+  .overviewSummary > .toolbar{ margin-bottom:0; }
+
+  .heroMetrics{ grid-template-columns:repeat(4, minmax(0,1fr)); gap:14px; margin-top:4px; }
+  .heroMetrics .metricCard.hero{
+    min-height:124px; padding:18px 18px 16px; gap:8px;
+    background:linear-gradient(180deg, rgba(56,189,248,.14), rgba(6,13,26,.5));
+    border-color:rgba(56,189,248,.24);
+  }
+  .heroMetrics .metricCard.hero strong{ font-size:.78rem; }
+  .heroMetrics .metricCard.hero span{ font-size:2.3rem; line-height:1.02; }
+
+  .secondaryMetrics{ grid-template-columns:repeat(5, minmax(0,1fr)); gap:12px; }
+  .secondaryMetrics .metricCard{ min-height:0; padding:13px 14px; }
+  .secondaryMetrics .metricCard span{ font-size:1.3rem; }
+
+  /* native <details> disclosures */
+  .disclosure{
+    margin-top:2px; border:1px solid rgba(148,163,184,.16); border-radius:16px;
+    background:rgba(6,13,26,.34); overflow:hidden;
+  }
+  .disclosure > summary{
+    list-style:none; cursor:pointer; padding:13px 16px; font-weight:800; font-size:.92rem;
+    color:var(--text); display:flex; align-items:center; gap:10px; user-select:none;
+  }
+  .disclosure > summary::-webkit-details-marker{ display:none; }
+  .disclosure > summary:hover{ color:var(--accent); }
+  .disclosureChevron{
+    width:8px; height:8px; border-right:2px solid currentColor; border-bottom:2px solid currentColor;
+    transform:rotate(-45deg); transition:transform .15s ease; opacity:.7; flex:0 0 auto;
+  }
+  .disclosure[open] > summary .disclosureChevron{ transform:rotate(45deg); }
+  .disclosureBody{ padding:2px 16px 16px; }
+  .disclosure .controls{ margin-top:6px; }
+
+  /* compact day customizer inside Trends */
+  .dayCustomize{ margin-top:8px; border:0; background:transparent; border-radius:0; }
+  .dayCustomize > summary{ padding:6px 0; font-size:.82rem; color:var(--muted); }
+  .dayCustomize .disclosureBody{ padding:10px 0 0; }
+
+  /* overview trend */
+  .overviewTrend{
+    margin-top:2px; padding:16px; border:1px solid rgba(148,163,184,.16); border-radius:18px;
+    background:linear-gradient(180deg, rgba(15,27,49,.5), rgba(6,13,26,.3));
+  }
+  .overviewTrendHead{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
+  .overviewTrendTitle{ font-size:.74rem; text-transform:uppercase; letter-spacing:.08em; font-weight:800; color:var(--muted); }
+  .overviewTrendBody{ min-height:120px; }
+  .overviewTrendBody svg{ display:block; overflow:visible; }
+  .linklike{
+    background:none; border:0; padding:0; color:var(--accent-2); font:inherit;
+    font-size:.86rem; font-weight:700; cursor:pointer;
+  }
+  .linklike:hover{ color:var(--accent); transform:none; }
+
+  @media (max-width: 1080px){
+    .heroMetrics{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .secondaryMetrics{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+  }
+  @media (max-width: 720px){
+    .heroMetrics{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .secondaryMetrics{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .heroMetrics .metricCard.hero span{ font-size:1.6rem; }
+    .secondaryMetrics .metricCard span{ font-size:1.12rem; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <section class="hero">
+    <div>
+      <h1>Room Operations Analytics</h1>
+      <p class="sub">A private analytics workspace for medical room flow, utilization, turnover, provider workload, and historical session cleanup.</p>
+      <div class="status" id="statusLine">Loading…</div>
+    </div>
+  </section>
+
+  <div class="stack">
+    <section class="panel card accessPanel">
+      <p class="eyebrow">Access</p>
+      <h2 class="sectionTitle">Supabase login</h2>
+      <p class="muted">Use the same account as the room board to load shared stats and manage past session logs.</p>
+      <div class="loginGrid" style="margin-top:14px;">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="text" autocomplete="username" placeholder="name@clinic.com"/>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" autocomplete="current-password" placeholder="password"/>
+        </div>
+      </div>
+      <div class="actions" style="margin-top:14px;">
+        <button class="primary" id="loginBtn" type="button">Login</button>
+        <button class="secondary" id="signupBtn" type="button">Sign up</button>
+        <button class="ghost" id="logoutBtn" type="button" style="display:none;">Logout</button>
+      </div>
+	    </section>
+
+    <nav class="tabBar" id="analyticsTabs" aria-label="Analytics sections" role="tablist">
+      <button class="tabButton active" type="button" data-tab="dashboard" role="tab" aria-selected="true">Dashboard</button>
+      <button class="tabButton" type="button" data-tab="trends" role="tab" aria-selected="false">Trends</button>
+      <button class="tabButton" type="button" data-tab="breakdowns" role="tab" aria-selected="false">Breakdowns</button>
+      <button class="tabButton" type="button" data-tab="logs" role="tab" aria-selected="false">Logs</button>
+    </nav>
+
+    <div class="tabPanel active" data-tab-panel="dashboard" role="tabpanel">
+      <section class="panel card overviewSummary">
+        <div class="toolbar">
+          <div>
+            <p class="eyebrow">Overview</p>
+            <h2 class="sectionTitle">At a glance</h2>
+            <p class="sectionSubtitle">How busy you were, how long visits ran, and how full the clinic was for the selected range.</p>
+          </div>
+          <div class="actions">
+            <button class="primary" id="refreshStatsBtn" type="button">Refresh stats</button>
+            <button class="secondary" id="exportStatsCsvBtn" type="button">Export CSV</button>
+          </div>
+        </div>
+        <div class="controls overviewControls">
+          <div class="field fieldWide">
+            <label>Quick range</label>
+            <div class="pillRow" id="statsQuickRanges">
+              <button class="pillBtn" type="button" data-range="today">Today</button>
+              <button class="pillBtn" type="button" data-range="7d">Last 7 days</button>
+              <button class="pillBtn" type="button" data-range="30d">Last 30 days</button>
+              <button class="pillBtn" type="button" data-range="90d">Last 90 days</button>
+              <button class="pillBtn" type="button" data-range="mtd">Month to date</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="statsStart">Start date</label>
+            <input id="statsStart" type="date"/>
+          </div>
+          <div class="field">
+            <label for="statsEnd">End date</label>
+            <input id="statsEnd" type="date"/>
+          </div>
+        </div>
+        <details class="disclosure advControls">
+          <summary><span class="disclosureChevron" aria-hidden="true"></span>Adjust assumptions &amp; exclusions</summary>
+          <div class="disclosureBody">
+            <div class="controls">
+              <div class="field fieldWide">
+                <label>Duration exclusions</label>
+                <div class="averageRuleGrid">
+                  <div class="field">
+                    <label for="statsAverageExcludeBelow">Ignore below (minutes)</label>
+                    <input id="statsAverageExcludeBelow" type="number" min="0" step="0.1" inputmode="decimal" placeholder="No minimum"/>
+                  </div>
+                  <div class="field">
+                    <label for="statsAverageExcludeAbove">Ignore above (minutes)</label>
+                    <input id="statsAverageExcludeAbove" type="number" min="0" step="0.1" inputmode="decimal" placeholder="No maximum"/>
+                  </div>
+                </div>
+              </div>
+              <div class="field fieldWide">
+                <label>Operational assumptions</label>
+                <div class="averageRuleGrid opsSettingsGrid">
+                  <div class="field">
+                    <label for="statsClinicHours">Clinic hours per day</label>
+                    <input id="statsClinicHours" type="number" min="1" max="24" step="0.5" inputmode="decimal" value="10"/>
+                  </div>
+                  <div class="field">
+                    <label for="statsTargetRoomMinutes">Target room minutes</label>
+                    <input id="statsTargetRoomMinutes" type="number" min="1" step="1" inputmode="decimal" value="45"/>
+                  </div>
+                  <div class="field">
+                    <label for="statsTargetCleanMinutes">Target clean minutes</label>
+                    <input id="statsTargetCleanMinutes" type="number" min="1" step="1" inputmode="decimal" value="10"/>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+        <div class="statsGrid heroMetrics">
+          <article class="metricCard hero">
+            <strong>Visits</strong>
+            <span id="visitCount">0</span>
+            <em>Appointments in range</em>
+          </article>
+          <article class="metricCard hero">
+            <strong>Throughput / day</strong>
+            <span id="throughputPerDay">0</span>
+            <em>Average visits per day</em>
+          </article>
+          <article class="metricCard hero">
+            <strong>Avg room time</strong>
+            <span id="avgRoomTime">00:00:00</span>
+            <em>Mean visit duration</em>
+          </article>
+          <article class="metricCard hero">
+            <strong>Utilization</strong>
+            <span id="utilizationRate">0%</span>
+            <em>Room hours vs available</em>
+          </article>
+        </div>
+        <div class="overviewTrend">
+          <div class="overviewTrendHead">
+            <span class="overviewTrendTitle">Visits per day</span>
+            <button class="linklike" type="button" data-goto-tab="trends">Open Trends &rarr;</button>
+          </div>
+          <div id="overviewTrend" class="muted overviewTrendBody">Refresh stats to load trend.</div>
+        </div>
+        <details class="disclosure moreMetrics">
+          <summary><span class="disclosureChevron" aria-hidden="true"></span>Show all metrics</summary>
+          <div class="disclosureBody">
+            <div class="statsGrid secondaryMetrics">
+              <article class="metricCard">
+                <strong>Median room time</strong>
+                <span id="medianRoomTime">00:00:00</span>
+                <em>Typical visit duration</em>
+              </article>
+              <article class="metricCard">
+                <strong>P90 room time</strong>
+                <span id="p90RoomTime">00:00:00</span>
+                <em>Upper-end visit duration</em>
+              </article>
+              <article class="metricCard">
+                <strong>Visits / room / day</strong>
+                <span id="visitsPerRoomDay">0</span>
+                <em>Load per active room</em>
+              </article>
+              <article class="metricCard">
+                <strong>Target pace</strong>
+                <span id="targetCapacityPace">0%</span>
+                <em>Visits vs assumed capacity</em>
+              </article>
+              <article class="metricCard">
+                <strong>Rooms used</strong>
+                <span id="uniqueRoomsCount">0</span>
+                <em>Distinct rooms in range</em>
+              </article>
+              <article class="metricCard">
+                <strong>Room hours</strong>
+                <span id="roomHoursTotal">0.0</span>
+                <em>Total appointment hours</em>
+              </article>
+              <article class="metricCard">
+                <strong>Cleanings</strong>
+                <span id="cleanCount">0</span>
+                <em>Closed cleaning sessions</em>
+              </article>
+              <article class="metricCard">
+                <strong>Avg clean time</strong>
+                <span id="avgCleanTime">00:00:00</span>
+                <em>Average turnaround</em>
+              </article>
+              <article class="metricCard">
+                <strong>Clean coverage</strong>
+                <span id="cleaningCoverage">0%</span>
+                <em>Cleanings logged per visit</em>
+              </article>
+              <article class="metricCard">
+                <strong>Cleaning hours</strong>
+                <span id="cleaningHoursTotal">0.0</span>
+                <em>Total turnaround time</em>
+              </article>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <section class="panel card">
+        <div class="toolbar">
+          <div>
+            <p class="eyebrow">Signals</p>
+            <h2 class="sectionTitle">What to notice</h2>
+            <p class="sectionSubtitle">Plain-language flags for utilization, turnover, and capacity in the selected range.</p>
+          </div>
+        </div>
+        <div class="insightList" id="opsInsightList">
+          <div class="emptyState">Refresh stats to load operational signals.</div>
+        </div>
+        <details class="disclosure opDetail">
+          <summary><span class="disclosureChevron" aria-hidden="true"></span>Operational detail &mdash; utilization, peak hours, room flow</summary>
+          <div class="disclosureBody">
+            <div class="opsDashboard">
+              <div class="opsStack">
+                <div class="inset">
+                  <h3 class="sectionTitle" style="margin-bottom:12px;">Room utilization</h3>
+                  <div class="barList" id="roomUtilizationBoard">
+                    <div class="emptyState">Refresh stats to load room utilization.</div>
+                  </div>
+                </div>
+                <div class="inset">
+                  <h3 class="sectionTitle" style="margin-bottom:12px;">Peak start hours</h3>
+                  <div class="barList" id="hourlyFlowChart">
+                    <div class="emptyState">Refresh stats to load hourly demand.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="opsStack">
+                <div class="inset">
+                  <h3 class="sectionTitle" style="margin-bottom:12px;">Room flow detail</h3>
+                  <div class="tableWrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Room</th>
+                          <th class="numeric">Util</th>
+                          <th class="numeric">Visits</th>
+                          <th class="numeric">Avg room</th>
+                          <th class="numeric">Avg clean</th>
+                          <th class="numeric">Clean cov</th>
+                          <th class="numeric">Long rate</th>
+                        </tr>
+                      </thead>
+                      <tbody id="roomFlowBody">
+                        <tr><td colspan="7" class="muted">Refresh stats to load room flow detail.</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </section>
+    <div class="tabPanel" data-tab-panel="trends" role="tabpanel">
+		    <section class="panel card">
+	      <div class="toolbar">
+	        <div>
+	          <p class="eyebrow">Trend</p>
+	          <h2 class="sectionTitle" id="trendTitle">Appointment trend by selected period</h2>
+	          <p class="sectionSubtitle">Choose the graph shape, provider scope, and day filters for the selected date range.</p>
+	        </div>
+	      </div>
+	      <div class="controls trendControls">
+	        <div class="field">
+	          <label for="statsGroupBy">Group by</label>
+	          <select id="statsGroupBy">
+	            <option value="day">Day</option>
+	            <option value="week">Week</option>
+	            <option value="month">Month</option>
+	          </select>
+	        </div>
+	        <div class="field">
+	          <label for="statsGraphMode">Graph dataset</label>
+	          <select id="statsGraphMode">
+	            <option value="appointments">Appointments</option>
+	            <option value="cleaning">Cleaning</option>
+	          </select>
+	        </div>
+	        <div class="field">
+	          <label for="statsTrendMetric">Trend metric</label>
+	          <select id="statsTrendMetric">
+	            <option value="avg_duration">Average duration</option>
+	            <option value="median_duration">Median duration</option>
+	            <option value="count">Session count</option>
+	            <option value="total_hours">Total hours</option>
+	          </select>
+	        </div>
+	        <div class="field">
+	          <label for="statsDoctorFilter">Doctor</label>
+	          <select id="statsDoctorFilter">
+	            <option value="">All doctors</option>
+	          </select>
+	        </div>
+	        <div class="field fieldWide">
+	          <label>Trend days</label>
+	          <div class="trendDayControl">
+	            <div class="pillRow trendDayPresets" id="trendDayPresets">
+	              <button class="pillBtn active" type="button" data-days="all">All days</button>
+	              <button class="pillBtn" type="button" data-days="weekdays">Weekdays</button>
+	              <button class="pillBtn" type="button" data-days="weekend">Weekend</button>
+	            </div>
+	            <details class="disclosure dayCustomize"><summary><span class="disclosureChevron" aria-hidden="true"></span>Customize days</summary><div class="disclosureBody"><div class="weekdayGrid" id="trendDayFilters" role="group" aria-label="Trend days">
+	              <button class="dayToggle active" type="button" data-weekday="0" aria-pressed="true">Sun</button>
+	              <button class="dayToggle active" type="button" data-weekday="1" aria-pressed="true">Mon</button>
+	              <button class="dayToggle active" type="button" data-weekday="2" aria-pressed="true">Tue</button>
+	              <button class="dayToggle active" type="button" data-weekday="3" aria-pressed="true">Wed</button>
+	              <button class="dayToggle active" type="button" data-weekday="4" aria-pressed="true">Thu</button>
+	              <button class="dayToggle active" type="button" data-weekday="5" aria-pressed="true">Fri</button>
+	              <button class="dayToggle active" type="button" data-weekday="6" aria-pressed="true">Sat</button>
+	            </div></div></details>
+	          </div>
+	        </div>
+	      </div>
+	      <div class="chartPanel" style="margin-top:14px;">
+        <div class="chartWrap">
+          <div id="trendChart" class="muted">Refresh stats to load chart.</div>
+          <div id="trendTooltip" class="chartTooltip"></div>
+          <div class="chartLegend" id="trendLegend">
+            <span class="legendKey"><span class="legendSwatch" style="background:var(--accent-2); color:var(--accent-2);"></span>Appointments</span>
+          </div>
+        </div>
+        <div class="highlights" id="statsHighlights">
+          <div class="highlightItem"><strong>Highlights</strong><span>Refresh stats to load summary.</span></div>
+        </div>
+	      </div>
+	    </section>
+    </div>
+
+    <div class="tabPanel" data-tab-panel="breakdowns" role="tabpanel">
+	    <section class="panel card">
+      <div class="toolbar">
+        <div>
+          <p class="eyebrow">Breakdowns</p>
+          <h2 class="sectionTitle">Doctor and room performance</h2>
+          <p class="sectionSubtitle" id="analysisStatus">Refresh stats to load detailed operational tables.</p>
+        </div>
+      </div>
+      <div class="split">
+        <div class="inset">
+          <h3 class="sectionTitle" style="margin-bottom:12px;">Doctor view</h3>
+          <div class="tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Doctor</th>
+                  <th class="numeric">Visits</th>
+                  <th class="numeric">Avg</th>
+                  <th class="numeric">Median</th>
+                  <th class="numeric">Hours</th>
+                  <th class="numeric">Share</th>
+                </tr>
+              </thead>
+              <tbody id="doctorBreakdownBody">
+                <tr><td colspan="6" class="muted">Refresh stats to load doctor breakdown.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="inset">
+          <h3 class="sectionTitle" style="margin-bottom:12px;">Room view</h3>
+          <div class="tableWrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Room</th>
+                  <th class="numeric">Visits</th>
+                  <th class="numeric">Avg</th>
+                  <th class="numeric">Cleanings</th>
+                  <th class="numeric">Hours</th>
+                  <th class="numeric">Last used</th>
+                </tr>
+              </thead>
+              <tbody id="roomBreakdownBody">
+                <tr><td colspan="6" class="muted">Refresh stats to load room breakdown.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+	      </div>
+	    </section>
+    </div>
+
+    <div class="tabPanel" data-tab-panel="logs" role="tabpanel">
+	    <section class="panel card">
+      <p class="eyebrow">Logs</p>
+      <h2 class="sectionTitle">Session log tools</h2>
+      <p class="muted">Filter room or cleaning sessions, search by room or doctor, spot outliers faster, export what you are reviewing, and remove incorrect entries.</p>
+      <div class="controls" style="margin-top:14px;">
+        <div class="field">
+          <label for="roomLogsType">Log type</label>
+          <select id="roomLogsType">
+            <option value="room">Room sessions</option>
+            <option value="cleaning">Cleaning sessions</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="roomLogsStart">Start date</label>
+          <input id="roomLogsStart" type="date"/>
+        </div>
+        <div class="field">
+          <label for="roomLogsEnd">End date</label>
+          <input id="roomLogsEnd" type="date"/>
+        </div>
+        <div class="field">
+          <label for="roomLogsLimit">Max rows</label>
+          <input id="roomLogsLimit" type="number" min="25" max="500" step="25"/>
+        </div>
+        <div class="field">
+          <label for="roomLogsSearch">Search</label>
+          <input id="roomLogsSearch" type="search" placeholder="Room, doctor, or date"/>
+        </div>
+        <div class="field">
+          <label for="roomLogsSort">Sort by</label>
+          <select id="roomLogsSort">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="longest">Longest duration</option>
+            <option value="shortest">Shortest duration</option>
+            <option value="room_az">Room A-Z</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="roomLogsOutliers">Show</label>
+          <select id="roomLogsOutliers">
+            <option value="all">All sessions</option>
+            <option value="outliers">All outliers</option>
+            <option value="short">Short outliers</option>
+            <option value="long">Long outliers</option>
+          </select>
+        </div>
+      </div>
+      <div class="actions" style="margin-top:14px;">
+        <button class="ghost" id="selectAllLogsBtn" type="button">Select all shown</button>
+        <button class="danger" id="deleteSelectedLogsBtn" type="button">Delete selected</button>
+        <button class="secondary" id="exportVisibleLogsBtn" type="button">Export visible logs</button>
+        <button class="primary" id="refreshRoomLogsBtn" type="button">Refresh logs</button>
+      </div>
+      <div class="summaryStrip" id="roomLogsSummary">
+        <span class="summaryPill">No logs loaded yet.</span>
+      </div>
+      <div class="miniStatus" id="roomLogsStatus" style="margin-top:12px;">No logs loaded yet.</div>
+    </section>
+
+	    <section class="panel card">
+      <div class="toolbar">
+        <div>
+          <p class="eyebrow">History</p>
+          <h2 class="sectionTitle">Logged sessions</h2>
+        </div>
+      </div>
+      <div class="logList" id="roomLogsList">
+        <div class="emptyState">Load logs to view room or cleaning session history.</div>
+	      </div>
+	    </section>
+    </div>
+	  </div>
+</div>
+
+<script>
+window.__SUPABASE_URL__ = window.__SUPABASE_URL__ || "https://bqqjtgbfvtscwhbhscps.supabase.co";
+window.__SUPABASE_PUBLISHABLE_KEY__ = window.__SUPABASE_PUBLISHABLE_KEY__ || "sb_publishable_NqK4gR7x45P1rjA-6DJngg_QmOiWXMi";
+window.__SUPABASE_ANON_KEY__ = window.__SUPABASE_ANON_KEY__ || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxcWp0Z2JmdnRzY3doYmhzY3BzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NTIxNDEsImV4cCI6MjA5MDMyODE0MX0.hi_ruvxOBNbUIdQ-BYhjhuy6KM5oigqib-zIWL8dsts";
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  (function(){
+    function $(id){ return document.getElementById(id); }
+    function $all(selector){ return Array.prototype.slice.call(document.querySelectorAll(selector)); }
+
+    var SUPABASE_URL = window.__SUPABASE_URL__ || "";
+    var SUPABASE_PUBLIC_KEY = window.__SUPABASE_PUBLISHABLE_KEY__ || window.__SUPABASE_ANON_KEY__ || "";
+    var STORAGE_KEY = "vetBoardAnalyticsPrefsV2";
+    var supabase = null;
+    var lastRows = null;
+    var rawLogRows = [];
+    var currentLogRows = [];
+    var selectedLogIds = {};
+    var statsRequestToken = 0;
+    var logsRequestToken = 0;
+    var STATS_PAGE_SIZE = 1000;
+    var ALL_TREND_DAYS = [0, 1, 2, 3, 4, 5, 6];
+    var WEEKDAY_TREND_DAYS = [1, 2, 3, 4, 5];
+    var WEEKEND_TREND_DAYS = [0, 6];
+    var TREND_DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+    function setStatus(msg){
+      $("statusLine").textContent = msg || "";
+    }
+
+    function setRoomLogsStatus(msg){
+      $("roomLogsStatus").textContent = msg || "";
+    }
+
+    function getSelectedLogIds(){
+      return Object.keys(selectedLogIds).filter(function(id){ return !!selectedLogIds[id]; });
+    }
+
+    function updateLogSelectionUI(){
+      var selectedCount = getSelectedLogIds().length;
+      var deleteBtn = $("deleteSelectedLogsBtn");
+      if(deleteBtn){
+        deleteBtn.disabled = !selectedCount;
+        deleteBtn.textContent = selectedCount ? ("Delete selected (" + selectedCount + ")") : "Delete selected";
+      }
+    }
+
+    function escapeHtml(str){
+      str = String(str == null ? "" : str);
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function getErrorMessage(err){
+      if(!err) return "Unknown error";
+      if(typeof err === "string") return err;
+      var parts = [];
+      if(err.code) parts.push("code " + err.code);
+      if(err.message) parts.push(err.message);
+      if(err.details) parts.push(err.details);
+      if(err.hint) parts.push("Hint: " + err.hint);
+      return parts.length ? parts.join(" | ") : String(err);
+    }
+
+    function looksLikeFetchFailure(err){
+      var msg = getErrorMessage(err).toLowerCase();
+      return msg.indexOf("failed to fetch") >= 0
+        || msg.indexOf("networkerror") >= 0
+        || msg.indexOf("load failed") >= 0
+        || msg.indexOf("timed out") >= 0;
+    }
+
+    async function withTimeout(promise, ms, label){
+      var timeoutMs = Math.max(1, Number(ms || 1));
+      var timer = null;
+      try{
+        return await Promise.race([
+          promise,
+          new Promise(function(_, reject){
+            timer = setTimeout(function(){
+              reject(new Error((label || "Request") + " timed out after " + timeoutMs + "ms"));
+            }, timeoutMs);
+          })
+        ]);
+      } finally {
+        if(timer) clearTimeout(timer);
+      }
+    }
+
+    async function parseJsonSafe(response){
+      try{
+        return await response.json();
+      } catch(e){
+        return null;
+      }
+    }
+
+    async function probeSupabaseAuthHealth(){
+      try{
+        var response = await withTimeout(fetch(
+          SUPABASE_URL.replace(/\/+$/, "") + "/auth/v1/health",
+          {
+            method: "GET",
+            headers: {
+              "apikey": SUPABASE_PUBLIC_KEY
+            }
+          }
+        ), 6000, "Supabase auth health");
+        return !!response;
+      } catch(e){
+        return false;
+      }
+    }
+
+    async function signInWithPasswordRobust(email, password){
+      try{
+        var primaryRes = await withTimeout(
+          supabase.auth.signInWithPassword({ email: email, password: password }),
+          12000,
+          "Login"
+        );
+        if(primaryRes && primaryRes.error && looksLikeFetchFailure(primaryRes.error)){
+          throw primaryRes.error;
+        }
+        return primaryRes;
+      } catch(primaryError){
+        if(!looksLikeFetchFailure(primaryError)) throw primaryError;
+
+        if(!await probeSupabaseAuthHealth()){
+          throw new Error("This browser cannot reach Supabase Auth from this hosted page. Check the Tiiny URL, browser extensions, network blocking, or Supabase allowed origins.");
+        }
+
+        setStatus("Primary login failed. Trying direct auth…");
+
+        var response = await withTimeout(fetch(
+          SUPABASE_URL.replace(/\/+$/, "") + "/auth/v1/token?grant_type=password",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "apikey": SUPABASE_PUBLIC_KEY
+            },
+            body: JSON.stringify({
+              email: email,
+              password: password
+            })
+          }
+        ), 12000, "Direct login");
+
+        var payload = await parseJsonSafe(response);
+        if(!response.ok){
+          throw new Error(
+            (payload && (payload.msg || payload.error_description || payload.error)) ||
+            ("Direct login failed with status " + response.status)
+          );
+        }
+        if(!payload || !payload.access_token || !payload.refresh_token){
+          throw new Error("Direct login returned an incomplete session.");
+        }
+
+        var sessionRes = await withTimeout(
+          supabase.auth.setSession({
+            access_token: payload.access_token,
+            refresh_token: payload.refresh_token
+          }),
+          10000,
+          "Store login session"
+        );
+        if(sessionRes.error) throw sessionRes.error;
+        return sessionRes;
+      }
+    }
+
+    function msToHMS(ms){
+      ms = Number(ms || 0);
+      if(!isFinite(ms) || ms < 0) ms = 0;
+      var total = Math.floor(ms / 1000);
+      var h = Math.floor(total / 3600);
+      var m = Math.floor((total % 3600) / 60);
+      var s = total % 60;
+      function pad(n){ n = String(n); return n.length < 2 ? ("0" + n) : n; }
+      return pad(h) + ":" + pad(m) + ":" + pad(s);
+    }
+
+    function median(arr){
+      if(!arr || !arr.length) return 0;
+      var copy = arr.slice().sort(function(a, b){ return a - b; });
+      var mid = Math.floor(copy.length / 2);
+      if(copy.length % 2) return copy[mid];
+      return (copy[mid - 1] + copy[mid]) / 2;
+    }
+
+    function percentile(arr, p){
+      if(!arr || !arr.length) return 0;
+      var copy = arr.slice().sort(function(a, b){ return a - b; });
+      if(copy.length === 1) return copy[0];
+      var idx = (copy.length - 1) * p;
+      var lo = Math.floor(idx);
+      var hi = Math.ceil(idx);
+      if(lo === hi) return copy[lo];
+      return copy[lo] + (copy[hi] - copy[lo]) * (idx - lo);
+    }
+
+    function csvEscape(v){
+      v = (v == null) ? "" : String(v);
+      if(/[",\n]/.test(v)) return '"' + v.replace(/"/g, '""') + '"';
+      return v;
+    }
+
+    function formatDateTime(iso){
+      if(!iso) return "—";
+      var d = new Date(iso);
+      if(isNaN(d.getTime())) return String(iso);
+      return d.toLocaleString([], {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    }
+
+    function formatDateOnly(iso){
+      if(!iso) return "—";
+      var d = new Date(iso);
+      if(isNaN(d.getTime())) return String(iso);
+      return d.toLocaleDateString([], {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+      });
+    }
+
+    function formatCount(value){
+      value = Number(value || 0);
+      if(!isFinite(value)) value = 0;
+      var rounded = Math.round(value * 10) / 10;
+      return Math.abs(rounded - Math.round(rounded)) < 0.001 ? String(Math.round(rounded)) : rounded.toFixed(1);
+    }
+
+    function formatPercent(value){
+      value = Number(value || 0);
+      if(!isFinite(value)) value = 0;
+      return formatCount(value) + "%";
+    }
+
+    function formatMinutes(value){
+      value = Number(value || 0);
+      if(!isFinite(value) || value < 0) value = 0;
+      return formatCount(value) + " min";
+    }
+
+    function formatDurationCompact(ms){
+      ms = Number(ms || 0);
+      if(!isFinite(ms) || ms < 0) ms = 0;
+      var minutes = Math.round(ms / 60000);
+      if(minutes < 60) return minutes + " min";
+      var hours = Math.floor(minutes / 60);
+      var remainder = minutes % 60;
+      return hours + "h" + (remainder ? " " + remainder + "m" : "");
+    }
+
+    function clamp(value, min, max){
+      value = Number(value || 0);
+      if(!isFinite(value)) value = min;
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function parsePositiveNumberInput(id, fallback, min, max){
+      var el = $(id);
+      var raw = el ? Number(el.value) : NaN;
+      var value = isFinite(raw) && raw > 0 ? raw : fallback;
+      if(el && (!isFinite(raw) || raw <= 0)) el.value = String(fallback);
+      return clamp(value, min, max);
+    }
+
+    function getOperationalSettings(){
+      return {
+        clinicHoursPerDay: parsePositiveNumberInput("statsClinicHours", 10, 1, 24),
+        targetRoomMinutes: parsePositiveNumberInput("statsTargetRoomMinutes", 45, 1, 480),
+        targetCleanMinutes: parsePositiveNumberInput("statsTargetCleanMinutes", 10, 1, 240)
+      };
+    }
+
+    function formatHourLabel(hour){
+      hour = Number(hour || 0);
+      if(!isFinite(hour) || hour < 0) hour = 0;
+      var suffix = hour >= 12 ? "PM" : "AM";
+      var display = hour % 12;
+      if(display === 0) display = 12;
+      return display + ":00 " + suffix;
+    }
+
+    function toDateInputValue(d){
+      if(!(d instanceof Date) || isNaN(d.getTime())) return "";
+      var y = d.getFullYear();
+      var m = String(d.getMonth() + 1).padStart(2, "0");
+      var day = String(d.getDate()).padStart(2, "0");
+      return y + "-" + m + "-" + day;
+    }
+
+    function parseDateInput(value, fallback){
+      var d = value ? new Date(value + "T00:00:00") : null;
+      if(!d || isNaN(d.getTime())) return fallback ? new Date(fallback.getTime()) : new Date();
+      return d;
+    }
+
+    function parseOptionalMinutesInput(id){
+      var el = $(id);
+      if(!el) return null;
+      var raw = (el.value || "").trim();
+      if(!raw) return null;
+      var value = Number(raw);
+      if(!isFinite(value) || value < 0) return null;
+      return value;
+    }
+
+    function formatThresholdMinutes(value){
+      value = Number(value || 0);
+      var rounded = Math.round(value * 10) / 10;
+      return Math.abs(rounded - Math.round(rounded)) < 0.001 ? String(Math.round(rounded)) : rounded.toFixed(1);
+    }
+
+    function getAverageExclusionRules(){
+      var below = parseOptionalMinutesInput("statsAverageExcludeBelow");
+      var above = parseOptionalMinutesInput("statsAverageExcludeAbove");
+      if(below != null && above != null && below > above){
+        var swap = below;
+        below = above;
+        above = swap;
+        $("statsAverageExcludeBelow").value = formatThresholdMinutes(below);
+        $("statsAverageExcludeAbove").value = formatThresholdMinutes(above);
+      }
+      return {
+        active: below != null || above != null,
+        belowMinutes: below,
+        aboveMinutes: above,
+        belowMs: below == null ? null : below * 60000,
+        aboveMs: above == null ? null : above * 60000
+      };
+    }
+
+    function durationCountsForAverage(durationMs, rules){
+      durationMs = Number(durationMs || 0);
+      if(!isFinite(durationMs) || durationMs < 0) return false;
+      rules = rules || {};
+      if(rules.belowMs != null && durationMs < rules.belowMs) return false;
+      if(rules.aboveMs != null && durationMs > rules.aboveMs) return false;
+      return true;
+    }
+
+    function filterDurationsForAverage(durations, rules){
+      return (durations || []).filter(function(duration){
+        return durationCountsForAverage(duration, rules);
+      });
+    }
+
+    function averageDuration(durations, rules){
+      var included = filterDurationsForAverage(durations, rules);
+      var total = included.reduce(function(sum, value){ return sum + value; }, 0);
+      return included.length ? total / included.length : 0;
+    }
+
+    function countAverageExcluded(durations, rules){
+      if(!rules || !rules.active) return 0;
+      return (durations || []).filter(function(duration){
+        return !durationCountsForAverage(duration, rules);
+      }).length;
+    }
+
+    function filterRowsByDurationRules(rows, rules){
+      if(!rules || !rules.active) return (rows || []).slice();
+      return (rows || []).filter(function(row){
+        return durationCountsForAverage(Number(row.duration_ms || 0), rules);
+      });
+    }
+
+    function summarizeAverageRules(rules){
+      if(!rules || !rules.active) return "No exclusions";
+      var parts = [];
+      if(rules.belowMinutes != null) parts.push("Below " + formatThresholdMinutes(rules.belowMinutes) + " min");
+      if(rules.aboveMinutes != null) parts.push("Above " + formatThresholdMinutes(rules.aboveMinutes) + " min");
+      return parts.join(", ");
+    }
+
+    function readStoredPreferences(){
+      try{
+        var raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch(e){
+        return {};
+      }
+    }
+
+    function savePreferences(){
+      try{
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          statsStart: $("statsStart").value || "",
+          statsEnd: $("statsEnd").value || "",
+          statsGroupBy: $("statsGroupBy").value || "day",
+          statsDoctorFilter: $("statsDoctorFilter").value || "",
+          statsGraphMode: $("statsGraphMode").value || "appointments",
+          statsTrendMetric: $("statsTrendMetric").value || "avg_duration",
+          statsTrendDays: getSelectedTrendDays().join(","),
+          statsAverageExcludeBelow: $("statsAverageExcludeBelow").value || "",
+          statsAverageExcludeAbove: $("statsAverageExcludeAbove").value || "",
+          statsClinicHours: $("statsClinicHours").value || "10",
+          statsTargetRoomMinutes: $("statsTargetRoomMinutes").value || "45",
+          statsTargetCleanMinutes: $("statsTargetCleanMinutes").value || "10",
+          statsPreset: $("statsQuickRanges").dataset.activePreset || "",
+          activeTab: getActiveAnalyticsTab(),
+          roomLogsType: $("roomLogsType").value || "room",
+          roomLogsStart: $("roomLogsStart").value || "",
+          roomLogsEnd: $("roomLogsEnd").value || "",
+          roomLogsLimit: $("roomLogsLimit").value || "100",
+          roomLogsSearch: $("roomLogsSearch").value || "",
+          roomLogsSort: $("roomLogsSort").value || "newest",
+          roomLogsOutliers: $("roomLogsOutliers").value || "all"
+        }));
+      } catch(e){}
+    }
+
+    function updateAuthUI(loggedIn){
+      $("logoutBtn").style.display = loggedIn ? "inline-flex" : "none";
+      $("loginBtn").style.display = loggedIn ? "none" : "inline-flex";
+      $("signupBtn").style.display = loggedIn ? "none" : "inline-flex";
+    }
+
+    function defaultStatsDates(){
+      var end = new Date();
+      var start = new Date(end.getTime() - 6 * 24 * 3600 * 1000);
+      $("statsStart").value = toDateInputValue(start);
+      $("statsEnd").value = toDateInputValue(end);
+    }
+
+    function defaultRoomLogDates(){
+      var end = new Date();
+      var start = new Date(end.getTime() - 29 * 24 * 3600 * 1000);
+      $("roomLogsStart").value = toDateInputValue(start);
+      $("roomLogsEnd").value = toDateInputValue(end);
+      $("roomLogsLimit").value = "100";
+    }
+
+    function restorePreferences(){
+      var prefs = readStoredPreferences();
+      if(prefs.statsStart) $("statsStart").value = prefs.statsStart;
+      if(prefs.statsEnd) $("statsEnd").value = prefs.statsEnd;
+      if(prefs.statsGroupBy) $("statsGroupBy").value = prefs.statsGroupBy;
+      if(prefs.statsGraphMode) $("statsGraphMode").value = prefs.statsGraphMode;
+      if(prefs.statsTrendMetric) $("statsTrendMetric").value = prefs.statsTrendMetric;
+      if(prefs.statsAverageExcludeBelow != null) $("statsAverageExcludeBelow").value = prefs.statsAverageExcludeBelow;
+      if(prefs.statsAverageExcludeAbove != null) $("statsAverageExcludeAbove").value = prefs.statsAverageExcludeAbove;
+      if(prefs.statsClinicHours != null) $("statsClinicHours").value = prefs.statsClinicHours;
+      if(prefs.statsTargetRoomMinutes != null) $("statsTargetRoomMinutes").value = prefs.statsTargetRoomMinutes;
+      if(prefs.statsTargetCleanMinutes != null) $("statsTargetCleanMinutes").value = prefs.statsTargetCleanMinutes;
+      setTrendDaySelection(prefs.statsTrendDays || ALL_TREND_DAYS.join(","), false);
+      $("statsDoctorFilter").dataset.pendingValue = prefs.statsDoctorFilter || "";
+      setActiveAnalyticsTab(prefs.activeTab || "dashboard", false);
+
+      if(prefs.roomLogsType) $("roomLogsType").value = prefs.roomLogsType;
+      if(prefs.roomLogsStart) $("roomLogsStart").value = prefs.roomLogsStart;
+      if(prefs.roomLogsEnd) $("roomLogsEnd").value = prefs.roomLogsEnd;
+      if(prefs.roomLogsLimit) $("roomLogsLimit").value = prefs.roomLogsLimit;
+      if(prefs.roomLogsSearch) $("roomLogsSearch").value = prefs.roomLogsSearch;
+      if(prefs.roomLogsSort) $("roomLogsSort").value = prefs.roomLogsSort;
+      if(prefs.roomLogsOutliers) $("roomLogsOutliers").value = prefs.roomLogsOutliers;
+
+      setActivePreset(prefs.statsPreset || "");
+    }
+
+    function getActiveAnalyticsTab(){
+      var active = document.querySelector(".tabButton.active");
+      return active ? (active.getAttribute("data-tab") || "dashboard") : "dashboard";
+    }
+
+    function setActiveAnalyticsTab(tabName, shouldSave){
+      var validTabs = { dashboard: true, trends: true, breakdowns: true, logs: true };
+      tabName = validTabs[tabName] ? tabName : "dashboard";
+      $all("#analyticsTabs .tabButton").forEach(function(btn){
+        var active = btn.getAttribute("data-tab") === tabName;
+        btn.classList.toggle("active", active);
+        btn.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      $all("[data-tab-panel]").forEach(function(panel){
+        panel.classList.toggle("active", panel.getAttribute("data-tab-panel") === tabName);
+      });
+      if(shouldSave) savePreferences();
+    }
+
+    function setActivePreset(presetKey){
+      var container = $("statsQuickRanges");
+      container.dataset.activePreset = presetKey || "";
+      $all("#statsQuickRanges .pillBtn").forEach(function(btn){
+        btn.classList.toggle("active", btn.getAttribute("data-range") === presetKey);
+      });
+    }
+
+    function applyStatsPreset(presetKey){
+      var today = new Date();
+      var start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      var end = new Date(start.getTime());
+      if(presetKey === "7d"){
+        start = new Date(end.getTime() - 6 * 24 * 3600 * 1000);
+      } else if(presetKey === "30d"){
+        start = new Date(end.getTime() - 29 * 24 * 3600 * 1000);
+      } else if(presetKey === "90d"){
+        start = new Date(end.getTime() - 89 * 24 * 3600 * 1000);
+      } else if(presetKey === "mtd"){
+        start = new Date(today.getFullYear(), today.getMonth(), 1);
+      }
+      $("statsStart").value = toDateInputValue(start);
+      $("statsEnd").value = toDateInputValue(end);
+      setActivePreset(presetKey);
+      savePreferences();
+    }
+
+    function clearActivePreset(){
+      setActivePreset("");
+      savePreferences();
+    }
+
+    function normalizeTrendDays(days){
+      var source = days;
+      if(typeof source === "string"){
+        source = source.split(",");
+      }
+      if(!Array.isArray(source)) source = ALL_TREND_DAYS.slice();
+      var seen = {};
+      var normalized = [];
+      source.forEach(function(day){
+        var value = Number(day);
+        if(Number.isInteger(value) && value >= 0 && value <= 6 && !seen[value]){
+          seen[value] = true;
+          normalized.push(value);
+        }
+      });
+      if(!normalized.length) normalized = ALL_TREND_DAYS.slice();
+      normalized.sort(function(a, b){ return a - b; });
+      return normalized;
+    }
+
+    function trendDaysEqual(a, b){
+      a = normalizeTrendDays(a);
+      b = normalizeTrendDays(b);
+      if(a.length !== b.length) return false;
+      for(var i = 0; i < a.length; i++){
+        if(a[i] !== b[i]) return false;
+      }
+      return true;
+    }
+
+    function getSelectedTrendDays(){
+      var selected = [];
+      $all("#trendDayFilters .dayToggle.active").forEach(function(btn){
+        selected.push(btn.getAttribute("data-weekday"));
+      });
+      return normalizeTrendDays(selected);
+    }
+
+    function getTrendDayPresetKey(days){
+      if(trendDaysEqual(days, ALL_TREND_DAYS)) return "all";
+      if(trendDaysEqual(days, WEEKDAY_TREND_DAYS)) return "weekdays";
+      if(trendDaysEqual(days, WEEKEND_TREND_DAYS)) return "weekend";
+      return "";
+    }
+
+    function updateTrendDayPresetState(days){
+      var presetKey = getTrendDayPresetKey(days);
+      $all("#trendDayPresets .pillBtn").forEach(function(btn){
+        btn.classList.toggle("active", btn.getAttribute("data-days") === presetKey);
+      });
+    }
+
+    function setTrendDaySelection(days, shouldSave){
+      var selected = normalizeTrendDays(days);
+      var selectedMap = {};
+      selected.forEach(function(day){ selectedMap[day] = true; });
+      $all("#trendDayFilters .dayToggle").forEach(function(btn){
+        var day = Number(btn.getAttribute("data-weekday"));
+        var active = !!selectedMap[day];
+        btn.classList.toggle("active", active);
+        btn.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+      updateTrendDayPresetState(selected);
+      if(shouldSave) savePreferences();
+    }
+
+    function applyTrendDayPreset(presetKey){
+      if(presetKey === "weekdays") setTrendDaySelection(WEEKDAY_TREND_DAYS, true);
+      else if(presetKey === "weekend") setTrendDaySelection(WEEKEND_TREND_DAYS, true);
+      else setTrendDaySelection(ALL_TREND_DAYS, true);
+      rerenderStatsIfLoaded();
+    }
+
+    function toggleTrendDay(day){
+      var selected = getSelectedTrendDays();
+      day = Number(day);
+      var next = selected.filter(function(value){ return value !== day; });
+      if(next.length === selected.length) next.push(day);
+      if(!next.length) next = [day];
+      setTrendDaySelection(next, true);
+      rerenderStatsIfLoaded();
+    }
+
+    function getTrendDayLookup(days){
+      var lookup = {};
+      normalizeTrendDays(days).forEach(function(day){ lookup[day] = true; });
+      return lookup;
+    }
+
+    function filterRowsByTrendDays(rows, days){
+      var lookup = getTrendDayLookup(days);
+      return (rows || []).filter(function(row){
+        var d = new Date(row.started_at);
+        return !isNaN(d.getTime()) && !!lookup[d.getDay()];
+      });
+    }
+
+    function summarizeTrendDays(days){
+      days = normalizeTrendDays(days);
+      if(trendDaysEqual(days, ALL_TREND_DAYS)) return "All days";
+      if(trendDaysEqual(days, WEEKDAY_TREND_DAYS)) return "Weekdays";
+      if(trendDaysEqual(days, WEEKEND_TREND_DAYS)) return "Weekend";
+      return days.map(function(day){ return TREND_DAY_LABELS[day]; }).join(", ");
+    }
+
+    function normalizeRangeInput(startId, endId, fallbackDays){
+      var endFallback = new Date();
+      var startFallback = new Date(endFallback.getTime() - fallbackDays * 24 * 3600 * 1000);
+      var start = parseDateInput($(startId).value, startFallback);
+      var end = parseDateInput($(endId).value, endFallback);
+      if(start.getTime() > end.getTime()){
+        var swap = start;
+        start = end;
+        end = swap;
+        $(startId).value = toDateInputValue(start);
+        $(endId).value = toDateInputValue(end);
+      }
+      return { start: start, end: end };
+    }
+
+    function getStatsRange(){
+      var normalized = normalizeRangeInput("statsStart", "statsEnd", 6);
+      return {
+        start: normalized.start,
+        end: normalized.end,
+        startIso: normalized.start.toISOString(),
+        endIso: new Date(normalized.end.getTime() + 24 * 3600 * 1000).toISOString()
+      };
+    }
+
+    function getRoomLogsRange(){
+      var normalized = normalizeRangeInput("roomLogsStart", "roomLogsEnd", 29);
+      return {
+        start: normalized.start,
+        endExclusive: new Date(normalized.end.getTime() + 24 * 3600 * 1000),
+        limit: Math.max(25, Math.min(500, Number($("roomLogsLimit").value || 100)))
+      };
+    }
+
+    function getSelectedLogType(){
+      return $("roomLogsType").value === "cleaning" ? "cleaning" : "room";
+    }
+
+    function getLogTypeConfig(){
+      if(getSelectedLogType() === "cleaning"){
+        return {
+          type: "cleaning",
+          table: "cleaning_sessions",
+          selectColumns: "id, room_name, duration_ms, started_at, ended_at",
+          labelPlural: "cleaning session(s)",
+          labelSingular: "cleaning session",
+          emptyMessage: "No closed cleaning sessions found for this range."
+        };
+      }
+      return {
+        type: "room",
+        table: "room_sessions",
+        selectColumns: "id, room_name, doctor_name, duration_ms, started_at, ended_at",
+        labelPlural: "room session(s)",
+        labelSingular: "room session",
+        emptyMessage: "No closed room sessions found for this range."
+      };
+    }
+
+    async function hasAuthenticatedSession(){
+      if(!supabase) return false;
+      var sess = await supabase.auth.getSession();
+      return !!(sess && sess.data && sess.data.session);
+    }
+
+    async function requireAuthenticatedSession(forLogs){
+      if(!supabase){
+        setStatus("Supabase not ready.");
+        if(forLogs) setRoomLogsStatus("Supabase not ready.");
+        return false;
+      }
+      if(await hasAuthenticatedSession()) return true;
+      setStatus("Login required to load analytics.");
+      if(forLogs) setRoomLogsStatus("Login required to load logs.");
+      return false;
+    }
+
+    function getSelectedGroupBy(){
+      return $("statsGroupBy").value || "day";
+    }
+
+    function getSelectedDoctor(){
+      return ($("statsDoctorFilter").value || "").trim();
+    }
+
+    function getSelectedGraphMode(){
+      return ($("statsGraphMode").value || "appointments").trim();
+    }
+
+    function getSelectedTrendMetric(){
+      return ($("statsTrendMetric").value || "avg_duration").trim();
+    }
+
+    function getSeriesColor(index){
+      var palette = ["#38bdf8", "#5eead4", "#fbbf24", "#fb7185", "#a78bfa", "#34d399", "#f97316", "#60a5fa"];
+      return palette[index % palette.length];
+    }
+
+    function populateDoctorFilter(roomRows){
+      var select = $("statsDoctorFilter");
+      if(!select) return;
+      var current = (select.dataset.pendingValue || getSelectedDoctor() || "").trim();
+      var doctors = {};
+      for(var i = 0; i < (roomRows || []).length; i++){
+        var name = (roomRows[i].doctor_name || "").trim();
+        if(name) doctors[name] = true;
+      }
+      var names = Object.keys(doctors).sort(function(a, b){ return a.localeCompare(b); });
+      select.innerHTML = '<option value="">All doctors</option><option value="__comparison__">Comparison</option>';
+      for(var j = 0; j < names.length; j++){
+        var option = document.createElement("option");
+        option.value = names[j];
+        option.textContent = names[j];
+        select.appendChild(option);
+      }
+      if(current === "__comparison__") select.value = current;
+      else if(current && doctors[current]) select.value = current;
+      else select.value = "";
+      delete select.dataset.pendingValue;
+    }
+
+    function updateTrendMeta(graphMode, metricMode){
+      var doctorField = $("statsDoctorFilter");
+      var title = $("trendTitle");
+      var datasetLabel = graphMode === "cleaning" ? "Cleaning" : "Appointment";
+      var metricLabel = "average duration";
+      if(metricMode === "median_duration") metricLabel = "median duration";
+      else if(metricMode === "count") metricLabel = "session count";
+      else if(metricMode === "total_hours") metricLabel = "total hours";
+
+      if(title){
+        title.textContent = datasetLabel + " trend by selected period (" + metricLabel + ")";
+      }
+      if(doctorField){
+        doctorField.disabled = (graphMode === "cleaning");
+      }
+    }
+
+    function getRangeDayCount(days){
+      var range = getStatsRange();
+      var endExclusive = new Date(range.end.getTime() + 24 * 3600 * 1000);
+      var hasDayFilter = Array.isArray(days) || typeof days === "string";
+      var lookup = hasDayFilter ? getTrendDayLookup(days) : null;
+      var count = 0;
+      var cursor = new Date(range.start.getTime());
+      while(cursor.getTime() < endExclusive.getTime()){
+        if(!lookup || lookup[cursor.getDay()]) count++;
+        cursor = new Date(cursor.getTime() + 24 * 3600 * 1000);
+      }
+      return hasDayFilter ? count : Math.max(1, count);
+    }
+
+    function getWeekNumber(date){
+      var d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      var dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    }
+
+    function getLocalPeriodKey(date, groupBy){
+      var d = new Date(date);
+      if(isNaN(d.getTime())) return "";
+      if(groupBy === "month"){
+        return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+      }
+      if(groupBy === "week"){
+        var weekStart = new Date(d);
+        var day = weekStart.getDay();
+        var diff = day === 0 ? -6 : (1 - day);
+        weekStart.setDate(weekStart.getDate() + diff);
+        return weekStart.getFullYear() + "-W" + String(getWeekNumber(weekStart)).padStart(2, "0");
+      }
+      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    }
+
+    function labelPeriodKey(key, groupBy){
+      if(!key) return "Unknown";
+      if(groupBy === "month"){
+        var parts = key.split("-");
+        var d = new Date(Number(parts[0]), Number(parts[1]) - 1, 1);
+        return d.toLocaleDateString([], { month: "short", year: "numeric" });
+      }
+      if(groupBy === "week"){
+        var m = key.match(/^(\d{4})-W(\d{2})$/);
+        return m ? ("Week " + m[2] + ", " + m[1]) : key;
+      }
+      var dayDate = new Date(key + "T00:00:00");
+      return isNaN(dayDate.getTime()) ? key : dayDate.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
+    }
+
+    function getAllPeriodKeys(groupBy, days){
+      var range = getStatsRange();
+      var keys = {};
+      var cursor = new Date(range.start.getTime());
+      var endExclusive = new Date(range.end.getTime() + 24 * 3600 * 1000);
+      var lookup = getTrendDayLookup(days || ALL_TREND_DAYS);
+      while(cursor.getTime() < endExclusive.getTime()){
+        if(lookup[cursor.getDay()]){
+          keys[getLocalPeriodKey(cursor, groupBy)] = true;
+        }
+        cursor = new Date(cursor.getTime() + 24 * 3600 * 1000);
+      }
+      return Object.keys(keys).sort();
+    }
+
+    function createBucket(){
+      return { count: 0, total: 0, durations: [], averageCount: 0, averageTotal: 0 };
+    }
+
+    function accumulateBuckets(rows, groupBy, averageRules){
+      var map = {};
+      for(var i = 0; i < rows.length; i++){
+        var key = getLocalPeriodKey(rows[i].started_at, groupBy);
+        if(!key) continue;
+        if(!map[key]) map[key] = createBucket();
+        var duration = Number(rows[i].duration_ms || 0);
+        if(isFinite(duration) && duration >= 0){
+          map[key].count++;
+          map[key].total += duration;
+          map[key].durations.push(duration);
+          if(durationCountsForAverage(duration, averageRules)){
+            map[key].averageCount++;
+            map[key].averageTotal += duration;
+          }
+        }
+      }
+      return map;
+    }
+
+    function getAverageDurationFromBucket(bucket){
+      if(!bucket || !bucket.averageCount) return 0;
+      return (bucket.averageTotal || 0) / bucket.averageCount;
+    }
+
+    function getMetricValueFromBucket(bucket, metricMode){
+      if(!bucket) return 0;
+      if(metricMode === "count") return bucket.count || 0;
+      if(metricMode === "total_hours") return (bucket.total || 0) / 3600000;
+      if(metricMode === "median_duration") return bucket.count ? median(bucket.durations || []) : 0;
+      return getAverageDurationFromBucket(bucket);
+    }
+
+    function formatMetricValue(value, metricMode){
+      if(metricMode === "count") return formatCount(value);
+      if(metricMode === "total_hours") return formatCount(value) + " hrs";
+      return msToHMS(value);
+    }
+
+    function buildSeriesFromBucketMap(bucketMap, orderedKeys, groupBy, metricMode, name, color){
+      orderedKeys = orderedKeys || Object.keys(bucketMap || {}).sort();
+      return {
+        name: name,
+        color: color,
+        points: orderedKeys.map(function(key){
+          var bucket = bucketMap[key] || createBucket();
+          return {
+            label: labelPeriodKey(key, groupBy),
+            metricValue: getMetricValueFromBucket(bucket, metricMode),
+            count: bucket.count || 0,
+            avgDurationMs: getAverageDurationFromBucket(bucket),
+            medianDurationMs: bucket.count ? median(bucket.durations || []) : 0,
+            totalDurationMs: bucket.total || 0
+          };
+        })
+      };
+    }
+
+    function renderTrendChart(seriesList, options){
+      var el = $("trendChart");
+      var legend = $("trendLegend");
+      var tooltip = $("trendTooltip");
+      options = options || {};
+      var emptyMessage = options.emptyMessage || "No session data available for this range.";
+      var valueFormatter = options.valueFormatter || function(value){ return String(value); };
+      var tooltipLabel = options.tooltipLabel || "Metric";
+      var metricMode = options.metricMode || "";
+
+      if(!seriesList || !seriesList.length || !seriesList.some(function(series){
+        return (series.points || []).some(function(point){ return Number(point.metricValue || 0) > 0; });
+      })){
+        el.innerHTML = '<div class="emptyState">' + escapeHtml(emptyMessage) + '</div>';
+        if(legend) legend.innerHTML = "";
+        if(tooltip){
+          tooltip.className = "chartTooltip";
+          tooltip.textContent = "";
+        }
+        return;
+      }
+
+      var width = 920;
+      var height = 320;
+      var padLeft = 66;
+      var padRight = 28;
+      var padTop = 26;
+      var padBottom = 62;
+      var chartHeight = height - padTop - padBottom;
+      var innerWidth = width - padLeft - padRight;
+      var maxRawValue = 1;
+      var labelCount = 0;
+      var isDurationMetric = metricMode === "avg_duration" || metricMode === "median_duration";
+      var tickCount = isDurationMetric ? 3 : 4;
+
+      seriesList.forEach(function(series){
+        var points = series.points || [];
+        labelCount = Math.max(labelCount, points.length);
+        points.forEach(function(point){
+          maxRawValue = Math.max(maxRawValue, Number(point.metricValue || 0));
+        });
+      });
+
+      function niceLinearMax(value){
+        value = Number(value || 1);
+        if(value <= 1) return 1;
+        var power = Math.pow(10, Math.floor(Math.log10(value)));
+        var fraction = value / power;
+        var niceFraction = fraction <= 1 ? 1 : (fraction <= 2 ? 2 : (fraction <= 5 ? 5 : 10));
+        return niceFraction * power;
+      }
+
+      function niceChartMax(value){
+        value = Math.max(1, Number(value || 1));
+        if(isDurationMetric){
+          var minute = 60000;
+          var step = value <= 30 * minute ? 5 * minute : (value <= 2 * 3600000 ? 15 * minute : 30 * minute);
+          var durationTickSpan = step * tickCount;
+          return Math.max(durationTickSpan, Math.ceil(value / durationTickSpan) * durationTickSpan);
+        }
+        if(metricMode === "count"){
+          var countMax = niceLinearMax(value);
+          return Math.max(tickCount, Math.ceil(countMax / tickCount) * tickCount);
+        }
+        if(metricMode === "total_hours") return Math.max(1, niceLinearMax(value));
+        return niceLinearMax(value);
+      }
+
+      var maxValue = niceChartMax(maxRawValue * 1.08);
+
+      function yFor(value){
+        return padTop + (chartHeight - ((value / maxValue) * chartHeight));
+      }
+
+      function xFor(points, idx){
+        return points.length === 1 ? (padLeft + innerWidth / 2) : (padLeft + (innerWidth * idx / Math.max(1, points.length - 1)));
+      }
+
+      var labels = "";
+      var dots = "";
+      var paths = "";
+      var areas = "";
+      var defs = "";
+      var labelSource = (seriesList[0] && seriesList[0].points) ? seriesList[0].points : [];
+      var labelEvery = Math.max(1, Math.ceil(labelSource.length / 8));
+      var baselineY = padTop + chartHeight;
+
+      seriesList.forEach(function(series, seriesIndex){
+        var points = series.points || [];
+        var linePath = "";
+        var areaPath = "";
+        points.forEach(function(point, idx){
+          var x = xFor(points, idx);
+          var y = yFor(Number(point.metricValue || 0));
+          linePath += (idx ? " L " : "M ") + x + " " + y;
+          if(!idx) areaPath = "M " + x + " " + baselineY + " L " + x + " " + y;
+          else areaPath += " L " + x + " " + y;
+          dots += '<circle class="chartPoint" data-series="' + escapeHtml(series.name || "") + '" data-label="' + escapeHtml(point.label || "") + '" data-metric="' + escapeHtml(valueFormatter(point.metricValue || 0)) + '" data-count="' + escapeHtml(String(point.count || 0)) + '" data-average="' + escapeHtml(msToHMS(point.avgDurationMs || 0)) + '" data-median="' + escapeHtml(msToHMS(point.medianDurationMs || 0)) + '" data-total="' + escapeHtml(formatCount((point.totalDurationMs || 0) / 3600000) + " hrs") + '" cx="' + x + '" cy="' + y + '" r="4.8" fill="' + escapeHtml(series.color) + '" stroke="#07111f" stroke-width="2.2" style="cursor:pointer"></circle>';
+        });
+        var gradientId = "trendGradient" + seriesIndex;
+        defs += '<linearGradient id="' + gradientId + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + escapeHtml(series.color) + '" stop-opacity=".26"></stop><stop offset="100%" stop-color="' + escapeHtml(series.color) + '" stop-opacity="0"></stop></linearGradient>';
+        if(points.length > 1){
+          var lastX = xFor(points, points.length - 1);
+          areaPath += " L " + lastX + " " + baselineY + " Z";
+          areas += '<path d="' + areaPath + '" fill="url(#' + gradientId + ')"></path>';
+        }
+        paths += '<path class="chartPath" d="' + linePath + '" fill="none" stroke="' + escapeHtml(series.color) + '" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path>';
+      });
+
+      labelSource.forEach(function(point, idx){
+        if(idx !== 0 && idx !== labelSource.length - 1 && idx % labelEvery !== 0) return;
+        var x = xFor(labelSource, idx);
+        var labelY = height - 22;
+        var anchor = labelSource.length > 8 ? "end" : "middle";
+        var transform = labelSource.length > 8 ? (' transform="rotate(-26 ' + x + ' ' + labelY + ')"') : "";
+        labels += '<text class="chartAxisText" x="' + x + '" y="' + labelY + '" text-anchor="' + anchor + '"' + transform + '>' + escapeHtml(point.label || "") + '</text>';
+      });
+
+      var grid = "";
+      for(var g = 0; g <= tickCount; g++){
+        var value = maxValue * (1 - (g / tickCount));
+        var y = padTop + (chartHeight * g / tickCount);
+        grid += '<line class="chartGridLine" x1="' + padLeft + '" y1="' + y + '" x2="' + (width - padRight) + '" y2="' + y + '"></line>';
+        grid += '<text class="chartAxisText" x="' + (padLeft - 12) + '" y="' + (y + 4) + '" text-anchor="end">' + escapeHtml(valueFormatter(value)) + '</text>';
+      }
+      grid += '<line class="chartAxisLine" x1="' + padLeft + '" y1="' + baselineY + '" x2="' + (width - padRight) + '" y2="' + baselineY + '"></line>';
+      grid += '<line class="chartAxisLine" x1="' + padLeft + '" y1="' + padTop + '" x2="' + padLeft + '" y2="' + baselineY + '"></line>';
+
+      el.innerHTML =
+        '<svg viewBox="0 0 ' + width + ' ' + height + '" width="100%" height="320" role="img" aria-label="Trend chart">'
+        + '<defs>' + defs + '</defs>'
+        + grid
+        + areas
+        + paths
+        + dots
+        + labels
+        + '</svg>';
+
+      if(legend){
+        legend.innerHTML = seriesList.map(function(series){
+          return '<span class="legendKey"><span class="legendSwatch" style="background:' + escapeHtml(series.color) + '; color:' + escapeHtml(series.color) + ';"></span>' + escapeHtml(series.name) + '</span>';
+        }).join("");
+      }
+
+      var wrap = el.parentNode;
+      var pointEls = el.querySelectorAll(".chartPoint");
+      Array.prototype.forEach.call(pointEls, function(point){
+        point.addEventListener("mousemove", function(evt){
+          if(!tooltip || !wrap) return;
+          var wrapRect = wrap.getBoundingClientRect();
+          tooltip.innerHTML =
+            '<strong style="display:block; margin-bottom:4px;">' + escapeHtml(point.getAttribute("data-series") || "") + '</strong>'
+            + '<div style="margin-bottom:4px;">' + escapeHtml(point.getAttribute("data-label") || "") + '</div>'
+            + '<div>' + escapeHtml(tooltipLabel) + ': ' + escapeHtml(point.getAttribute("data-metric") || "0") + '</div>'
+            + '<div>Count: ' + escapeHtml(point.getAttribute("data-count") || "0") + '</div>'
+            + '<div>Avg: ' + escapeHtml(point.getAttribute("data-average") || "00:00:00") + '</div>'
+            + '<div>Median: ' + escapeHtml(point.getAttribute("data-median") || "00:00:00") + '</div>'
+            + '<div>Total: ' + escapeHtml(point.getAttribute("data-total") || "0 hrs") + '</div>';
+          var left = evt.clientX - wrapRect.left + 14;
+          var top = evt.clientY - wrapRect.top - 22;
+          var tooltipWidth = tooltip.offsetWidth || 210;
+          var tooltipHeight = tooltip.offsetHeight || 130;
+          left = Math.max(8, Math.min(left, wrapRect.width - tooltipWidth - 8));
+          top = Math.max(8, Math.min(top, wrapRect.height - tooltipHeight - 8));
+          tooltip.style.left = left + "px";
+          tooltip.style.top = top + "px";
+          tooltip.className = "chartTooltip show";
+        });
+        point.addEventListener("mouseleave", function(){
+          if(!tooltip) return;
+          tooltip.className = "chartTooltip";
+        });
+      });
+    }
+
+    function renderBreakdownTables(roomRows, cleaningRows, filteredRoomRows, selectedDoctor, isComparison, averageRules){
+      var doctorBody = $("doctorBreakdownBody");
+      var roomBody = $("roomBreakdownBody");
+      var analysisStatus = $("analysisStatus");
+      var doctorSource = isComparison ? roomRows : filteredRoomRows;
+      var doctorMap = {};
+      var roomMap = {};
+      var totalVisits = doctorSource.length;
+
+      doctorSource.forEach(function(row){
+        var doctor = (row.doctor_name || "Unassigned").trim() || "Unassigned";
+        if(!doctorMap[doctor]){
+          doctorMap[doctor] = { count: 0, total: 0, durations: [], averageCount: 0, averageTotal: 0 };
+        }
+        var duration = Number(row.duration_ms || 0);
+        if(isFinite(duration) && duration >= 0){
+          doctorMap[doctor].count++;
+          doctorMap[doctor].total += duration;
+          doctorMap[doctor].durations.push(duration);
+          if(durationCountsForAverage(duration, averageRules)){
+            doctorMap[doctor].averageCount++;
+            doctorMap[doctor].averageTotal += duration;
+          }
+        }
+      });
+
+      filteredRoomRows.forEach(function(row){
+        var room = (row.room_name || "(unnamed room)").trim() || "(unnamed room)";
+        if(!roomMap[room]){
+          roomMap[room] = { visits: 0, total: 0, cleanings: 0, lastUsed: "", averageCount: 0, averageTotal: 0 };
+        }
+        var duration = Number(row.duration_ms || 0);
+        if(isFinite(duration) && duration >= 0){
+          roomMap[room].visits++;
+          roomMap[room].total += duration;
+          if(durationCountsForAverage(duration, averageRules)){
+            roomMap[room].averageCount++;
+            roomMap[room].averageTotal += duration;
+          }
+        }
+        if(row.started_at && (!roomMap[room].lastUsed || new Date(row.started_at).getTime() > new Date(roomMap[room].lastUsed).getTime())){
+          roomMap[room].lastUsed = row.started_at;
+        }
+      });
+
+      cleaningRows.forEach(function(row){
+        var room = (row.room_name || "(unnamed room)").trim() || "(unnamed room)";
+        if(!roomMap[room]){
+          roomMap[room] = { visits: 0, total: 0, cleanings: 0, lastUsed: "", averageCount: 0, averageTotal: 0 };
+        }
+        roomMap[room].cleanings++;
+        if(row.started_at && (!roomMap[room].lastUsed || new Date(row.started_at).getTime() > new Date(roomMap[room].lastUsed).getTime())){
+          roomMap[room].lastUsed = row.started_at;
+        }
+      });
+
+      var doctorRows = Object.keys(doctorMap).sort(function(a, b){
+        return doctorMap[b].count - doctorMap[a].count || a.localeCompare(b);
+      });
+      if(!doctorRows.length){
+        doctorBody.innerHTML = '<tr><td colspan="6" class="muted">No doctor data available for the current filters.</td></tr>';
+      } else {
+        doctorBody.innerHTML = doctorRows.map(function(name){
+          var item = doctorMap[name];
+          var avg = item.averageCount ? item.averageTotal / item.averageCount : 0;
+          var med = item.count ? median(item.durations) : 0;
+          var share = totalVisits ? (item.count / totalVisits) * 100 : 0;
+          return '<tr>'
+            + '<td data-label="Doctor">' + escapeHtml(name) + '</td>'
+            + '<td class="numeric" data-label="Visits">' + escapeHtml(String(item.count)) + '</td>'
+            + '<td class="numeric" data-label="Avg">' + escapeHtml(msToHMS(avg)) + '</td>'
+            + '<td class="numeric" data-label="Median">' + escapeHtml(msToHMS(med)) + '</td>'
+            + '<td class="numeric" data-label="Hours">' + escapeHtml(formatCount(item.total / 3600000)) + '</td>'
+            + '<td class="numeric" data-label="Share">' + escapeHtml(formatPercent(share)) + '</td>'
+            + '</tr>';
+        }).join("");
+      }
+
+      var roomRowsSorted = Object.keys(roomMap).sort(function(a, b){
+        return roomMap[b].visits - roomMap[a].visits || a.localeCompare(b);
+      });
+      if(!roomRowsSorted.length){
+        roomBody.innerHTML = '<tr><td colspan="6" class="muted">No room data available for the current filters.</td></tr>';
+      } else {
+        roomBody.innerHTML = roomRowsSorted.map(function(name){
+          var item = roomMap[name];
+          var avg = item.averageCount ? item.averageTotal / item.averageCount : 0;
+          return '<tr>'
+            + '<td data-label="Room">' + escapeHtml(name) + '</td>'
+            + '<td class="numeric" data-label="Visits">' + escapeHtml(String(item.visits)) + '</td>'
+            + '<td class="numeric" data-label="Avg">' + escapeHtml(msToHMS(avg)) + '</td>'
+            + '<td class="numeric" data-label="Cleanings">' + escapeHtml(String(item.cleanings)) + '</td>'
+            + '<td class="numeric" data-label="Hours">' + escapeHtml(formatCount(item.total / 3600000)) + '</td>'
+            + '<td class="numeric" data-label="Last used">' + escapeHtml(formatDateOnly(item.lastUsed)) + '</td>'
+            + '</tr>';
+        }).join("");
+      }
+
+      analysisStatus.textContent = selectedDoctor && !isComparison
+        ? ('Showing operational detail for "' + selectedDoctor + '".')
+        : (isComparison ? "Showing side-by-side doctor comparison across the selected range." : "Showing all doctors and rooms for the selected range.");
+    }
+
+    function getUtilizationClass(value){
+      value = Number(value || 0);
+      if(value >= 85) return "warn";
+      if(value >= 55) return "success";
+      return "";
+    }
+
+    function buildRoomOperationalRows(roomRows, cleaningRows, averageRules, settings, rangeDays){
+      var map = {};
+      rangeDays = Math.max(1, Number(rangeDays || 1));
+      settings = settings || getOperationalSettings();
+      var roomCapacityHours = Math.max(0.1, rangeDays * settings.clinicHoursPerDay);
+      var targetRoomMs = settings.targetRoomMinutes * 60000;
+
+      function ensureRoom(name){
+        name = (name || "(unnamed room)").trim() || "(unnamed room)";
+        if(!map[name]){
+          map[name] = {
+            room: name,
+            visits: 0,
+            roomTotal: 0,
+            roomDurations: [],
+            averageCount: 0,
+            averageTotal: 0,
+            cleanings: 0,
+            cleanTotal: 0,
+            cleanDurations: [],
+            longVisits: 0,
+            lastUsed: ""
+          };
+        }
+        return map[name];
+      }
+
+      (roomRows || []).forEach(function(row){
+        var item = ensureRoom(row.room_name);
+        var duration = Number(row.duration_ms || 0);
+        if(isFinite(duration) && duration >= 0){
+          item.visits++;
+          item.roomTotal += duration;
+          item.roomDurations.push(duration);
+          if(durationCountsForAverage(duration, averageRules)){
+            item.averageCount++;
+            item.averageTotal += duration;
+          }
+          if(duration > targetRoomMs) item.longVisits++;
+        }
+        if(row.started_at && (!item.lastUsed || new Date(row.started_at).getTime() > new Date(item.lastUsed).getTime())){
+          item.lastUsed = row.started_at;
+        }
+      });
+
+      (cleaningRows || []).forEach(function(row){
+        var item = ensureRoom(row.room_name);
+        var duration = Number(row.duration_ms || 0);
+        item.cleanings++;
+        if(isFinite(duration) && duration >= 0){
+          item.cleanTotal += duration;
+          item.cleanDurations.push(duration);
+        }
+        if(row.started_at && (!item.lastUsed || new Date(row.started_at).getTime() > new Date(item.lastUsed).getTime())){
+          item.lastUsed = row.started_at;
+        }
+      });
+
+      return Object.keys(map).map(function(name){
+        var item = map[name];
+        var avgRoom = item.averageCount ? item.averageTotal / item.averageCount : 0;
+        var avgClean = item.cleanDurations.length ? (item.cleanTotal / item.cleanDurations.length) : 0;
+        return {
+          room: item.room,
+          visits: item.visits,
+          cleanings: item.cleanings,
+          roomHours: item.roomTotal / 3600000,
+          utilization: (item.roomTotal / 3600000) / roomCapacityHours * 100,
+          avgRoom: avgRoom,
+          medianRoom: item.roomDurations.length ? median(item.roomDurations) : 0,
+          p90Room: item.roomDurations.length ? percentile(item.roomDurations, 0.9) : 0,
+          avgClean: avgClean,
+          cleanCoverage: item.visits ? (item.cleanings / item.visits) * 100 : 0,
+          longRate: item.visits ? (item.longVisits / item.visits) * 100 : 0,
+          lastUsed: item.lastUsed
+        };
+      }).sort(function(a, b){
+        return b.utilization - a.utilization || b.visits - a.visits || a.room.localeCompare(b.room);
+      });
+    }
+
+    function renderBarList(id, rows, emptyMessage){
+      var el = $(id);
+      if(!el) return;
+      rows = rows || [];
+      if(!rows.length){
+        el.innerHTML = '<div class="emptyState">' + escapeHtml(emptyMessage || "No data available for this range.") + '</div>';
+        return;
+      }
+      el.innerHTML = rows.map(function(row){
+        var fillClass = row.fillClass ? (" " + row.fillClass) : "";
+        var width = clamp(row.percent || 0, 0, 100);
+        return '<div class="barRow">'
+          + '<div class="barMeta"><strong>' + escapeHtml(row.label || "") + '</strong><span>' + escapeHtml(row.value || "") + '</span></div>'
+          + '<div class="barTrack"><span class="barFill' + fillClass + '" style="width:' + escapeHtml(String(width)) + '%"></span></div>'
+          + '<div class="barMeta"><span>' + escapeHtml(row.note || "") + '</span><span>' + escapeHtml(row.detail || "") + '</span></div>'
+          + '</div>';
+      }).join("");
+    }
+
+    function renderInsightList(insights){
+      var el = $("opsInsightList");
+      if(!el) return;
+      insights = insights || [];
+      if(!insights.length){
+        el.innerHTML = '<div class="emptyState">No operational signals available for this range.</div>';
+        return;
+      }
+      el.innerHTML = insights.map(function(item){
+        return '<div class="insightItem ' + escapeHtml(item.severity || "") + '">'
+          + '<strong>' + escapeHtml(item.title || "") + '</strong>'
+          + '<span>' + escapeHtml(item.detail || "") + '</span>'
+          + '</div>';
+      }).join("");
+    }
+
+    function renderHourlyDemand(roomRows){
+      var byHour = {};
+      (roomRows || []).forEach(function(row){
+        var started = new Date(row.started_at);
+        if(isNaN(started.getTime())) return;
+        var hour = started.getHours();
+        byHour[hour] = (byHour[hour] || 0) + 1;
+      });
+      var hours = Object.keys(byHour).map(Number).sort(function(a, b){ return a - b; });
+      var maxCount = hours.reduce(function(max, hour){ return Math.max(max, byHour[hour] || 0); }, 0);
+      renderBarList("hourlyFlowChart", hours.map(function(hour){
+        var count = byHour[hour] || 0;
+        return {
+          label: formatHourLabel(hour),
+          value: count + " starts",
+          percent: maxCount ? (count / maxCount) * 100 : 0,
+          fillClass: count === maxCount ? "warn" : "",
+          note: "Patient-room starts",
+          detail: maxCount ? formatPercent((count / maxCount) * 100) + " of peak" : ""
+        };
+      }), "No hourly demand available for this range.");
+    }
+
+    function renderRoomFlowTable(roomRows){
+      var body = $("roomFlowBody");
+      if(!body) return;
+      if(!roomRows.length){
+        body.innerHTML = '<tr><td colspan="7" class="muted">No room flow data available for the current filters.</td></tr>';
+        return;
+      }
+      body.innerHTML = roomRows.slice(0, 14).map(function(row){
+        return '<tr>'
+          + '<td data-label="Room">' + escapeHtml(row.room) + '</td>'
+          + '<td class="numeric" data-label="Util">' + escapeHtml(formatPercent(row.utilization)) + '</td>'
+          + '<td class="numeric" data-label="Visits">' + escapeHtml(String(row.visits)) + '</td>'
+          + '<td class="numeric" data-label="Avg room">' + escapeHtml(formatDurationCompact(row.avgRoom)) + '</td>'
+          + '<td class="numeric" data-label="Avg clean">' + escapeHtml(row.cleanings ? formatDurationCompact(row.avgClean) : "—") + '</td>'
+          + '<td class="numeric" data-label="Clean cov">' + escapeHtml(formatPercent(row.cleanCoverage)) + '</td>'
+          + '<td class="numeric" data-label="Long rate">' + escapeHtml(formatPercent(row.longRate)) + '</td>'
+          + '</tr>';
+      }).join("");
+    }
+
+    function renderOperationsDashboard(roomRows, cleaningRows, averageRules, summary){
+      roomRows = roomRows || [];
+      cleaningRows = cleaningRows || [];
+      summary = summary || {};
+      var settings = getOperationalSettings();
+      var rangeDays = Math.max(1, getRangeDayCount());
+      var activeRooms = Math.max(0, Number(summary.activeRooms || 0));
+      var visits = roomRows.length;
+      var roomHours = Number(summary.roomHours || 0);
+      var cleaningHours = Number(summary.cleaningHours || 0);
+      var availableRoomHours = activeRooms * rangeDays * settings.clinicHoursPerDay;
+      var utilizationRate = availableRoomHours ? (roomHours / availableRoomHours) * 100 : 0;
+      var throughputPerDay = visits / rangeDays;
+      var visitsPerRoomDay = activeRooms ? visits / (activeRooms * rangeDays) : 0;
+      var cleaningCoverage = visits ? (cleaningRows.length / visits) * 100 : 0;
+      var targetCycleMinutes = settings.targetRoomMinutes + settings.targetCleanMinutes;
+      var targetCapacity = targetCycleMinutes > 0 ? (availableRoomHours * 60) / targetCycleMinutes : 0;
+      var capacityPace = targetCapacity ? (visits / targetCapacity) * 100 : 0;
+
+      $("throughputPerDay").textContent = formatCount(throughputPerDay);
+      $("visitsPerRoomDay").textContent = formatCount(visitsPerRoomDay);
+      $("utilizationRate").textContent = formatPercent(utilizationRate);
+      $("cleaningCoverage").textContent = formatPercent(cleaningCoverage);
+      $("cleaningHoursTotal").textContent = formatCount(cleaningHours);
+      $("targetCapacityPace").textContent = formatPercent(capacityPace);
+
+      var roomOperationalRows = buildRoomOperationalRows(roomRows, cleaningRows, averageRules, settings, rangeDays);
+      renderBarList("roomUtilizationBoard", roomOperationalRows.slice(0, 12).map(function(row){
+        return {
+          label: row.room,
+          value: formatPercent(row.utilization),
+          percent: row.utilization,
+          fillClass: getUtilizationClass(row.utilization),
+          note: row.visits + " visits, " + formatCount(row.roomHours) + " hrs",
+          detail: row.cleanings + " cleanings"
+        };
+      }), "No room utilization available for this range.");
+      renderHourlyDemand(roomRows);
+      renderRoomFlowTable(roomOperationalRows);
+
+      var insights = [];
+      function addInsight(severity, title, detail){
+        insights.push({ severity: severity, title: title, detail: detail });
+      }
+
+      if(!visits){
+        addInsight("", "No appointment sessions in range", "Adjust the date range or confirm the board has closed room sessions.");
+      } else {
+        if(utilizationRate >= 90){
+          addInsight("danger", "Rooms are running hot", "Utilization is " + formatPercent(utilizationRate) + " against " + formatCount(settings.clinicHoursPerDay) + " clinic hours/day.");
+        } else if(utilizationRate >= 75){
+          addInsight("warn", "Room utilization is high", "Utilization is " + formatPercent(utilizationRate) + "; watch late-day backups and cleaning handoffs.");
+        } else if(utilizationRate < 35){
+          addInsight("", "Capacity available", "Utilization is " + formatPercent(utilizationRate) + ", leaving room to consolidate schedules or absorb add-ons.");
+        } else {
+          addInsight("success", "Room utilization looks balanced", "Utilization is " + formatPercent(utilizationRate) + " for the selected range.");
+        }
+
+        if(cleaningCoverage < 75){
+          addInsight("warn", "Cleaning documentation gap", "Only " + formatPercent(cleaningCoverage) + " as many cleanings as visits were logged.");
+        } else {
+          addInsight("success", "Cleaning coverage is trackable", "Cleaning logs cover " + formatPercent(cleaningCoverage) + " of visit volume.");
+        }
+
+        if(summary.cleanAvgMs > settings.targetCleanMinutes * 60000 * 1.3){
+          addInsight("warn", "Turnaround is above target", "Average cleaning time is " + formatDurationCompact(summary.cleanAvgMs) + " vs a " + formatMinutes(settings.targetCleanMinutes) + " target.");
+        }
+
+        if(summary.roomP90Ms > settings.targetRoomMinutes * 60000 * 1.6){
+          addInsight("warn", "Long-room tail is elevated", "P90 room time is " + formatDurationCompact(summary.roomP90Ms) + " vs a " + formatMinutes(settings.targetRoomMinutes) + " target.");
+        }
+
+        if(summary.outlierRate > 10){
+          addInsight("warn", "Session outliers need review", formatPercent(summary.outlierRate) + " of room sessions are unusually short or long.");
+        }
+
+        if(capacityPace > 105){
+          addInsight("danger", "Above assumed capacity", "Visit volume is " + formatPercent(capacityPace) + " of target capacity; assumptions may need adjustment.");
+        } else if(capacityPace >= 80){
+          addInsight("warn", "Near target capacity", "Visit volume is " + formatPercent(capacityPace) + " of target capacity.");
+        } else if(targetCapacity){
+          addInsight("success", "Target capacity has headroom", "About " + formatCount(Math.max(0, targetCapacity - visits)) + " visits remain under current assumptions.");
+        }
+      }
+
+      renderInsightList(insights.slice(0, 7));
+    }
+
+    function renderStats(roomRows, cleaningRows){
+      roomRows = roomRows || [];
+      cleaningRows = cleaningRows || [];
+      populateDoctorFilter(roomRows);
+
+      var graphMode = getSelectedGraphMode();
+      var metricMode = getSelectedTrendMetric();
+      updateTrendMeta(graphMode, metricMode);
+      var averageRules = getAverageExclusionRules();
+
+      var selectedDoctor = getSelectedDoctor();
+      var isComparison = (selectedDoctor === "__comparison__");
+      var filteredRoomRows = roomRows.filter(function(row){
+        var doctorName = (row.doctor_name || "").trim();
+        return !selectedDoctor || isComparison || doctorName === selectedDoctor;
+      });
+      var statsRoomRows = filterRowsByDurationRules(filteredRoomRows, averageRules);
+      var statsAllRoomRows = filterRowsByDurationRules(roomRows, averageRules);
+      var statsCleaningRows = filterRowsByDurationRules(cleaningRows, averageRules);
+
+      var rawTrendRoomDur = filteredRoomRows.map(function(r){ return Number(r.duration_ms || 0); }).filter(function(v){ return isFinite(v) && v >= 0; });
+      var roomDur = statsRoomRows.map(function(r){ return Number(r.duration_ms || 0); }).filter(function(v){ return isFinite(v) && v >= 0; });
+      var dashboardRoomDur = statsAllRoomRows.map(function(r){ return Number(r.duration_ms || 0); }).filter(function(v){ return isFinite(v) && v >= 0; });
+      var roomAverageExcluded = countAverageExcluded(rawTrendRoomDur, averageRules);
+      var dashboardRoomTotal = dashboardRoomDur.reduce(function(sum, v){ return sum + v; }, 0);
+      var dashboardRoomAvg = averageDuration(dashboardRoomDur, averageRules);
+      var dashboardRoomMed = dashboardRoomDur.length ? median(dashboardRoomDur) : 0;
+      var dashboardRoomP90 = dashboardRoomDur.length ? percentile(dashboardRoomDur, 0.9) : 0;
+
+      var rawCleanDur = cleaningRows.map(function(r){ return Number(r.duration_ms || 0); }).filter(function(v){ return isFinite(v) && v >= 0; });
+      var cleanDur = statsCleaningRows.map(function(r){ return Number(r.duration_ms || 0); }).filter(function(v){ return isFinite(v) && v >= 0; });
+      var cleanTotal = cleanDur.reduce(function(sum, v){ return sum + v; }, 0);
+      var cleanAvg = averageDuration(cleanDur, averageRules);
+      var cleanAverageExcluded = countAverageExcluded(rawCleanDur, averageRules);
+
+      var uniqueRooms = {};
+      var dashboardUniqueRooms = {};
+      var byHour = {};
+      var byWeekday = {};
+      var byDoctorCounts = {};
+      var weekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      var shortOutliers = 0;
+      var longOutliers = 0;
+      var dashboardShortOutliers = 0;
+      var dashboardLongOutliers = 0;
+
+      statsAllRoomRows.forEach(function(row){
+        var roomNameSeen = (row.room_name || "").trim();
+        var durationMs = Number(row.duration_ms || 0);
+        if(roomNameSeen) dashboardUniqueRooms[roomNameSeen] = true;
+        if(isFinite(durationMs) && durationMs >= 0){
+          if(durationMs > 0 && durationMs < 5 * 60000) dashboardShortOutliers++;
+          else if(durationMs > 180 * 60000) dashboardLongOutliers++;
+        }
+      });
+
+      statsRoomRows.forEach(function(row){
+        var roomNameSeen = (row.room_name || "").trim();
+        var doctorNameSeen = (row.doctor_name || "Unassigned").trim() || "Unassigned";
+        var durationMs = Number(row.duration_ms || 0);
+        if(roomNameSeen) uniqueRooms[roomNameSeen] = true;
+        byDoctorCounts[doctorNameSeen] = (byDoctorCounts[doctorNameSeen] || 0) + 1;
+        if(isFinite(durationMs) && durationMs >= 0){
+          if(durationMs > 0 && durationMs < 5 * 60000) shortOutliers++;
+          else if(durationMs > 180 * 60000) longOutliers++;
+        }
+        var started = new Date(row.started_at);
+        if(!isNaN(started.getTime())){
+          var hour = started.getHours();
+          byHour[hour] = (byHour[hour] || 0) + 1;
+          var weekday = weekdayNames[started.getDay()];
+          byWeekday[weekday] = (byWeekday[weekday] || 0) + 1;
+        }
+      });
+
+      var staffedRooms = Object.keys(uniqueRooms).length;
+      var dashboardStaffedRooms = Object.keys(dashboardUniqueRooms).length;
+      var peakHour = null;
+      var peakHourCount = -1;
+      Object.keys(byHour).forEach(function(hourKey){
+        if(byHour[hourKey] > peakHourCount){
+          peakHourCount = byHour[hourKey];
+          peakHour = Number(hourKey);
+        }
+      });
+
+      var busiestWeekday = "";
+      var busiestWeekdayCount = -1;
+      Object.keys(byWeekday).forEach(function(dayKey){
+        if(byWeekday[dayKey] > busiestWeekdayCount){
+          busiestWeekdayCount = byWeekday[dayKey];
+          busiestWeekday = dayKey;
+        }
+      });
+
+      var topDoctor = "";
+      var topDoctorCount = -1;
+      Object.keys(byDoctorCounts).forEach(function(name){
+        if(byDoctorCounts[name] > topDoctorCount){
+          topDoctorCount = byDoctorCounts[name];
+          topDoctor = name;
+        }
+      });
+
+      $("visitCount").textContent = String(statsAllRoomRows.length);
+      $("avgRoomTime").textContent = msToHMS(dashboardRoomAvg);
+      $("medianRoomTime").textContent = msToHMS(dashboardRoomMed);
+      $("p90RoomTime").textContent = msToHMS(dashboardRoomP90);
+      $("cleanCount").textContent = String(statsCleaningRows.length);
+      $("avgCleanTime").textContent = msToHMS(cleanAvg);
+      $("roomHoursTotal").textContent = formatCount(dashboardRoomTotal / 3600000);
+      $("uniqueRoomsCount").textContent = String(dashboardStaffedRooms);
+
+      var groupBy = getSelectedGroupBy();
+      var selectedTrendDays = getSelectedTrendDays();
+      var orderedKeys = getAllPeriodKeys(groupBy, selectedTrendDays);
+      var trendRoomRows = filterRowsByTrendDays(statsRoomRows, selectedTrendDays);
+      var trendAllRoomRows = filterRowsByTrendDays(statsAllRoomRows, selectedTrendDays);
+      var trendCleaningRows = filterRowsByTrendDays(statsCleaningRows, selectedTrendDays);
+      var seriesList = [];
+
+      if(graphMode === "cleaning"){
+        seriesList.push(buildSeriesFromBucketMap(
+          accumulateBuckets(trendCleaningRows, groupBy, averageRules),
+          orderedKeys,
+          groupBy,
+          metricMode,
+          "Cleaning",
+          "#5eead4"
+        ));
+      } else if(isComparison){
+        var byDoctorSeries = {};
+        trendAllRoomRows.forEach(function(row){
+          var doctorName = (row.doctor_name || "").trim();
+          if(!doctorName) return;
+          if(!byDoctorSeries[doctorName]) byDoctorSeries[doctorName] = [];
+          byDoctorSeries[doctorName].push(row);
+        });
+        Object.keys(byDoctorSeries).sort(function(a, b){ return a.localeCompare(b); }).forEach(function(name, idx){
+          seriesList.push(buildSeriesFromBucketMap(
+            accumulateBuckets(byDoctorSeries[name], groupBy, averageRules),
+            orderedKeys,
+            groupBy,
+            metricMode,
+            name,
+            getSeriesColor(idx)
+          ));
+        });
+      } else {
+        seriesList.push(buildSeriesFromBucketMap(
+          accumulateBuckets(trendRoomRows, groupBy, averageRules),
+          orderedKeys,
+          groupBy,
+          metricMode,
+          selectedDoctor || "All doctors",
+          "#38bdf8"
+        ));
+      }
+
+      renderTrendChart(seriesList, {
+        metricMode: metricMode,
+        tooltipLabel: (metricMode === "count")
+          ? "Sessions"
+          : (metricMode === "total_hours" ? "Total hours" : (metricMode === "median_duration" ? "Median duration" : "Average duration")),
+        valueFormatter: function(value){ return formatMetricValue(value, metricMode); },
+        emptyMessage: averageRules.active
+          ? "No session durations match the duration exclusion settings for this graph."
+          : (graphMode === "cleaning"
+            ? "No cleaning data available for this range."
+            : (isComparison ? "No appointment data available to compare for this range." : "No appointment data available for this range."))
+      });
+
+      var outlierCount = shortOutliers + longOutliers;
+      var outlierRate = statsRoomRows.length ? ((outlierCount / statsRoomRows.length) * 100) : 0;
+      var dashboardOutlierCount = dashboardShortOutliers + dashboardLongOutliers;
+      var dashboardOutlierRate = statsAllRoomRows.length ? ((dashboardOutlierCount / statsAllRoomRows.length) * 100) : 0;
+      renderOperationsDashboard(statsAllRoomRows, statsCleaningRows, averageRules, {
+        activeRooms: dashboardStaffedRooms,
+        roomHours: dashboardRoomTotal / 3600000,
+        cleaningHours: cleanTotal / 3600000,
+        cleanAvgMs: cleanAvg,
+        roomP90Ms: dashboardRoomP90,
+        outlierRate: dashboardOutlierRate
+      });
+
+      $("statsHighlights").innerHTML =
+        '<div class="highlightItem"><strong>Busiest weekday</strong><span>' + escapeHtml(busiestWeekday || "—") + (busiestWeekdayCount > -1 ? (' (' + busiestWeekdayCount + ')') : "") + '</span></div>' +
+        '<div class="highlightItem"><strong>Peak start hour</strong><span>' + escapeHtml(peakHour == null ? "—" : formatHourLabel(peakHour)) + (peakHourCount > -1 ? (' (' + peakHourCount + ')') : "") + '</span></div>' +
+        '<div class="highlightItem"><strong>Top doctor</strong><span>' + escapeHtml(topDoctor || "—") + (topDoctorCount > -1 ? (' (' + topDoctorCount + ' visits)') : "") + '</span></div>' +
+        '<div class="highlightItem"><strong>Outlier rate</strong><span>' + escapeHtml(formatPercent(outlierRate)) + '</span></div>' +
+        '<div class="highlightItem"><strong>Duration rule</strong><span>' + escapeHtml(summarizeAverageRules(averageRules)) + '</span></div>' +
+        '<div class="highlightItem"><strong>Excluded</strong><span>' + escapeHtml(String(roomAverageExcluded)) + ' room, ' + escapeHtml(String(cleanAverageExcluded)) + ' cleaning</span></div>' +
+        '<div class="highlightItem"><strong>Graph view</strong><span>' + escapeHtml(graphMode === "cleaning" ? "Cleaning" : (isComparison ? "Doctor comparison" : (selectedDoctor || "All doctors"))) + '</span></div>' +
+        '<div class="highlightItem"><strong>Trend days</strong><span>' + escapeHtml(summarizeTrendDays(selectedTrendDays)) + '</span></div>' +
+        '<div class="highlightItem"><strong>Range coverage</strong><span>' + escapeHtml(String(getRangeDayCount())) + ' day(s), ' + escapeHtml(String(getRangeDayCount(selectedTrendDays))) + ' graphed</span></div>';
+
+      renderBreakdownTables(statsAllRoomRows, statsCleaningRows, statsRoomRows, selectedDoctor, isComparison, averageRules);
+    }
+
+    async function fetchStatsRows(tableName, selectColumns, range){
+      var rows = [];
+      var offset = 0;
+      while(true){
+        var res = await supabase
+          .from(tableName)
+          .select(selectColumns)
+          .gte("started_at", range.startIso)
+          .lt("started_at", range.endIso)
+          .not("ended_at", "is", null)
+          .order("started_at", { ascending: true })
+          .range(offset, offset + STATS_PAGE_SIZE - 1);
+        if(res.error) throw res.error;
+        var page = res.data || [];
+        rows = rows.concat(page);
+        if(page.length < STATS_PAGE_SIZE) break;
+        offset += STATS_PAGE_SIZE;
+      }
+      return rows;
+    }
+
+    async function refreshStats(){
+      if(!await requireAuthenticatedSession(false)) return;
+      var token = ++statsRequestToken;
+      setStatus("Loading stats…");
+      $("refreshStatsBtn").disabled = true;
+      var range = getStatsRange();
+      try{
+        var results = await Promise.all([
+          fetchStatsRows("room_sessions", "room_name, doctor_name, duration_ms, started_at, ended_at", range),
+          fetchStatsRows("cleaning_sessions", "room_name, duration_ms, started_at, ended_at", range)
+        ]);
+        if(token !== statsRequestToken) return;
+
+        lastRows = {
+          room: results[0] || [],
+          cleaning: results[1] || []
+        };
+        renderStats(lastRows.room, lastRows.cleaning);
+        setStatus("Stats updated. Loaded " + lastRows.room.length + " visits and " + lastRows.cleaning.length + " cleanings.");
+      } catch(e){
+        console.error(e);
+        setStatus("Failed to load stats: " + getErrorMessage(e));
+      } finally {
+        $("refreshStatsBtn").disabled = false;
+      }
+    }
+
+    function isShortOutlier(durationMs){
+      return durationMs > 0 && durationMs < 5 * 60000;
+    }
+
+    function isLongOutlier(durationMs){
+      return durationMs > 180 * 60000;
+    }
+
+    function getLogSearchTerm(){
+      return ($("roomLogsSearch").value || "").trim().toLowerCase();
+    }
+
+    function getLogSortMode(){
+      return ($("roomLogsSort").value || "newest").trim();
+    }
+
+    function getLogOutlierMode(){
+      return ($("roomLogsOutliers").value || "all").trim();
+    }
+
+    function applyLogFilters(rows){
+      var search = getLogSearchTerm();
+      var sortMode = getLogSortMode();
+      var outlierMode = getLogOutlierMode();
+      var filtered = (rows || []).filter(function(row){
+        var durationMs = Number(row.duration_ms || 0);
+        var shortOutlier = isShortOutlier(durationMs);
+        var longOutlier = isLongOutlier(durationMs);
+        if(outlierMode === "short" && !shortOutlier) return false;
+        if(outlierMode === "long" && !longOutlier) return false;
+        if(outlierMode === "outliers" && !(shortOutlier || longOutlier)) return false;
+        if(!search) return true;
+        var haystack = [
+          row.room_name || "",
+          row.doctor_name || "",
+          row.started_at || "",
+          row.ended_at || "",
+          formatDateTime(row.started_at),
+          formatDateTime(row.ended_at)
+        ].join(" ").toLowerCase();
+        return haystack.indexOf(search) !== -1;
+      });
+
+      filtered.sort(function(a, b){
+        var aStart = new Date(a.started_at || 0).getTime();
+        var bStart = new Date(b.started_at || 0).getTime();
+        var aDuration = Number(a.duration_ms || 0);
+        var bDuration = Number(b.duration_ms || 0);
+        if(sortMode === "oldest") return aStart - bStart;
+        if(sortMode === "longest") return bDuration - aDuration || bStart - aStart;
+        if(sortMode === "shortest") return aDuration - bDuration || bStart - aStart;
+        if(sortMode === "room_az") return String(a.room_name || "").localeCompare(String(b.room_name || "")) || bStart - aStart;
+        return bStart - aStart;
+      });
+
+      return filtered;
+    }
+
+    function renderRoomLogsSummary(rawRows, visibleRows){
+      rawRows = rawRows || [];
+      visibleRows = visibleRows || [];
+      var shortCount = 0;
+      var longCount = 0;
+      visibleRows.forEach(function(row){
+        var durationMs = Number(row.duration_ms || 0);
+        if(isShortOutlier(durationMs)) shortCount++;
+        if(isLongOutlier(durationMs)) longCount++;
+      });
+      $("roomLogsSummary").innerHTML =
+        '<span class="summaryPill">Loaded <strong>' + escapeHtml(String(rawRows.length)) + '</strong></span>' +
+        '<span class="summaryPill">Visible <strong>' + escapeHtml(String(visibleRows.length)) + '</strong></span>' +
+        '<span class="summaryPill">Selected <strong>' + escapeHtml(String(getSelectedLogIds().filter(function(id){
+          return visibleRows.some(function(row){ return row.id === id; });
+        }).length)) + '</strong></span>' +
+        '<span class="summaryPill">Short outliers <strong>' + escapeHtml(String(shortCount)) + '</strong></span>' +
+        '<span class="summaryPill">Long outliers <strong>' + escapeHtml(String(longCount)) + '</strong></span>';
+    }
+
+    function renderRoomLogs(rows){
+      rawLogRows = (rows || []).slice();
+      currentLogRows = applyLogFilters(rawLogRows);
+      var cfg = getLogTypeConfig();
+      var list = $("roomLogsList");
+      list.innerHTML = "";
+      updateLogSelectionUI();
+      renderRoomLogsSummary(rawLogRows, currentLogRows);
+
+      if(!rawLogRows.length){
+        list.innerHTML = '<div class="emptyState">' + escapeHtml(cfg.emptyMessage) + '</div>';
+        return;
+      }
+      if(!currentLogRows.length){
+        list.innerHTML = '<div class="emptyState">No logs match the current search and outlier filters.</div>';
+        return;
+      }
+
+      currentLogRows.forEach(function(row){
+        var el = document.createElement("div");
+        el.className = "logItem" + (selectedLogIds[row.id] ? " selected" : "");
+        var durationMs = Number(row.duration_ms || 0);
+        var badges = '<span class="logBadge">' + escapeHtml(msToHMS(durationMs)) + '</span>';
+        if((row.doctor_name || "").trim()) badges += '<span class="logBadge success">' + escapeHtml(row.doctor_name) + '</span>';
+        if(isShortOutlier(durationMs)) badges += '<span class="logBadge warn">Short outlier</span>';
+        else if(isLongOutlier(durationMs)) badges += '<span class="logBadge danger">Long outlier</span>';
+
+        el.innerHTML =
+          '<div class="logSelect">'
+            + '<input class="logCheck" type="checkbox" ' + (selectedLogIds[row.id] ? 'checked' : '') + '/>'
+            + '<div class="logMain">'
+              + '<div class="logTitle">'
+                + '<span class="logName">' + escapeHtml(row.room_name || "(unnamed room)") + '</span>'
+                + badges
+              + '</div>'
+              + '<div class="logMeta">'
+                + '<span>Started ' + escapeHtml(formatDateTime(row.started_at)) + '</span>'
+                + '<span>Ended ' + escapeHtml(formatDateTime(row.ended_at)) + '</span>'
+                + '<span>ID ' + escapeHtml(String(row.id || "—").slice(0, 8)) + '</span>'
+              + '</div>'
+            + '</div>'
+          + '</div>'
+          + '<div class="logActions"><button class="danger" type="button">Delete</button></div>';
+
+        el.querySelector(".logCheck").addEventListener("change", function(evt){
+          selectedLogIds[row.id] = !!evt.target.checked;
+          el.className = "logItem" + (selectedLogIds[row.id] ? " selected" : "");
+          updateLogSelectionUI();
+          renderRoomLogsSummary(rawLogRows, currentLogRows);
+        });
+        el.querySelector("button").addEventListener("click", function(){
+          deleteRoomLog(row);
+        });
+        list.appendChild(el);
+      });
+      updateLogSelectionUI();
+      renderRoomLogsSummary(rawLogRows, currentLogRows);
+    }
+
+    async function refreshRoomLogs(){
+      if(!await requireAuthenticatedSession(true)) return;
+      var token = ++logsRequestToken;
+      var cfg = getLogTypeConfig();
+      setRoomLogsStatus("Loading logs…");
+      $("refreshRoomLogsBtn").disabled = true;
+      var range = getRoomLogsRange();
+      try{
+        var res = await supabase
+          .from(cfg.table)
+          .select(cfg.selectColumns)
+          .gte("started_at", range.start.toISOString())
+          .lt("started_at", range.endExclusive.toISOString())
+          .not("ended_at", "is", null)
+          .order("started_at", { ascending: false })
+          .limit(range.limit);
+        if(token !== logsRequestToken) return;
+        if(res.error) throw res.error;
+        selectedLogIds = {};
+        renderRoomLogs(res.data || []);
+        setRoomLogsStatus("Showing " + currentLogRows.length + " of " + rawLogRows.length + " logged " + cfg.labelPlural + ".");
+      } catch(e){
+        console.error(e);
+        selectedLogIds = {};
+        renderRoomLogs([]);
+        setRoomLogsStatus("Failed to load logs: " + getErrorMessage(e));
+      } finally {
+        $("refreshRoomLogsBtn").disabled = false;
+      }
+    }
+
+    async function deleteRoomLog(row){
+      if(!row || !row.id) return;
+      var cfg = getLogTypeConfig();
+      if(!window.confirm('Delete logged ' + cfg.labelSingular + ' for "' + (row.room_name || "this room") + '"?')) return;
+      setRoomLogsStatus("Deleting log…");
+      try{
+        if(!await requireAuthenticatedSession(true)) return;
+        var res = await supabase.from(cfg.table).delete().eq("id", row.id);
+        if(res.error) throw res.error;
+        delete selectedLogIds[row.id];
+        setRoomLogsStatus("Log deleted.");
+        await refreshRoomLogs();
+        if(lastRows) refreshStats();
+      } catch(e){
+        console.error(e);
+        setRoomLogsStatus("Failed to delete log: " + getErrorMessage(e));
+      }
+    }
+
+    function toggleSelectAllLogs(){
+      if(!currentLogRows.length) return;
+      var ids = currentLogRows.map(function(row){ return row.id; }).filter(Boolean);
+      var allSelected = ids.length && ids.every(function(id){ return !!selectedLogIds[id]; });
+      ids.forEach(function(id){
+        selectedLogIds[id] = !allSelected;
+      });
+      renderRoomLogs(rawLogRows);
+      setRoomLogsStatus((!allSelected ? "Selected " : "Cleared ") + ids.length + " log(s).");
+    }
+
+    async function deleteSelectedLogs(){
+      var ids = getSelectedLogIds();
+      if(!ids.length) return;
+      var cfg = getLogTypeConfig();
+      if(!window.confirm("Delete " + ids.length + " selected " + cfg.labelPlural + "?")) return;
+      setRoomLogsStatus("Deleting selected logs…");
+      try{
+        if(!await requireAuthenticatedSession(true)) return;
+        var res = await supabase.from(cfg.table).delete().in("id", ids);
+        if(res.error) throw res.error;
+        selectedLogIds = {};
+        setRoomLogsStatus("Deleted " + ids.length + " log(s).");
+        await refreshRoomLogs();
+        if(lastRows) refreshStats();
+      } catch(e){
+        console.error(e);
+        setRoomLogsStatus("Failed to delete selected logs: " + getErrorMessage(e));
+      }
+    }
+
+    function exportRowsToCsv(rows, filename, header){
+      if(!rows || !rows.length){
+        return false;
+      }
+      var csv = header.join(",") + "\n";
+      rows.forEach(function(row){
+        csv += header.map(function(key){ return csvEscape(row[key]); }).join(",") + "\n";
+      });
+      var blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      return true;
+    }
+
+    function exportStatsCsv(){
+      if(!lastRows){
+        setStatus("Nothing to export yet. Refresh stats first.");
+        return;
+      }
+      var rows = [];
+      lastRows.room.forEach(function(row){
+        rows.push({
+          kind: "room_session",
+          started_at: row.started_at,
+          ended_at: row.ended_at,
+          duration_ms: row.duration_ms,
+          room_name: row.room_name,
+          doctor_name: row.doctor_name || ""
+        });
+      });
+      lastRows.cleaning.forEach(function(row){
+        rows.push({
+          kind: "cleaning_session",
+          started_at: row.started_at,
+          ended_at: row.ended_at,
+          duration_ms: row.duration_ms,
+          room_name: row.room_name,
+          doctor_name: ""
+        });
+      });
+      if(exportRowsToCsv(rows, "vet-room-board-stats.csv", ["kind", "started_at", "ended_at", "duration_ms", "room_name", "doctor_name"])){
+        setStatus("CSV exported.");
+      }
+    }
+
+    function exportVisibleLogsCsv(){
+      var cfg = getLogTypeConfig();
+      if(!currentLogRows.length){
+        setRoomLogsStatus("No visible logs to export.");
+        return;
+      }
+      var rows = currentLogRows.map(function(row){
+        return {
+          id: row.id,
+          type: cfg.type,
+          room_name: row.room_name || "",
+          doctor_name: row.doctor_name || "",
+          started_at: row.started_at || "",
+          ended_at: row.ended_at || "",
+          duration_ms: row.duration_ms || 0
+        };
+      });
+      if(exportRowsToCsv(rows, "vet-room-board-visible-logs.csv", ["id", "type", "room_name", "doctor_name", "started_at", "ended_at", "duration_ms"])){
+        setRoomLogsStatus("Visible logs exported.");
+      }
+    }
+
+    async function signup(){
+      var email = ($("email").value || "").trim();
+      var password = ($("password").value || "").trim();
+      if(!email || !password) return;
+      setStatus("Creating account…");
+      try{
+        var res = await withTimeout(supabase.auth.signUp({ email: email, password: password }), 12000, "Sign up");
+        if(res.error) alert(res.error.message);
+        else alert("Signed up. If email confirmation is enabled, confirm then login.");
+      } catch(e){
+        var msg = "Signup failed: " + getErrorMessage(e);
+        setStatus(msg);
+        alert(msg);
+      }
+    }
+
+    async function login(){
+      var email = ($("email").value || "").trim();
+      var password = ($("password").value || "").trim();
+      if(!email || !password) return;
+      setStatus("Logging in…");
+      $("loginBtn").disabled = true;
+      try{
+        var res = await signInWithPasswordRobust(email, password);
+        if(res.error){
+          alert(res.error.message);
+          setStatus("Login failed: " + res.error.message);
+          return;
+        }
+        updateAuthUI(true);
+        setStatus("Logged in. Loading analytics…");
+        refreshStats();
+        refreshRoomLogs();
+      } catch(e){
+        var msg = "Login failed: " + getErrorMessage(e);
+        setStatus(msg);
+        alert(msg);
+      } finally {
+        $("loginBtn").disabled = false;
+      }
+    }
+
+    async function logout(){
+      try{ await supabase.auth.signOut(); }catch(e){}
+      updateAuthUI(false);
+      setStatus("Logged out.");
+      setRoomLogsStatus("Login required to load logs.");
+    }
+
+    function rerenderStatsIfLoaded(){
+      if(lastRows) renderStats(lastRows.room, lastRows.cleaning);
+    }
+
+    function rerenderLogsIfLoaded(){
+      if(rawLogRows.length || currentLogRows.length){
+        renderRoomLogs(rawLogRows);
+        var cfg = getLogTypeConfig();
+        setRoomLogsStatus("Showing " + currentLogRows.length + " of " + rawLogRows.length + " logged " + cfg.labelPlural + ".");
+      }
+    }
+
+    async function refreshStatsIfAuthenticated(){
+      savePreferences();
+      if(await hasAuthenticatedSession()) refreshStats();
+      else setStatus("Filters saved. Login required to load analytics.");
+    }
+
+    async function refreshLogsIfAuthenticated(){
+      savePreferences();
+      if(await hasAuthenticatedSession()) refreshRoomLogs();
+      else setRoomLogsStatus("Filters saved. Login required to load logs.");
+    }
+
+    async function initSupabase(){
+      try{
+        var supabaseBrowser = window.__SUPABASE_BROWSER__ || window.supabase;
+        if(!supabaseBrowser || typeof supabaseBrowser.createClient !== "function"){
+          throw new Error("Supabase browser SDK failed to load.");
+        }
+        supabase = supabaseBrowser.createClient(SUPABASE_URL, SUPABASE_PUBLIC_KEY, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+          }
+        });
+        supabase.auth.onAuthStateChange(function(event, session){
+          updateAuthUI(!!session);
+          if(session){
+            setStatus("Logged in. Loading analytics…");
+            refreshStats();
+            refreshRoomLogs();
+          } else {
+            setStatus("Login required to load analytics.");
+            setRoomLogsStatus("Login required to load logs.");
+          }
+        });
+        var sess = await supabase.auth.getSession();
+        var loggedIn = !!(sess && sess.data && sess.data.session);
+        updateAuthUI(loggedIn);
+        setStatus(loggedIn ? "Logged in. Loading analytics…" : "Login required to load analytics.");
+        setRoomLogsStatus(loggedIn ? "Loading logs…" : "Login required to load logs.");
+        if(loggedIn){
+          refreshStats();
+          refreshRoomLogs();
+        }
+      } catch(e){
+        console.error(e);
+        setStatus("Supabase init failed: " + getErrorMessage(e));
+        setRoomLogsStatus("Supabase init failed.");
+      }
+    }
+
+    defaultStatsDates();
+    defaultRoomLogDates();
+    restorePreferences();
+    updateLogSelectionUI();
+
+    $all("#analyticsTabs .tabButton").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        setActiveAnalyticsTab(btn.getAttribute("data-tab") || "dashboard", true);
+      });
+    });
+
+    $("refreshStatsBtn").addEventListener("click", refreshStats);
+    $("exportStatsCsvBtn").addEventListener("click", exportStatsCsv);
+    $("statsStart").addEventListener("change", function(){
+      clearActivePreset();
+      refreshStatsIfAuthenticated();
+    });
+    $("statsEnd").addEventListener("change", function(){
+      clearActivePreset();
+      refreshStatsIfAuthenticated();
+    });
+    $("statsGroupBy").addEventListener("change", function(){
+      savePreferences();
+      rerenderStatsIfLoaded();
+    });
+    $("statsDoctorFilter").addEventListener("change", function(){
+      savePreferences();
+      rerenderStatsIfLoaded();
+    });
+    $("statsGraphMode").addEventListener("change", function(){
+      savePreferences();
+      rerenderStatsIfLoaded();
+    });
+    $("statsTrendMetric").addEventListener("change", function(){
+      savePreferences();
+      rerenderStatsIfLoaded();
+    });
+    ["statsAverageExcludeBelow", "statsAverageExcludeAbove"].forEach(function(id){
+      $(id).addEventListener("input", function(){
+        savePreferences();
+        rerenderStatsIfLoaded();
+      });
+    });
+    ["statsClinicHours", "statsTargetRoomMinutes", "statsTargetCleanMinutes"].forEach(function(id){
+      $(id).addEventListener("input", function(){
+        savePreferences();
+        rerenderStatsIfLoaded();
+      });
+    });
+    $all("#trendDayPresets .pillBtn").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        applyTrendDayPreset(btn.getAttribute("data-days") || "all");
+      });
+    });
+    $all("#trendDayFilters .dayToggle").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        toggleTrendDay(btn.getAttribute("data-weekday"));
+      });
+    });
+    $all("#statsQuickRanges .pillBtn").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        applyStatsPreset(btn.getAttribute("data-range") || "");
+        refreshStatsIfAuthenticated();
+      });
+    });
+
+    $("selectAllLogsBtn").addEventListener("click", toggleSelectAllLogs);
+    $("deleteSelectedLogsBtn").addEventListener("click", deleteSelectedLogs);
+    $("exportVisibleLogsBtn").addEventListener("click", exportVisibleLogsCsv);
+    $("refreshRoomLogsBtn").addEventListener("click", refreshRoomLogs);
+    $("roomLogsType").addEventListener("change", refreshLogsIfAuthenticated);
+    $("roomLogsStart").addEventListener("change", refreshLogsIfAuthenticated);
+    $("roomLogsEnd").addEventListener("change", refreshLogsIfAuthenticated);
+    $("roomLogsLimit").addEventListener("change", refreshLogsIfAuthenticated);
+    $("roomLogsSearch").addEventListener("input", function(){
+      savePreferences();
+      rerenderLogsIfLoaded();
+    });
+    $("roomLogsSort").addEventListener("change", function(){
+      savePreferences();
+      rerenderLogsIfLoaded();
+    });
+    $("roomLogsOutliers").addEventListener("change", function(){
+      savePreferences();
+      rerenderLogsIfLoaded();
+    });
+
+    $("signupBtn").addEventListener("click", signup);
+    $("loginBtn").addEventListener("click", login);
+    $("logoutBtn").addEventListener("click", logout);
+
+    initSupabase();
+  })();
+</script>
+</body>
+</html>
