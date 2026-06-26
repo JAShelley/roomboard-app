@@ -139,6 +139,7 @@
       room.checklist = getDefaultPatientChecklistTemplate().map(makeChecklistItem);
     }
     window.makeChecklistItem = makeChecklistItem;
+    window.seedRoomChecklistFromDefault = seedRoomChecklistFromDefault;
 
     var DEFAULT_SETTINGS = {
       doctorInitials: {},

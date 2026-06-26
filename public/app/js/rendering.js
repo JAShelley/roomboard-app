@@ -1498,6 +1498,9 @@
         var hadPatientBefore = roomHasAssignedPatient(room);
         room.patientName = value;
         shouldRefreshDisplay = true;
+        if(!hadPatientBefore && roomHasAssignedPatient(room)){
+          if(typeof window.seedRoomChecklistFromDefault === "function") window.seedRoomChecklistFromDefault(room);
+        }
         if(hadPatientBefore !== roomHasAssignedPatient(room)){
           await syncRoomSessionAfterOccupancyChange(room, hadPatientBefore, {
             autoStartTimer: true,
