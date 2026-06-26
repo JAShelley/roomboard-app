@@ -18,7 +18,8 @@ export async function POST(request: Request) {
       refreshToken: body?.refreshToken,
     });
 
-    const priceId = priceIdForPlan(String(body?.plan || "monthly"));
+    const rawPlan = String(body?.plan || "monthly");
+    const priceId = priceIdForPlan(rawPlan);
     const customerId = await ensureStripeCustomer(ctx.practiceId, ctx.email);
     const billing = await getPracticeBilling(ctx.practiceId);
 
@@ -34,13 +35,43 @@ export async function POST(request: Request) {
     const appBase = `${origin}/app/index.html?mode=startup`;
 
     const stripe = getStripe();
+
+    // Founding offer: the first N clinics on Advanced monthly lock in a reduced
+    // rate for life. Gated behind STRIPE_COUPON_FOUNDING — when that env var is
+    // unset this block is a no-op and checkout behaves exactly as before. Stripe
+    // owns both the cap (coupon max_redemptions) and the lifetime lock (coupon
+    // duration=forever), so we never count founders ourselves. Monthly-only by
+    // design. Note: discounts and allow_promotion_codes are mutually exclusive
+    // on a Checkout Session, so a founding checkout can't also enter a promo code.
+    const normalizedPlan = rawPlan.toLowerCase().replace(/\s+/g, "-");
+    const isAdvancedMonthly =
+      normalizedPlan === "advanced-monthly" || normalizedPlan === "advanced";
+    const foundingCouponId = process.env.STRIPE_COUPON_FOUNDING;
+    let founderDiscount: Array<{ coupon: string }> | null = null;
+    if (foundingCouponId && isAdvancedMonthly) {
+      try {
+        const coupon = await stripe.coupons.retrieve(foundingCouponId);
+        const max = coupon.max_redemptions ?? Number.POSITIVE_INFINITY;
+        if (coupon.valid && (coupon.times_redeemed ?? 0) < max) {
+          founderDiscount = [{ coupon: foundingCouponId }];
+        }
+      } catch {
+        // Unreadable/exhausted coupon → fall back to normal pricing.
+      }
+    }
+
     const checkout = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
-      allow_promotion_codes: true,
+      ...(founderDiscount
+        ? { discounts: founderDiscount }
+        : { allow_promotion_codes: true }),
       subscription_data: {
-        metadata: { practice_id: ctx.practiceId },
+        metadata: {
+          practice_id: ctx.practiceId,
+          ...(founderDiscount ? { founding_member: "true" } : {}),
+        },
         ...(hasRemainingTrial ? { trial_end: trialEndUnix } : {}),
       },
       success_url: `${appBase}&billing=success&session_id={CHECKOUT_SESSION_ID}`,

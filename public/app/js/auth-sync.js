@@ -4264,10 +4264,10 @@
       });
     }
     if($("billingMonthlyBtn")){
-      $("billingMonthlyBtn").addEventListener("click", function(){ startBillingCheckout(this.getAttribute("data-billing-plan") || "advanced_monthly"); });
+      $("billingMonthlyBtn").addEventListener("click", function(){ startBillingCheckout(this.getAttribute("data-billing-plan") || "advanced-monthly"); });
     }
     if($("billingAnnualBtn")){
-      $("billingAnnualBtn").addEventListener("click", function(){ startBillingCheckout(this.getAttribute("data-billing-plan") || "advanced_annual"); });
+      $("billingAnnualBtn").addEventListener("click", function(){ startBillingCheckout(this.getAttribute("data-billing-plan") || "advanced-annual"); });
     }
     if($("billingManageBtn")){
       $("billingManageBtn").addEventListener("click", function(){ openBillingPortal(); });

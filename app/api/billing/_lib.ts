@@ -12,7 +12,9 @@ export function requireEnv(name: string) {
 // plan name <-> Stripe price id ------------------------------------------
 // Plans: "base-monthly" | "base-annual" | "advanced-monthly" | "advanced-annual"
 export function priceIdForPlan(plan: string): string {
-  const p = String(plan || "").toLowerCase().replace(/\s+/g, "-");
+  // Normalize spaces AND underscores to hyphens so "advanced_monthly",
+  // "advanced monthly", and "advanced-monthly" all resolve to the same price.
+  const p = String(plan || "").toLowerCase().replace(/[\s_]+/g, "-");
   if (p === "advanced-annual"  || p === "advanced-yearly") return requireEnv("STRIPE_PRICE_ADVANCED_ANNUAL");
   if (p === "advanced-monthly" || p === "advanced")        return requireEnv("STRIPE_PRICE_ADVANCED_MONTHLY");
   if (p === "base-annual"      || p === "annual" || p === "yearly") return requireEnv("STRIPE_PRICE_BASE_ANNUAL");

@@ -986,6 +986,83 @@ ul { padding: 0; margin: 0; }
 .testimonial-name { font-weight: 700; font-size: 14px; }
 .testimonial-role { color: var(--muted); font-size: 13px; }
 
+/* ---------- Trust bar ---------- */
+.trustbar { padding: 26px 0 4px; }
+.trustbar-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  list-style: none; margin: 0 auto; padding: 18px; max-width: 1180px;
+  background: var(--surface); border: 1.5px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm);
+}
+.trustbar-item { display: flex; align-items: center; gap: 12px; padding: 4px 6px; }
+.trustbar-item + .trustbar-item { border-left: 1px solid var(--line); padding-left: 18px; }
+.tb-ic {
+  flex: none; width: 38px; height: 38px; border-radius: 11px;
+  display: grid; place-items: center;
+  color: var(--teal-600); background: var(--teal-50);
+  border: 1px solid color-mix(in srgb, var(--teal-500) 22%, transparent);
+}
+.tb-ic svg { width: 20px; height: 20px; }
+.tb-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tb-txt strong { font-size: 14px; font-weight: 700; color: var(--ink); letter-spacing: -.01em; }
+.tb-txt small { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+
+@media (max-width: 940px) {
+  .trustbar-grid { grid-template-columns: repeat(2, 1fr); }
+  .trustbar-item:nth-child(odd) { border-left: 0; padding-left: 6px; }
+}
+@media (max-width: 540px) {
+  .trustbar-grid { grid-template-columns: 1fr; gap: 6px; }
+  .trustbar-item { border-left: 0 !important; padding-left: 6px !important; }
+  .trustbar-item + .trustbar-item { border-top: 1px solid var(--line); padding-top: 12px; }
+}
+
+/* ---------- Why we built it ---------- */
+.founder-wrap { display: grid; grid-template-columns: 1.5fr 1fr; gap: 28px; max-width: 1040px; margin: 0 auto; align-items: stretch; }
+.founder-note {
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius);
+  padding: 40px; box-shadow: var(--shadow-sm); position: relative;
+}
+.founder-note::before {
+  content: "\201C"; position: absolute; top: 4px; left: 22px;
+  font-family: var(--font-display); font-size: 96px; line-height: 1;
+  color: color-mix(in srgb, var(--teal-500) 16%, transparent); pointer-events: none;
+}
+.founder-quote {
+  font-family: var(--font-display); font-weight: 600; font-size: clamp(20px, 2.4vw, 26px);
+  line-height: 1.25; color: var(--ink); margin: 0 0 18px; letter-spacing: -.02em; position: relative;
+}
+.founder-note p { color: var(--ink-2); font-size: 15.5px; line-height: 1.7; margin-bottom: 14px; }
+.founder-sign { margin-top: 6px; font-weight: 700; font-size: 14px; color: var(--teal-600); }
+
+.replaces {
+  background: linear-gradient(165deg, var(--teal-50), var(--surface));
+  border: 1.5px solid color-mix(in srgb, var(--teal-500) 22%, transparent);
+  border-radius: var(--radius); padding: 32px 28px; box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column;
+}
+.replaces-label { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.replaces-list { list-style: none; margin: 14px 0 4px; padding: 0; display: grid; gap: 10px; }
+.replaces-list li { display: flex; align-items: center; gap: 10px; }
+.replaces-list li::before {
+  content: ""; flex: none; width: 18px; height: 2px; border-radius: 2px;
+  background: var(--st-surgery); box-shadow: 0 0 0 3px color-mix(in srgb, var(--st-surgery) 14%, transparent);
+}
+.rep-old { font-size: 15px; color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--st-surgery) 60%, transparent); }
+.replaces-with {
+  display: flex; align-items: center; gap: 10px; margin-top: 18px; padding-top: 16px;
+  border-top: 1px solid color-mix(in srgb, var(--teal-500) 18%, transparent);
+  font-family: var(--font-display); font-weight: 600; font-size: 16px; color: var(--ink);
+}
+.rep-dot { flex: none; width: 11px; height: 11px; border-radius: 50%; background: var(--st-ready); box-shadow: 0 0 0 4px color-mix(in srgb, var(--st-ready) 18%, transparent); }
+.replaces-cta { margin-top: 20px; width: 100%; }
+.replaces-fine { margin-top: 10px; font-size: 12.5px; color: var(--muted); text-align: center; }
+
+@media (max-width: 820px) {
+  .founder-wrap { grid-template-columns: 1fr; gap: 20px; }
+  .founder-note { padding: 32px 24px; }
+}
+
 /* ---------- Pricing ---------- */
 .billing-toggle {
   display: flex; align-items: center; justify-content: center; gap: 16px;
@@ -1036,13 +1113,45 @@ ul { padding: 0; margin: 0; }
 .plan-price { display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; }
 .price-num { font-family: var(--font-display); font-weight: 900; font-size: 52px; letter-spacing: -.03em; color: var(--ink); transition: opacity .15s; }
 .price-per { font-size: 17px; font-weight: 600; color: var(--muted); }
+.plan-unit { font-size: 13px; font-weight: 600; color: var(--teal-600); margin: 0 0 10px; }
+[data-theme="dark"] .plan-unit { color: var(--teal-300); }
 .plan-billing { font-size: 13px; color: var(--muted); margin-bottom: 28px; min-height: 18px; }
 .plan-cta { width: 100%; margin-bottom: 28px; }
 .plan-features { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 13px; }
 .plan-features li { font-size: 15px; color: var(--ink-2); display: flex; align-items: flex-start; gap: 10px; line-height: 1.45; }
 .plan-features li::before { content: "✓"; color: var(--teal-600); font-weight: 800; font-size: 14px; flex: none; margin-top: 1px; }
 [data-theme="dark"] .plan-features li::before { color: var(--teal-300); }
-.pricing-note { text-align: center; color: var(--muted); font-size: 14px; margin-top: 36px; }
+.pricing-note { text-align: center; color: var(--muted); font-size: 14px; margin-top: 28px; }
+
+/* Founding-clinic offer banner */
+.founders-offer {
+  display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px 18px;
+  max-width: 780px; margin: 0 auto 40px; padding: 16px 24px; text-align: center;
+  background: linear-gradient(120deg, color-mix(in srgb, var(--coral) 16%, var(--surface)), var(--surface));
+  border: 1.5px solid color-mix(in srgb, var(--coral) 42%, transparent);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm);
+}
+.fo-badge {
+  display: inline-flex; align-items: center; gap: 6px; flex: none;
+  font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+  color: #fff; background: var(--coral); padding: 6px 12px; border-radius: 999px;
+}
+.fo-text { font-size: 15px; color: var(--ink-2); line-height: 1.5; }
+.fo-text strong { color: var(--ink); font-weight: 700; }
+.fo-spots {
+  flex: none; font-size: 12px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase;
+  color: var(--coral); border: 1px dashed color-mix(in srgb, var(--coral) 55%, transparent);
+  padding: 5px 11px; border-radius: 999px;
+}
+
+/* Multi-location discount note */
+.pricing-multiloc {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 30px; font-size: 15px; color: var(--ink-2);
+}
+.pricing-multiloc svg { width: 18px; height: 18px; color: var(--teal-600); flex: none; }
+.pricing-multiloc strong { color: var(--ink); font-weight: 700; }
+[data-theme="dark"] .pricing-multiloc svg { color: var(--teal-300); }
 
 @media (max-width: 940px) {
   .testimonials-grid { grid-template-columns: 1fr; }
