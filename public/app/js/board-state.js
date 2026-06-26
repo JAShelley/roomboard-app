@@ -136,7 +136,9 @@
       // Base subscribers don't get the Advanced checklist feature, so don't seed.
       var plan = typeof window.roomboardGetCurrentPlan === "function" ? window.roomboardGetCurrentPlan() : null;
       if(plan && String(plan).indexOf("base") !== -1){ room.checklist = []; return; }
-      room.checklist = getDefaultPatientChecklistTemplate().map(makeChecklistItem);
+      var template = getDefaultPatientChecklistTemplate();
+      console.log("[PCL seed] room:", room.id, "template length:", template.length, "defaultPatientChecklist:", JSON.stringify(state && state.settings && state.settings.defaultPatientChecklist));
+      room.checklist = template.map(makeChecklistItem);
     }
     window.makeChecklistItem = makeChecklistItem;
     window.seedRoomChecklistFromDefault = seedRoomChecklistFromDefault;
