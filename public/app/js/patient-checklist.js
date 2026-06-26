@@ -47,8 +47,9 @@
       var isOpen = (openPatientChecklistRoomId === room.id);
       return '<div class="pclDock' + (isOpen ? " isOpen" : "") + '" data-pcl-room="' + pclEsc(room.id) + '">'
         + '<button class="pclToggle" data-pcl-toggle="' + pclEsc(room.id) + '" type="button" title="Patient checklist">'
-          + '<span class="pclToggleIcon" aria-hidden="true">☑</span>'
+          + 'Checklist'
           + '<span class="pclCount">' + doneCount + '/' + items.length + '</span>'
+          + '<span class="pclToggleIcon" aria-hidden="true">⌄</span>'
         + '</button>'
         + '<div class="pclPanel">'
           + '<div class="pclPanelInner">'
