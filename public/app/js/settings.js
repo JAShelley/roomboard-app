@@ -163,6 +163,27 @@
       // ── Checklist (header button) ──
       if(typeof window.refreshChecklistGate === "function") window.refreshChecklistGate();
 
+      // ── Per-patient checklist (board cards) ──
+      if(typeof window.refreshPatientChecklistGate === "function") window.refreshPatientChecklistGate();
+
+      // ── Default patient checklist editor (Settings) ──
+      var pclDefaultPanel = document.getElementById("defaultChecklistPanel");
+      var pclDefaultGate = document.getElementById("defaultChecklistAdvancedGate");
+      if(pclDefaultPanel){
+        if(isBase){
+          if(!pclDefaultGate){
+            var pclBody = pclDefaultPanel.querySelector(".settingsCollapsibleBody") || pclDefaultPanel;
+            pclDefaultGate = document.createElement("div");
+            pclDefaultGate.id = "defaultChecklistAdvancedGate";
+            pclDefaultGate.className = "planGateOverlay";
+            pclDefaultGate.innerHTML = '<div class="planGateBox"><div class="planGateBadge">Advanced</div><strong>Patient Checklists</strong><p>Upgrade to Advanced to give every patient card a checklist and set a default the whole practice starts from.</p><button class="btn primary" data-upgrade-btn="1" type="button">Upgrade to Advanced</button></div>';
+            pclBody.insertBefore(pclDefaultGate, pclBody.firstChild);
+          }
+        } else if(pclDefaultGate){
+          pclDefaultGate.remove();
+        }
+      }
+
       // ── Stats tab button badge ──
       var statsTabBtn = document.querySelector("[data-tab='tabStats']");
       if(statsTabBtn){
@@ -192,6 +213,7 @@
       }
 	      holdRemoteUpdates(SHORT_INTERACTION_HOLD_MS);
 	      renderSettingsLists();
+	      if(typeof window.renderDefaultChecklistList === "function") window.renderDefaultChecklistList();
 	      loadFeedbackChecklist(true);
 	      if(typeof window.syncStopwatchDiagnosticsUi === "function") window.syncStopwatchDiagnosticsUi();
 	      if($("stopwatchDiagnosticsPanel") && $("stopwatchDiagnosticsPanel").open && typeof window.runStopwatchDiagnostics === "function"){
@@ -1084,6 +1106,86 @@
         if(e.key !== "Enter") return;
         e.preventDefault();
         addQuickNoteFromSettings();
+      });
+    }
+
+    // ===== Default patient checklist editor (practice-wide, Advanced) =====
+    function getDefaultPatientChecklist(){
+      if(!state.settings) state.settings = {};
+      if(!Array.isArray(state.settings.defaultPatientChecklist)) state.settings.defaultPatientChecklist = [];
+      return state.settings.defaultPatientChecklist;
+    }
+    function renderDefaultChecklistList(){
+      var toggle = $("patientChecklistEnabledToggle");
+      if(toggle) toggle.checked = (state.settings.patientChecklistEnabled !== false);
+      var host = $("defaultChecklistList");
+      if(!host) return;
+      var items = getDefaultPatientChecklist();
+      if(!items.length){ host.innerHTML = '<div class="muted">No default items yet. Add one above.</div>'; return; }
+      host.innerHTML = "";
+      items.forEach(function(it, idx){
+        var text = typeof it === "string" ? it : String(it && it.text || "");
+        var row = document.createElement("div");
+        row.style.cssText = "display:flex;align-items:center;gap:8px;padding:6px 0;";
+        var span = document.createElement("span");
+        span.style.cssText = "flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;";
+        span.textContent = text;
+        var del = document.createElement("button");
+        del.className = "btn sm";
+        del.type = "button";
+        del.textContent = "Remove";
+        del.addEventListener("click", function(){ removeDefaultChecklistItem(idx); });
+        row.appendChild(span); row.appendChild(del);
+        host.appendChild(row);
+      });
+    }
+    window.renderDefaultChecklistList = renderDefaultChecklistList;
+    function persistDefaultChecklist(){
+      normalizeSettingsForSave(state);
+      saveLocal();
+      if(!supabase || !currentPracticeId){
+        noteSettingsLocalSaved("Saved locally");
+      } else {
+        // Reuse the practice-default snapshot save (writes practice_default_settings + user_settings).
+        doctorBadgeSettingsDirty = true;
+        noteSettingsRemoteQueued("Saving default checklist…");
+        scheduleRemoteSave("board", { immediate: true });
+      }
+      renderDefaultChecklistList();
+    }
+    function addDefaultChecklistItem(text){
+      text = String(text || "").trim();
+      if(!text) return;
+      getDefaultPatientChecklist().push(text);
+      persistDefaultChecklist();
+    }
+    function removeDefaultChecklistItem(idx){
+      var items = getDefaultPatientChecklist();
+      if(idx < 0 || idx >= items.length) return;
+      items.splice(idx, 1);
+      persistDefaultChecklist();
+    }
+    if($("patientChecklistEnabledToggle")){
+      $("patientChecklistEnabledToggle").addEventListener("change", function(){
+        state.settings.patientChecklistEnabled = !!this.checked;
+        persistDefaultChecklist();
+        // Show/hide the dock on every card immediately.
+        if(typeof requestRenderDisplay === "function") requestRenderDisplay();
+        else if(typeof renderDisplay === "function") renderDisplay();
+      });
+    }
+    if($("addDefaultChecklistBtn")){
+      $("addDefaultChecklistBtn").addEventListener("click", function(){
+        var inp = $("newDefaultChecklistItem");
+        if(inp){ addDefaultChecklistItem(inp.value); inp.value = ""; inp.focus(); }
+      });
+    }
+    if($("newDefaultChecklistItem")){
+      $("newDefaultChecklistItem").addEventListener("keydown", function(e){
+        if(e.key !== "Enter") return;
+        e.preventDefault();
+        addDefaultChecklistItem(this.value);
+        this.value = "";
       });
     }
 

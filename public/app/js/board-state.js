@@ -109,7 +109,8 @@
         cleaningTimer: { elapsedMs: 0, running: false, startedAt: null, startedAtIso: null, updatedAtIso: null },
         activeRoomSessionId: null,
         activeCleaningSessionId: null,
-        lastDischargeSnapshot: null
+        lastDischargeSnapshot: null,
+        checklist: []
       };
     }
 
@@ -121,8 +122,28 @@
       return rooms;
     }
 
+    // ===== Per-patient checklist seeding =====
+    function makeChecklistItem(text){
+      return { id: "pcl-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8), text: String(text || ""), done: false };
+    }
+    function getDefaultPatientChecklistTemplate(){
+      var d = state && state.settings && Array.isArray(state.settings.defaultPatientChecklist) ? state.settings.defaultPatientChecklist : [];
+      return d.map(function(it){ return typeof it === "string" ? it : String(it && it.text || ""); }).filter(function(t){ return t && t.trim(); });
+    }
+    function seedRoomChecklistFromDefault(room){
+      if(!room) return;
+      if(Array.isArray(room.checklist) && room.checklist.length) return; // never clobber existing items
+      // Base subscribers don't get the Advanced checklist feature, so don't seed.
+      var plan = typeof window.roomboardGetCurrentPlan === "function" ? window.roomboardGetCurrentPlan() : null;
+      if(plan && String(plan).indexOf("base") !== -1){ room.checklist = []; return; }
+      room.checklist = getDefaultPatientChecklistTemplate().map(makeChecklistItem);
+    }
+    window.makeChecklistItem = makeChecklistItem;
+
     var DEFAULT_SETTINGS = {
       doctorInitials: {},
+      defaultPatientChecklist: [],
+      patientChecklistEnabled: true,
       displayCols: 4,
       displayRows: 0,
       intakeCols: 2,
@@ -1381,6 +1402,7 @@
         if(r.activeRoomSessionId == null) r.activeRoomSessionId = null;
         if(r.activeCleaningSessionId == null) r.activeCleaningSessionId = null;
         if(r.lastDischargeSnapshot == null) r.lastDischargeSnapshot = null;
+        if(!Array.isArray(r.checklist)) r.checklist = [];
         if(r.cleaningTimer.elapsedMs == null) r.cleaningTimer.elapsedMs = 0;
         if(r.cleaningTimer.running == null) r.cleaningTimer.running = false;
         if(r.cleaningTimer.startedAt == null) r.cleaningTimer.startedAt = null;
@@ -1806,6 +1828,9 @@
 	      room.notes = String(draft.notes || "").trim();
       room.doctorReady = !!draft.doctorReady;
       room.lastDischargeSnapshot = null;
+      // Seed the patient checklist from the practice default when this room
+      // goes from empty → occupied.
+      if(!hadPatientBefore && room.patientName) seedRoomChecklistFromDefault(room);
 
       var selectedColor = getColorById(room.colorLabelId);
       if(selectedColor) room.reason = selectedColor.title;
@@ -1892,7 +1917,9 @@
 	      if(!fromId || !toId || fromId === toId) return false;
 	      var swapKey = [String(fromId), String(toId)].sort().join("::");
 	      var now = Date.now();
-	      if(recentRoomSwapKey === swapKey && (now - recentRoomSwapAt) < 350){
+	      // The rapid-swap guard prevents an accidental double-fire, but an undo
+	      // is an intentional re-swap so it must be allowed through.
+	      if(!options.isUndo && recentRoomSwapKey === swapKey && (now - recentRoomSwapAt) < 350){
 	        return false;
 	      }
 	      var fromRoom = findRoomById(fromId);
@@ -1904,7 +1931,21 @@
 	      swapRoomContents(fromRoom, toRoom);
 	      requestBoardRoomRefresh([fromId, toId], { includeIntake: false });
 	      commitBoardInBackground({ immediate: !!options.immediate });
+	      // Offer a one-tap undo after a drag-and-drop swap (skip on the undo itself).
+	      if(!options.isUndo) showRoomSwapUndoToast(fromId, toId, fromRoom.name, toRoom.name);
 	      return true;
+	    }
+	    function showRoomSwapUndoToast(fromId, toId, fromName, toName){
+	      if(typeof window.toast !== "function") return;
+	      var msg = "Swapped " + (fromName || "room") + " ↔ " + (toName || "room");
+	      window.toast(msg, {
+	        actionLabel: "Undo",
+	        timeoutMs: 7000,
+	        onAction: function(){
+	          // Re-swapping the same two rooms restores the original layout.
+	          swapRoomsById(fromId, toId, { immediate: true, isUndo: true });
+	        }
+	      });
 	    }
 	function swapRoomContents(a,b){
 	      // Swap room state while keeping the physical room ids/names in place.
@@ -1912,7 +1953,7 @@
 	      var fields = [
 		        "patientName","reason","colorLabelId","colorHex","doctor","tech","notes","quickNote","quickNotes",
         "roomReady","doctorReady","needsCleaning","timer","cleaningTimer",
-        "activeRoomSessionId","activeCleaningSessionId","lastDischargeSnapshot"
+        "activeRoomSessionId","activeCleaningSessionId","lastDischargeSnapshot","checklist"
       ];
       for(var i=0;i<fields.length;i++){
         var f = fields[i];

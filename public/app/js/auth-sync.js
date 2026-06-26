@@ -2470,7 +2470,8 @@
         cleaningTimer: serializeTimerForRoomState(room.cleaningTimer),
         activeRoomSessionId: isUuidLike(room.activeRoomSessionId) ? room.activeRoomSessionId : null,
         activeCleaningSessionId: isUuidLike(room.activeCleaningSessionId) ? room.activeCleaningSessionId : null,
-        lastDischargeSnapshot: room.lastDischargeSnapshot ? JSON.parse(JSON.stringify(room.lastDischargeSnapshot)) : null
+        lastDischargeSnapshot: room.lastDischargeSnapshot ? JSON.parse(JSON.stringify(room.lastDischargeSnapshot)) : null,
+        checklist: Array.isArray(room.checklist) ? JSON.parse(JSON.stringify(room.checklist)) : []
       };
     }
 
@@ -2492,6 +2493,7 @@
       room.activeRoomSessionId = isUuidLike(data.activeRoomSessionId) ? String(data.activeRoomSessionId) : (isUuidLike(room.activeRoomSessionId) ? room.activeRoomSessionId : null);
       room.activeCleaningSessionId = isUuidLike(data.activeCleaningSessionId) ? String(data.activeCleaningSessionId) : (isUuidLike(room.activeCleaningSessionId) ? room.activeCleaningSessionId : null);
       room.lastDischargeSnapshot = data.lastDischargeSnapshot ? JSON.parse(JSON.stringify(data.lastDischargeSnapshot)) : null;
+      room.checklist = Array.isArray(data.checklist) ? JSON.parse(JSON.stringify(data.checklist)) : [];
       normalizeRoomTimerModes(room);
     }
 

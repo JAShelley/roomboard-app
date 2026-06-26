@@ -163,3 +163,4 @@
       if(card.parentNode) card.parentNode.removeChild(card);
     }, timeoutMs);
   }
+  window.toast = toast;

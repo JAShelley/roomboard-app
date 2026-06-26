@@ -397,6 +397,18 @@ Manage subscription
 <div id="quickNotesList" style="padding:0 16px 4px;"></div>
 </div>
 </section>
+<section class="sxSection" id="defaultChecklistPanel">
+<div class="sxHead">Default patient checklist <span class="planBadge">Advanced</span></div>
+<div class="settingsCollapsibleBody">
+<div class="sxRow"><span class="sxLabel">Show checklist on patient cards</span><input checked id="patientChecklistEnabledToggle" type="checkbox"></div>
+<p class="sxSubHead" style="font-weight:400;opacity:.75;">Every new patient starts with these items. Click a patient card on the board to open and check them off.</p>
+<div class="sxAddRow">
+<input id="newDefaultChecklistItem" placeholder="e.g., Verify weight" type="text" style="flex:1;">
+<button class="btn sm primary" id="addDefaultChecklistBtn" type="button">Add</button>
+</div>
+<div id="defaultChecklistList" style="padding:0 16px 4px;"></div>
+</div>
+</section>
 <section class="sxSection">
 <div class="sxHead">Doctors</div>
 <div class="settingsCollapsibleBody">
@@ -803,6 +815,7 @@ Manage subscription
 <script src="./js/rendering.js?v=20260624a"></script>
 <script src="./js/settings.js?v=20260617a"></script>
 <script src="./js/checklist.js?v=20260625a"></script>
+<script src="./js/patient-checklist.js?v=20260626a"></script>
 <script src="./js/auth-sync.js?v=20260625c"></script>
 <script src="./js/ux.js?v=20260606a"></script>
 <script src="./js/theme.js?v=20260517d"></script>

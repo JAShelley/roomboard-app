@@ -599,6 +599,7 @@
           + '</div>'
         + '</div>'
         + notesDock
+        + (typeof window.buildPatientChecklistDockHtml === "function" ? window.buildPatientChecklistDockHtml(room) : "")
         + (hasRedoDischarge(room) ? '<button class="roomRedoBtn" data-action="displayRedo" data-room-id="'+room.id+'" title="Redo discharge">↺</button>' : '')
 	        + (displayDoctorInitials ? '<div class="docInitCorner">' + buildDoctorBadgeMarkup(room.doctor, displayDoctorInitials) + '</div>' : '');
 	      return el;
@@ -1742,6 +1743,7 @@
       room.needsCleaning = true;
       room.cleaningTimer = { elapsedMs: 0, running: true, startedAt: null, startedAtIso: serverNowIso, updatedAtIso: serverNowIso };
       room.activeCleaningSessionId = null;
+      room.checklist = [];
       normalizeRoomTimerModes(room);
 
       logCleaningSessionStart(room);
