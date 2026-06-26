@@ -749,18 +749,20 @@
 	    }
 	    .room[draggable="true"]{ cursor: grab; }
 	    .room[draggable="true"]:active{ cursor: grabbing; }
-	    /* Drag-and-drop visuals — match the roomboard.app landing demo */
-	    .room.isDragSource{
+	    /* Drag-and-drop visuals — match the roomboard.app landing demo.
+	       Scoped to body.isRoomDragging so the dashed outline only ever shows
+	       during an active drag, never lingering on the board afterward. */
+	    body.isRoomDragging .room.isDragSource{
 	      opacity:.32;
 	      filter:saturate(.6);
 	      box-shadow:none;
 	    }
-	    .room.isDropTarget{
+	    body.isRoomDragging .room.isDropTarget{
 	      outline:3px dashed rgba(125,211,252,.95);
 	      outline-offset:-4px;
 	      box-shadow:0 0 0 4px rgba(125,211,252,.18), 0 20px 40px rgba(0,0,0,.45);
 	    }
-	    .room.isDropTarget::after{
+	    body.isRoomDragging .room.isDropTarget::after{
 	      content:"Drop to move here";
 	      position:absolute; inset:0; z-index:40;
 	      display:grid; place-items:center;
@@ -908,42 +910,34 @@
     }
 
     /* ===== Per-patient checklist (Advanced) =====
-       Lives inside .roomBody, below the timerRow. The toggle is a full-width
-       bar; the drawer expands downward with its own dark neutral background
-       so it reads as a separate section from the card's color fill. */
+       Invisible when closed. Card tap opens a dark drawer that slides
+       out from the very bottom of the card, growing it downward. */
     .pclDock{
-      /* Negative side margins so the drawer spans the full card width,
-         bleeding past .roomBody's 12px padding on each side. */
-      margin: 8px -12px -12px;
-      border-top: 1px solid rgba(0,0,0,.18);
-      border-radius: 0 0 var(--radius, 16px) var(--radius, 16px);
-      overflow: hidden;
+      margin: 6px -12px -12px;
     }
-    .pclToggle{
-      width:100%; display:flex; align-items:center; justify-content:center;
-      gap:6px; padding:7px 12px; cursor:pointer; user-select:none;
-      background: rgba(8,14,26,.55);
-      border:none; color: rgba(255,255,255,.7);
-      font-size:12px; font-weight:600; letter-spacing:.03em;
-      transition: background .16s ease, color .16s ease;
-    }
-    .pclToggle:hover{ background: rgba(8,14,26,.72); color:#fff; }
-    .pclDock.isOpen .pclToggle{ background: rgba(8,14,26,.72); color:#fff; }
-    .pclToggleIcon{ font-size:13px; transition: transform .28s cubic-bezier(.4,0,.2,1); }
-    .pclDock.isOpen .pclToggleIcon{ transform: rotate(180deg); }
-    .pclCount{ font-variant-numeric: tabular-nums; font-weight:700;
-      background: rgba(255,255,255,.12); padding:1px 7px;
-      border-radius:999px; font-size:11px; }
-    /* Slide-open drawer */
     .pclPanel{
       display:grid; grid-template-rows:0fr;
-      transition: grid-template-rows .34s cubic-bezier(.4,0,.2,1);
-      background: rgba(8,14,26,.88);
+      transition: grid-template-rows .32s cubic-bezier(.4,0,.2,1);
+      background: rgba(7,12,24,.90);
+      border-top: 1px solid rgba(255,255,255,.07);
+      border-radius: 0 0 var(--radius, 16px) var(--radius, 16px);
     }
     .pclDock.isOpen .pclPanel{ grid-template-rows:1fr; }
     .pclPanelInner{
       overflow:hidden; min-height:0;
-      padding:10px 12px 12px;
+      padding:12px 12px 14px;
+    }
+    .pclHeader{
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:10px;
+    }
+    .pclHeaderLabel{
+      font-size:11px; font-weight:700; letter-spacing:.06em;
+      text-transform:uppercase; color:rgba(160,180,220,.6);
+    }
+    .pclCount{
+      font-variant-numeric:tabular-nums; font-weight:700; font-size:11px;
+      color:rgba(160,180,220,.6);
     }
     .pclList{ max-height:min(40vh, 300px); overflow:auto; }
     /* All colors inside the drawer are fixed to the dark neutral palette,

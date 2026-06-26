@@ -46,13 +46,12 @@
       for(var i = 0; i < items.length; i++){ if(items[i] && items[i].done) doneCount++; }
       var isOpen = (openPatientChecklistRoomId === room.id);
       return '<div class="pclDock' + (isOpen ? " isOpen" : "") + '" data-pcl-room="' + pclEsc(room.id) + '">'
-        + '<button class="pclToggle" data-pcl-toggle="' + pclEsc(room.id) + '" type="button" title="Patient checklist">'
-          + 'Checklist'
-          + '<span class="pclCount">' + doneCount + '/' + items.length + '</span>'
-          + '<span class="pclToggleIcon" aria-hidden="true">⌄</span>'
-        + '</button>'
         + '<div class="pclPanel">'
           + '<div class="pclPanelInner">'
+            + '<div class="pclHeader">'
+              + '<span class="pclHeaderLabel">Checklist</span>'
+              + '<span class="pclCount">' + doneCount + '/' + items.length + '</span>'
+            + '</div>'
             + '<ul class="pclList">' + pclItemsHtml(room) + '</ul>'
             + '<div class="pclAddRow">'
               + '<input class="pclInput" data-pcl-input="' + pclEsc(room.id) + '" type="text" placeholder="Add item…" maxlength="120">'
@@ -183,7 +182,7 @@
       if(!grid || !grid.contains(t)) return;
       var card = t.closest(".room");
       if(!card) return;
-      if(t.closest("button, .btn, .iconBtn, [data-action], input, textarea, select, a, summary, .roomNotesDock, .pclDock")) return;
+      if(t.closest("button, .btn, .iconBtn, [data-action], input, textarea, select, a, summary, .roomNotesDock, .pclPanel")) return;
       var rid = card.getAttribute("data-room-id") || (card.dataset && card.dataset.roomId) || "";
       if(!rid) return;
       var room = (typeof findRoomById === "function") ? findRoomById(rid) : null;
