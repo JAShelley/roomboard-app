@@ -1886,6 +1886,15 @@
 	    // "Drop to move here" target — like the example on roomboard.app.
 	    function markRoomDragSource(card){
 	      if(!card) return;
+	      // Safety net: a single document-level dragend guarantees the drag flag
+	      // clears even if a grid's own dragend doesn't fire (native-drag quirk).
+	      if(!window.__roomDragEndHooked){
+	        window.__roomDragEndHooked = true;
+	        document.addEventListener("dragend", clearRoomDragVisuals, true);
+	      }
+	      // body flag gates the drag visuals in CSS, so a stuck .isDropTarget /
+	      // .isDragSource class can never show its dashed outline outside a drag.
+	      document.body.classList.add("isRoomDragging");
 	      var id = card.getAttribute("data-room-id") || (card.dataset && card.dataset.roomId);
 	      // Defer one tick so the browser captures the native drag image BEFORE
 	      // the source is dimmed (otherwise the floating ghost gets dimmed too).
@@ -1904,6 +1913,7 @@
 	      if(card) card.classList.add("isDropTarget");
 	    }
 	    function clearRoomDragVisuals(){
+	      document.body.classList.remove("isRoomDragging");
 	      var els = document.querySelectorAll(".room.isDragSource, .room.isDropTarget");
 	      for(var i=0; i<els.length; i++){
 	        els[i].classList.remove("isDragSource");

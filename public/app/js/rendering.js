@@ -1306,7 +1306,7 @@
 
 	      grid.addEventListener("drop", function(e){
 	        var toCard = closestRoomCard(e.target);
-	        if(!toCard) return;
+	        if(!toCard){ clearRoomDragVisuals(); return; }
 	        e.preventDefault();
 	        var toId = toCard.getAttribute("data-room-id") || toCard.dataset.roomId;
 	        var fromId = getDraggedRoomId(e.dataTransfer);
@@ -1314,6 +1314,7 @@
 	          swapRoomsById(fromId, toId, { immediate: true });
 	        });
 	        clearDraggedRoomId();
+	        clearRoomDragVisuals();
 	      });
 	    }
     function isIntakeVisible(){
@@ -1635,12 +1636,13 @@
 
       grid.addEventListener("drop", async function(e){
         var toCard = closestRoomCard(e.target);
-        if(!toCard) return;
+        if(!toCard){ clearRoomDragVisuals(); return; }
         e.preventDefault();
         var toId = toCard.getAttribute("data-room-id") || toCard.dataset.roomId;
         var fromId = getDraggedRoomId(e.dataTransfer);
         await swapRoomsById(fromId, toId, { immediate: true });
         clearDraggedRoomId();
+        clearRoomDragVisuals();
       });
     }
 
