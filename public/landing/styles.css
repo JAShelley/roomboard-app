@@ -334,6 +334,26 @@ img { max-width: 100%; display: block; }
   100% { filter: brightness(1); }
 }
 
+/* Discharge button — the only control that takes a patient out of a room */
+.roomDischargeBtn {
+  font-family: var(--font-display);
+  font-size: 11px; font-weight: 700; letter-spacing: .02em; line-height: 1;
+  white-space: nowrap; cursor: pointer;
+  color: inherit;
+  background: rgba(255,255,255,.16);
+  border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+  border-radius: 8px; padding: 6px 9px;
+  transition: background .15s, border-color .15s, transform .08s;
+}
+.roomDischargeBtn:hover { background: rgba(255,255,255,.30); border-color: color-mix(in srgb, currentColor 42%, transparent); }
+.roomDischargeBtn:active { transform: scale(.93); }
+.roomDischargeBtn.cleaning {
+  color: #f3c969;
+  background: rgba(245,181,10,.14);
+  border-color: rgba(245,181,10,.45);
+}
+.roomDischargeBtn.cleaning:hover { background: rgba(245,181,10,.24); }
+
 /* Drag a patient card onto another room to move / swap them */
 .bd-grid:not(.list-view) .room:not(.empty):not(.cleaning) { cursor: grab; }
 .bd-grid.drag-active .room { cursor: grabbing; }
@@ -668,6 +688,99 @@ img { max-width: 100%; display: block; }
 .feature h3 { font-size: 20px; margin-bottom: 10px; font-weight: 700; }
 .feature p { color: var(--muted); font-size: 15px; line-height: 1.6; }
 .feature.span2 { grid-column: span 2; }
+
+/* ---------- Drag-to-move showcase ---------- */
+.move-section { background: linear-gradient(180deg, var(--surface) 0%, color-mix(in srgb, var(--teal-50) 32%, var(--surface)) 100%); }
+.move-copy h2 { font-size: clamp(26px, 3.6vw, 38px); margin-bottom: 16px; }
+.move-copy p { color: var(--muted); font-size: 17px; line-height: 1.6; margin-bottom: 22px; }
+.move-cta { margin-top: 26px; }
+
+.move-board {
+  position: relative; width: 100%; max-width: 440px; margin: 0 auto;
+  padding: 16px; border-radius: 22px;
+  background: linear-gradient(165deg, #0d2236, #081726);
+  border: 1px solid rgba(125,211,252,.16);
+  box-shadow: 0 30px 70px rgba(4,20,36,.45);
+}
+.move-board-bar { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 14px; }
+.move-board-name { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: #dbe9ff; }
+.move-board-live { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: .05em; color: #7dd3fc; }
+.move-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #7dd3fc; box-shadow: 0 0 8px #7dd3fc; animation: livePulse 2s ease-in-out infinite; }
+
+.move-stage { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.move-slot {
+  position: relative; min-height: 172px;
+  border-radius: 14px;
+  border: 1.5px dashed rgba(148,178,214,.28);
+  background: rgba(255,255,255,.02);
+}
+.move-slot-label {
+  position: absolute; top: 11px; left: 13px;
+  font-family: var(--font-display); font-weight: 700; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase;
+  color: #6f86a8;
+}
+.move-slot-b { animation: moveGlowB 6.5s ease-in-out infinite; }
+
+.move-card {
+  position: absolute; top: 36px; left: 0;
+  width: calc((100% - 18px) / 2); height: 124px;
+  display: flex; flex-direction: column; gap: 5px;
+  padding: 12px 14px; box-sizing: border-box;
+  border-radius: 14px;
+  background: linear-gradient(165deg, #18c2ae, #0e8f86);
+  border-top: 3px solid rgba(255,255,255,.5);
+  color: #06231f; z-index: 5;
+  animation: moveCard 6.5s cubic-bezier(.5,0,.2,1) infinite;
+}
+.move-card-name { font-family: var(--font-display); font-weight: 800; font-size: 16px; }
+.move-card-sub { font-size: 12px; font-weight: 600; opacity: .82; }
+.move-card-timer {
+  margin-top: auto; align-self: flex-start;
+  font-family: ui-monospace, Menlo, monospace; font-weight: 700; font-size: 17px;
+  background: rgba(255,255,255,.22); border: 1px solid rgba(255,255,255,.3);
+  padding: 3px 10px; border-radius: 8px;
+}
+.move-cursor {
+  position: absolute; right: 14px; bottom: -8px; z-index: 8;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.55));
+  animation: moveCursorPress 6.5s cubic-bezier(.5,0,.2,1) infinite;
+}
+.move-synced {
+  position: absolute; right: 4px; bottom: 6px; z-index: 9;
+  font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: .02em;
+  color: #06231f; background: #7dd3fc;
+  padding: 5px 11px; border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(125,211,252,.45);
+  opacity: 0;
+  animation: moveSynced 6.5s ease-in-out infinite;
+}
+
+@keyframes moveCard {
+  0%, 8%    { transform: translate(0,0) rotate(0) scale(1);                              box-shadow: 0 10px 24px rgba(0,0,0,.42); }
+  16%       { transform: translate(0,-12px) rotate(-2.5deg) scale(1.04);                 box-shadow: 0 28px 52px rgba(0,0,0,.55); }
+  40%       { transform: translate(calc(100% + 18px),-12px) rotate(2.5deg) scale(1.04);  box-shadow: 0 28px 52px rgba(0,0,0,.55); }
+  48%, 64%  { transform: translate(calc(100% + 18px),0) rotate(0) scale(1);              box-shadow: 0 10px 24px rgba(0,0,0,.42); }
+  72%       { transform: translate(calc(100% + 18px),-12px) rotate(2.5deg) scale(1.04);  box-shadow: 0 28px 52px rgba(0,0,0,.55); }
+  88%       { transform: translate(0,-12px) rotate(-2.5deg) scale(1.04);                 box-shadow: 0 28px 52px rgba(0,0,0,.55); }
+  94%, 100% { transform: translate(0,0) rotate(0) scale(1);                              box-shadow: 0 10px 24px rgba(0,0,0,.42); }
+}
+@keyframes moveCursorPress {
+  0%, 12%, 50%, 66%, 96%, 100% { transform: scale(1); }
+  18%, 44%, 72%, 90%           { transform: scale(.82); }
+}
+@keyframes moveGlowB {
+  0%, 34%, 70%, 100% { border-color: rgba(148,178,214,.28); background: rgba(255,255,255,.02); box-shadow: none; }
+  44%, 62%           { border-color: rgba(125,211,252,.85); background: rgba(125,211,252,.10); box-shadow: inset 0 0 0 3px rgba(125,211,252,.14); }
+}
+@keyframes moveSynced {
+  0%, 44%   { opacity: 0; transform: translateY(6px); }
+  50%, 66%  { opacity: 1; transform: translateY(0); }
+  72%, 100% { opacity: 0; transform: translateY(6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .move-card, .move-cursor, .move-slot-b, .move-synced, .move-live-dot { animation: none !important; }
+  .move-synced { opacity: 1; transform: none; }
+}
 
 /* ---------- Track anywhere ---------- */
 .track-phone-showcase { display: grid; grid-template-columns: 1fr auto; gap: 64px; align-items: center; max-width: 1000px; margin: 0 auto; }

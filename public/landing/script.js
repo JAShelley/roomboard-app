@@ -251,8 +251,13 @@
       el.setAttribute("data-room", r.name);
       el.setAttribute("data-type", r.type || "");
       if (r.state === "active") { el.style.setProperty("--c", ty.c); el.style.color = readableText(ty.c); }
-      var icons = '<span class="roomIcons">🐾 ➡️ 🚪</span>';
-      var top = '<div class="roomTop"><span class="roomName">' + esc(r.name) + '</span>' + icons + '</div>';
+      var dischargeBtn = "";
+      if (r.state === "active") {
+        dischargeBtn = '<button class="roomDischargeBtn" data-discharge title="Discharge patient">🐾 Discharge</button>';
+      } else if (r.state === "cleaning") {
+        dischargeBtn = '<button class="roomDischargeBtn cleaning" data-discharge title="Mark room clean">🧹 Mark clean</button>';
+      }
+      var top = '<div class="roomTop"><span class="roomName">' + esc(r.name) + '</span>' + dischargeBtn + '</div>';
       var body;
       var noteRow = "";
       var wbRow = "";
@@ -380,16 +385,14 @@
         if (dragState && dragState.started) return; // don't reshuffle mid-drag
         var r = rooms[flips % rooms.length];
         flips++;
+        // Rooms are only ever discharged by the discharge button — the live
+        // feel comes from empty rooms picking up a new patient on their own.
         if (r.state === "empty") {
           r.state = "active";
           r.patient = names[Math.floor(Math.random() * names.length)];
           r.doc = docKeys[Math.floor(Math.random() * docKeys.length)];
           r.type = typeKeys[Math.floor(Math.random() * typeKeys.length)];
           r.secs = Math.floor(Math.random() * 5 * 60) + 30;
-        } else if (r.state === "cleaning") {
-          r.state = "empty"; r.secs = 0;
-        } else if (r.secs > TIMER_ALERT && Math.random() > 0.5) {
-          r.state = "cleaning"; r.secs = Math.floor(Math.random() * 60) + 5;
         } else { return; } // no state change, skip redraw
         if (onlyActive) { renderGrouped(); } else { renderOne(r); }
         updateActiveCount();
@@ -455,15 +458,31 @@
       /* notePopoverInput: stop propagation so clicking inside doesn't cycle room */
       if (e.target.classList.contains("notePopoverInput")) { e.stopPropagation(); return; }
 
+      /* Discharge button: the ONLY way to take a patient out of a room */
+      var dischargeEl = e.target.closest("[data-discharge]");
+      if (dischargeEl) {
+        e.stopPropagation();
+        var dCard = dischargeEl.closest(".room");
+        var dRoom = rooms.find(function (r) { return r.name === dCard.getAttribute("data-room"); });
+        if (!dRoom) return;
+        if (dRoom.state === "active")        { dRoom.state = "cleaning"; dRoom.secs = 0; }
+        else if (dRoom.state === "cleaning") { dRoom.state = "empty";    dRoom.secs = 0; }
+        if (onlyActive) { renderGrouped(); }
+        else { renderOne(dRoom); var dc = grid.querySelector('[data-room="' + dRoom.name + '"]'); if (dc) { dc.classList.add("click-flash"); setTimeout(function () { dc.classList.remove("click-flash"); }, 380); } }
+        updateActiveCount();
+        hideTryHint();
+        return;
+      }
+
       var card = e.target.closest(".room");
       if (!card) return;
       var roomName = card.getAttribute("data-room");
       var room = rooms.find(function (r) { return r.name === roomName; });
       if (!room) return;
 
-      if (room.state === "active")        { room.state = "cleaning"; room.secs = 0; }
-      else if (room.state === "cleaning") { room.state = "empty";    room.secs = 0; }
-      else                                { randomPatient(room); }
+      /* Tapping a card no longer discharges — empty rooms just gain a patient */
+      if (room.state !== "empty") return;
+      randomPatient(room);
 
       if (onlyActive) {
         renderGrouped();
@@ -559,6 +578,7 @@
       if (e.button != null && e.button > 0) return; // primary button / touch only
       if (isListView) return;                        // grid views only
       if (e.target.closest(".noteDock")) return;     // let notes open normally
+      if (e.target.closest("[data-discharge]")) return; // discharge button isn't a drag handle
       var card = e.target.closest(".room");
       if (!card || card.parentNode !== grid) return;
       var room = roomByName(card.getAttribute("data-room"));
