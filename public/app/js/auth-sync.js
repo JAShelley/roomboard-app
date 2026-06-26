@@ -1383,10 +1383,18 @@
         var endedAtIso = normalizeServerNowIso(options.endedAtIso) || await getServerNowIso();
         var durationMs = Number(options.durationMs);
         if(!isFinite(durationMs) || durationMs < 0) durationMs = computeElapsed(room.timer);
-        // Ensure ended_at is at least 1ms after started_at (DB constraint requires strict >)
         if(durationMs < 1) durationMs = 1;
         var doctorName = options.doctorName != null ? options.doctorName : (room.doctor || null);
         var roomName = options.roomName != null ? options.roomName : (room.name || room.label || room.id);
+        // Clamp ended_at to be strictly after started_at (DB constraint: ended_after_started)
+        var sessionRow = await supabase.from("room_sessions").select("started_at").eq("id", sessionId).maybeSingle();
+        if(sessionRow && sessionRow.data && sessionRow.data.started_at){
+          var startedMs = new Date(sessionRow.data.started_at).getTime();
+          var endedMs = new Date(endedAtIso).getTime();
+          if(endedMs <= startedMs){
+            endedAtIso = new Date(startedMs + Math.max(durationMs, 1)).toISOString();
+          }
+        }
         var res = await supabase.from("room_sessions")
           .update({
             ended_at: endedAtIso,
@@ -1499,9 +1507,17 @@
         var endedAtIso = normalizeServerNowIso(options.endedAtIso) || await getServerNowIso();
         var durationMs = Number(options.durationMs);
         if(!isFinite(durationMs) || durationMs < 0) durationMs = computeElapsed(room.cleaningTimer);
-        // Ensure ended_at is at least 1ms after started_at (DB constraint requires strict >)
         if(durationMs < 1) durationMs = 1;
         var roomName = options.roomName != null ? options.roomName : (room.name || room.label || room.id);
+        // Clamp ended_at to be strictly after started_at (DB constraint: ended_after_started)
+        var sessionRow = await supabase.from("cleaning_sessions").select("started_at").eq("id", sessionId).maybeSingle();
+        if(sessionRow && sessionRow.data && sessionRow.data.started_at){
+          var startedMs = new Date(sessionRow.data.started_at).getTime();
+          var endedMs = new Date(endedAtIso).getTime();
+          if(endedMs <= startedMs){
+            endedAtIso = new Date(startedMs + Math.max(durationMs, 1)).toISOString();
+          }
+        }
         var res = await supabase.from("cleaning_sessions")
           .update({
             ended_at: endedAtIso,
