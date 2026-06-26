@@ -916,23 +916,32 @@
     }
 
     /* ===== Per-patient checklist (Advanced) =====
-       pclDock is a direct child of .room (outside roomBody), so it
-       naturally fills the card's full width. .room has overflow:hidden
-       which clips and rounds the bottom corners automatically.
-       The grid-template-rows:0fr trick needs zero padding on pclPanelInner
-       — all padding lives on pclPanelContent so the collapse is truly 0px. */
-    .pclDock{ display:block; }
+       The drawer extends from BELOW the card's bottom edge (popover style).
+       pclDock is position:absolute at top:100% so the card's own layout
+       (timer, badge) is completely undisturbed. .room gets overflow:visible
+       when open so the panel can extend below. */
+    .pclDock{
+      position:absolute;
+      left:-1px; right:-1px;
+      top:calc(100% - 1px);
+      z-index:15;
+    }
+    #displayGrid .room:has(.pclDock.isOpen){
+      overflow:visible;
+      z-index:40;
+    }
     .pclPanel{
       display:grid; grid-template-rows:0fr;
-      transition: grid-template-rows .32s cubic-bezier(.4,0,.2,1);
-      background: rgba(7,12,24,.90);
+      transition: grid-template-rows .34s cubic-bezier(.4,0,.2,1);
+      background: rgba(7,12,24,.92);
+      border: 1px solid rgba(255,255,255,.10);
+      border-top: none;
+      border-radius: 0 0 var(--radius, 16px) var(--radius, 16px);
+      box-shadow: 0 16px 40px rgba(0,0,0,.38);
     }
     .pclDock.isOpen .pclPanel{ grid-template-rows:1fr; }
     .pclPanelInner{ overflow:hidden; min-height:0; }
-    .pclPanelContent{
-      padding:12px 14px 14px;
-      border-top: 1px solid rgba(255,255,255,.08);
-    }
+    .pclPanelContent{ padding:12px 14px 14px; }
     .pclHeader{
       display:flex; align-items:center; justify-content:space-between;
       margin-bottom:10px;
