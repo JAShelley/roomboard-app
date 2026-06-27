@@ -533,6 +533,7 @@
       '  </div>',
       '  <div class="rbPaywallFooter">',
       '    ' + manageHtml,
+      '    <a class="rbPaywallLink" href="mailto:roomboardsupport@gmail.com?subject=RoomBoard%20billing%20help">Contact support</a>',
       '    <button class="rbPaywallLink" data-action="signout">Sign out</button>',
       '  </div>',
       '</div>'
