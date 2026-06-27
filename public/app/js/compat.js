@@ -254,7 +254,7 @@ function uuid(){
       var onlyActive = !!(state && state.settings && state.settings.displayOnlyActive);
       var isMobileToolbar = !!(window.matchMedia && window.matchMedia("(max-width: 820px)").matches);
       var quickViewOn = isMobileQuickViewEnabled();
-      if(activeSwitch) activeSwitch.classList.toggle("on", onlyActive);
+      if(activeSwitch){ activeSwitch.classList.toggle("on", onlyActive); activeSwitch.setAttribute("aria-checked", onlyActive ? "true" : "false"); }
       if(activeWrap) activeWrap.classList.toggle("isActive", onlyActive);
       if(sortSelect) sortSelect.value = (state && state.settings && state.settings.displaySortMode === "time") ? "time" : "room";
       if(toolbar) toolbar.classList.toggle("activeSortBeforeToggle", !quickViewOn && onlyActive);

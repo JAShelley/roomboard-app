@@ -13,7 +13,7 @@
 	        var notes = isRoomCardFieldVisible("StatusNotes") ? String(room.notes || "") : "";
 		      if(room.needsCleaning || !notes) return "";
 	      return '<details class="roomNotesDock">'
-	        + '<summary class="roomNotesBtn" title="View status notes">📝</summary>'
+	        + '<summary class="roomNotesBtn" title="View status notes" aria-label="View status notes">📝</summary>'
 	        + '<div class="roomNotesPanel">'
 	          + (notes ? '<div class="roomNotesItem"><div class="roomNotesLabel">Notes</div><div class="roomNotesValue">' + escapeHtmlWithLineBreaks(notes) + '</div></div>' : '')
 	        + '</div>'
@@ -230,7 +230,7 @@
         + '<section class="mobileDisplayExpandCard">'
         +   '<div class="mobileDisplayExpandActions">'
         +     '<button class="btn sm mobileDisplayExpandActionBtn" data-action="displayDischarge" data-room-id="' + escapeHtml(room.id) + '" type="button">' + escapeHtml(getDischargeButtonIcon(room.needsCleaning)) + ' ' + escapeHtml(room.needsCleaning ? "Mark clean" : "Discharge") + '</button>'
-        +     (hasRedoDischarge(room) ? '<button class="mobileDisplayExpandRedoBtn" data-action="displayRedo" data-room-id="' + escapeHtml(room.id) + '" type="button" title="Redo discharge">↺</button>' : '')
+        +     (hasRedoDischarge(room) ? '<button class="mobileDisplayExpandRedoBtn" data-action="displayRedo" data-room-id="' + escapeHtml(room.id) + '" type="button" title="Redo discharge" aria-label="Redo discharge">↺</button>' : '')
         +   '</div>'
         +   '<div class="mobileDisplayExpandGrid">' + detailFields + '</div>'
         +   (noteMarkup ? '<div class="mobileDisplayExpandNotes">'
@@ -343,8 +343,8 @@
       var readyMarkup = "";
       if(isQuickMiniBoard && isRoomCardFieldVisible("Ready") && !room.needsCleaning){
         readyMarkup = '<span class="mobileQuickMiniReady">'
-          + '<span class="mobileQuickMiniReadyBadge' + (room.roomReady ? ' is-on' : ' is-off') + '">R</span>'
-          + '<span class="mobileQuickMiniReadyBadge' + (room.doctorReady ? ' is-on' : ' is-off') + '">D</span>'
+          + '<span class="mobileQuickMiniReadyBadge' + (room.roomReady ? ' is-on' : ' is-off') + '" aria-label="' + (room.roomReady ? 'Room ready' : 'Room not ready') + '">R</span>'
+          + '<span class="mobileQuickMiniReadyBadge' + (room.doctorReady ? ' is-on' : ' is-off') + '" aria-label="' + (room.doctorReady ? 'Doctor ready' : 'Doctor not ready') + '">D</span>'
         + '</span>';
       }
       var isEmptyCompact = (
@@ -498,6 +498,20 @@
       if(!skipTimerBindingRefresh) rebuildTimerBindings();
     }
 
+    // Concise spoken label for a display card (room + occupancy state), used both
+    // for the card's aria-label and for live-region announcements during a
+    // keyboard pick-up/put-down move.
+    function roomCardAccessibleLabel(room){
+      var name = room.name || "Room";
+      if(room.needsCleaning) return name + ", needs cleaning";
+      if(!room.patientName) return name + ", empty";
+      var color = getColorById(room.colorLabelId);
+      var parts = [room.patientName];
+      if(color && color.title) parts.push(color.title);
+      if(room.doctor) parts.push("Dr. " + room.doctor);
+      return name + ", " + parts.join(", ");
+    }
+
     function createDisplayRoomElement(room, isList){
       var color = getColorById(room.colorLabelId);
       var effectiveColor = room.colorHex ? room.colorHex : color.color;
@@ -514,6 +528,11 @@
 	      var el = document.createElement("section");
       el.dataset.roomId = room.id;
       el.setAttribute("draggable", "true");
+      // Keyboard equivalent of drag-to-move: card is a focusable target that can be
+      // "picked up" with Shift and dropped onto another room (see bindDisplayActions).
+      el.tabIndex = 0;
+      el.setAttribute("aria-roledescription", "Draggable room");
+      el.setAttribute("aria-label", roomCardAccessibleLabel(room));
 
       if(isList){
         var patientCellHtml = "";
@@ -524,7 +543,7 @@
         var notesCellHtml = "";
 	        if(roomQuickNotes.length) notesCellHtml += '<span class="wbQuickNotes">' + roomQuickNotes.map(escapeHtml).join('<span class="roomInfoSep" aria-hidden="true">&#12539;</span>') + '</span>';
 	        if(notesDock) notesCellHtml += '<span class="wbNotesIconSlot">'+notesDock+'</span>';
-	        if(showReady) notesCellHtml += '<span class="wbReady"><span class="r '+(room.roomReady ? '' : 'off')+'">room ✅</span><span class="r '+(room.doctorReady ? '' : 'off')+'">doctor ✅</span></span>';
+	        if(showReady) notesCellHtml += '<span class="wbReady"><span class="r '+(room.roomReady ? '' : 'off')+'" aria-label="'+(room.roomReady ? 'Room ready' : 'Room not ready')+'"><span aria-hidden="true">room ✅</span></span><span class="r '+(room.doctorReady ? '' : 'off')+'" aria-label="'+(room.doctorReady ? 'Doctor ready' : 'Doctor not ready')+'"><span aria-hidden="true">doctor ✅</span></span></span>';
         if(!notesCellHtml) notesCellHtml = '<span class="muted">—</span>';
         el.className = "room" + (room.needsCleaning ? " cleaning" : "") + (roomMatchesSelectedDoctor(room) ? " doctorSelected" : "");
         el.style.borderLeft = "6px solid " + (room.needsCleaning ? "rgba(251,191,36,.65)" : (effectiveColor + "AA"));
@@ -540,8 +559,8 @@
             + '<div class="wbCell wbTechCell" data-label="Tech">'+(showTech && room.tech ? escapeHtml(room.tech) : '<span class="muted">—</span>')+'</div>'
             + '<div class="wbCell wbNotes" data-label="Notes">'+notesCellHtml+'</div>'
             + '<div class="wbCell wbTimer"><div class="wbTimerWrap">'
-              + '<button class="wbIconBtn" data-action="displayDischarge" data-room-id="'+room.id+'" title="'+(room.needsCleaning ? 'Mark clean' : 'Discharge')+'">'+getDischargeButtonIcon(room.needsCleaning)+'</button>'
-              + (hasRedoDischarge(room) ? '<button class="wbIconBtn" data-action="displayRedo" data-room-id="'+room.id+'" title="Redo discharge">↺</button>' : '')
+              + '<button class="wbIconBtn" data-action="displayDischarge" data-room-id="'+room.id+'" title="'+(room.needsCleaning ? 'Mark clean' : 'Discharge')+'" aria-label="'+(room.needsCleaning ? 'Mark clean' : 'Discharge')+'">'+getDischargeButtonIcon(room.needsCleaning)+'</button>'
+              + (hasRedoDischarge(room) ? '<button class="wbIconBtn" data-action="displayRedo" data-room-id="'+room.id+'" title="Redo discharge" aria-label="Redo discharge">↺</button>' : '')
               + '<span class="wbTimerText'+(room.needsCleaning ? ' timerCleaning' : (isTimerRunning ? ' timerRunning' : ''))+'" data-timerText data-room-id="'+room.id+'">'+formatTime(computeElapsed(timer))+'</span>'
             + '</div></div>'
           + '</div>';
@@ -588,7 +607,7 @@
       el.innerHTML =
         '<div class="roomTop">'
           + '<div class="roomName"><span class="wbRoomNameWrap"><span class="wbRoomName">'+escapeHtml(room.name)+'</span></span></div>'
-          + '<button class="iconBtn" data-action="displayDischarge" data-room-id="'+room.id+'" title="'+(room.needsCleaning ? 'Mark clean' : 'Discharge')+'">'+getDischargeButtonIcon(room.needsCleaning)+'</button>'
+          + '<button class="iconBtn" data-action="displayDischarge" data-room-id="'+room.id+'" title="'+(room.needsCleaning ? 'Mark clean' : 'Discharge')+'" aria-label="'+(room.needsCleaning ? 'Mark clean' : 'Discharge')+'">'+getDischargeButtonIcon(room.needsCleaning)+'</button>'
         + '</div>'
         + '<div class="roomBody">'
           + summary
@@ -600,7 +619,7 @@
         + '</div>'
         + notesDock
         + (typeof window.buildPatientChecklistDockHtml === "function" ? window.buildPatientChecklistDockHtml(room) : "")
-        + (hasRedoDischarge(room) ? '<button class="roomRedoBtn" data-action="displayRedo" data-room-id="'+room.id+'" title="Redo discharge">↺</button>' : '')
+        + (hasRedoDischarge(room) ? '<button class="roomRedoBtn" data-action="displayRedo" data-room-id="'+room.id+'" title="Redo discharge" aria-label="Redo discharge">↺</button>' : '')
 	        + (displayDoctorInitials ? '<div class="docInitCorner">' + buildDoctorBadgeMarkup(room.doctor, displayDoctorInitials) + '</div>' : '');
 	      return el;
 	    }
@@ -1071,10 +1090,114 @@
       syncRoomNotesLayers();
     }
 
+	    function displayMoveAnnounce(msg){
+	      var live = document.getElementById("displayMoveLive");
+	      if(!live){
+	        live = document.createElement("div");
+	        live.id = "displayMoveLive";
+	        live.className = "srOnly";
+	        live.setAttribute("aria-live", "assertive");
+	        live.setAttribute("aria-atomic", "true");
+	        document.body.appendChild(live);
+	      }
+	      // Clear first so repeating the same message is still announced.
+	      live.textContent = "";
+	      setTimeout(function(){ live.textContent = msg; }, 30);
+	    }
+
+	    function bindDisplayKeyboardMove(grid){
+	      if(!grid || grid.__kbMoveBound) return;
+	      grid.__kbMoveBound = true;
+
+	      var pickedUpId = null;   // room id currently "carried"
+	      var shiftPending = false; // a lone Shift is being held (no other key yet)
+	      var shiftCombo = false;   // another key was pressed during the Shift hold
+
+	      function clearPickup(){
+	        pickedUpId = null;
+	        var els = grid.querySelectorAll(".room.isKbPickedUp");
+	        for(var i=0; i<els.length; i++) els[i].classList.remove("isKbPickedUp");
+	      }
+
+	      // Left/Up -> previous card, Right/Down -> next card (DOM order). Predictable
+	      // for AT users and viewport-independent.
+	      function focusAdjacent(card, key){
+	        var cards = Array.prototype.slice.call(grid.querySelectorAll('.room[data-room-id]'));
+	        var idx = cards.indexOf(card);
+	        if(idx < 0) return false;
+	        var dir = (key === "ArrowLeft" || key === "ArrowUp") ? -1 : 1;
+	        var next = cards[idx + dir];
+	        if(!next) return false;
+	        next.focus();
+	        return true;
+	      }
+
+	      grid.addEventListener("keydown", function(e){
+	        if(e.key === "Shift"){
+	          if(!e.repeat){ shiftPending = true; shiftCombo = false; }
+	          return;
+	        }
+	        // Any non-Shift key during the hold means this Shift is a modifier
+	        // (Shift+Tab, Shift+Arrow, …), not a lone pick-up/drop press.
+	        if(e.shiftKey) shiftCombo = true;
+
+	        var card = closestRoomCard(e.target);
+	        if(!card) return;
+
+	        if(e.key === "Escape"){
+	          if(pickedUpId){
+	            e.preventDefault();
+	            var name = roomCardAccessibleLabel(findRoomById(pickedUpId) || {});
+	            clearPickup();
+	            displayMoveAnnounce("Cancelled. " + name + " stayed put.");
+	          }
+	          return;
+	        }
+	        if(e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown"){
+	          if(focusAdjacent(card, e.key)) e.preventDefault();
+	          return;
+	        }
+	      });
+
+	      grid.addEventListener("keyup", function(e){
+	        if(e.key !== "Shift") return;
+	        var clean = shiftPending && !shiftCombo;
+	        shiftPending = false;
+	        if(!clean) return;
+
+	        var card = closestRoomCard(document.activeElement);
+	        if(!card) return;
+	        var id = card.getAttribute("data-room-id") || card.dataset.roomId;
+	        if(!id) return;
+
+	        if(!pickedUpId){
+	          pickedUpId = id;
+	          card.classList.add("isKbPickedUp");
+	          displayMoveAnnounce("Picked up " + roomCardAccessibleLabel(findRoomById(id) || {})
+	            + ". Use arrow keys to choose a room, Shift to drop, Escape to cancel.");
+	        } else if(pickedUpId === id){
+	          clearPickup();
+	          displayMoveAnnounce("Put back. Nothing moved.");
+	        } else {
+	          var fromId = pickedUpId;
+	          var toId = id;
+	          var fromName = roomCardAccessibleLabel(findRoomById(fromId) || {});
+	          var toName = (findRoomById(toId) || {}).name || "room";
+	          clearPickup();
+	          enqueueRoomBoardMutation(function(){
+	            swapRoomsById(fromId, toId, { immediate: true });
+	          });
+	          displayMoveAnnounce("Moved " + fromName + " to " + toName + ".");
+	        }
+	      });
+
+	    }
+
 	    function bindDisplayActions(){
 	      var grid = $("displayGrid");
 	      if(!grid || grid.__bound) return;
 	      grid.__bound = true;
+	      bindDisplayKeyboardMove(grid);
 
 			      grid.addEventListener("click", function(e){
 			        if(Date.now() < mobileSuppressClickUntilMs){
@@ -1391,8 +1514,8 @@
               + '</div>'
               + '<div class="row2 techRowCompact">'
                 + '<div class="field"><label>Initials</label><input data-field="tech" type="text" value="'+escapeHtml(room.tech)+'" placeholder="e.g., AJ" /></div>'
-                + '<div class="drReadyCompact" title="Room ready"><span class="drReadyIcon">🚪</span><div class="switch '+(room.roomReady ? "on" : "")+'" data-action="toggleRoomReady"><div class="knob"></div></div></div>'
-                + '<div class="drReadyCompact" title="Doctor ready"><span class="drReadyIcon">🩺</span><div class="switch '+(room.doctorReady ? "on" : "")+'" data-action="toggleDoctorReady"><div class="knob"></div></div></div>'
+                + '<div class="drReadyCompact" title="Room ready"><span class="drReadyIcon">🚪</span><div class="switch '+(room.roomReady ? "on" : "")+'" data-action="toggleRoomReady" role="switch" tabindex="0" aria-checked="'+(room.roomReady ? "true" : "false")+'" aria-label="Room ready"><div class="knob"></div></div></div>'
+                + '<div class="drReadyCompact" title="Doctor ready"><span class="drReadyIcon">🩺</span><div class="switch '+(room.doctorReady ? "on" : "")+'" data-action="toggleDoctorReady" role="switch" tabindex="0" aria-checked="'+(room.doctorReady ? "true" : "false")+'" aria-label="Doctor ready"><div class="knob"></div></div></div>'
               + '</div>'
             + '</div>'
           )
@@ -1411,8 +1534,8 @@
 	              + '<div class="field full"><label>Quick notes</label>'+createQuickNotePickerHtml(room)+'</div>'
 	              + '<div class="field"><label>Status notes</label><textarea data-field="notes" placeholder="Status notes...">'+escapeHtml(room.notes)+'</textarea></div>'
               + '<div class="row2">'
-                + '<div class="toggle"><div><div style="font-weight:700;">Room ready</div><div class="muted">Patient ready in room</div></div><div class="switch '+(room.roomReady ? "on" : "")+'" data-action="toggleRoomReady"><div class="knob"></div></div></div>'
-                + '<div class="toggle"><div><div style="font-weight:700;">Doctor ready</div><div class="muted">Doctor ready to go in</div></div><div class="switch '+(room.doctorReady ? "on" : "")+'" data-action="toggleDoctorReady"><div class="knob"></div></div></div>'
+                + '<div class="toggle"><div><div style="font-weight:700;">Room ready</div><div class="muted">Patient ready in room</div></div><div class="switch '+(room.roomReady ? "on" : "")+'" data-action="toggleRoomReady" role="switch" tabindex="0" aria-checked="'+(room.roomReady ? "true" : "false")+'" aria-label="Room ready"><div class="knob"></div></div></div>'
+                + '<div class="toggle"><div><div style="font-weight:700;">Doctor ready</div><div class="muted">Doctor ready to go in</div></div><div class="switch '+(room.doctorReady ? "on" : "")+'" data-action="toggleDoctorReady" role="switch" tabindex="0" aria-checked="'+(room.doctorReady ? "true" : "false")+'" aria-label="Doctor ready"><div class="knob"></div></div></div>'
               + '</div>'
               + '<div class="timerRow">'
                 + '<div class="timerBox'+(room.needsCleaning ? ' timerCleaning' : (isTimerRunning ? ' timerRunning' : ''))+'">'
@@ -1424,7 +1547,7 @@
                 + '</div>'
               + '</div>'
             + '</div>'
-            + (hasRedoDischarge(room) ? '<button class="roomRedoBtn" data-action="redoDischarge" title="Redo discharge">↺</button>' : '')
+            + (hasRedoDischarge(room) ? '<button class="roomRedoBtn" data-action="redoDischarge" title="Redo discharge" aria-label="Redo discharge">↺</button>' : '')
           )
         );
       return el;
@@ -1623,6 +1746,15 @@
         var room = card ? findRoomById(card.getAttribute("data-room-id") || card.dataset.roomId) : null;
         if(!room) return;
         await handleIntakeRoomAction(room, node.getAttribute("data-action"));
+      });
+
+      // Keyboard activation for non-button switches (role="switch") — reuses the click delegation above.
+      grid.addEventListener("keydown", function(e){
+        if(e.key !== " " && e.key !== "Enter" && e.key !== "Spacebar") return;
+        var sw = e.target;
+        if(!sw || !sw.classList || !sw.classList.contains("switch") || !sw.getAttribute("data-action")) return;
+        e.preventDefault();
+        sw.click();
       });
 
       grid.addEventListener("dragstart", function(e){
@@ -1883,7 +2015,7 @@
           row.innerHTML =
             '<div class="dragHandle" draggable="true" title="Drag to reorder">⋮⋮</div>'
             + '<input type="text" value="'+escapeHtml(room.name)+'" />'
-            + '<button class="trash" title="Delete">✕</button>';
+            + '<button class="trash" title="Delete" aria-label="Delete">✕</button>';
 
           var handle = row.querySelector(".dragHandle");
           var input = row.querySelector("input");
@@ -1984,7 +2116,7 @@
           row.innerHTML =
             '<input type="text" value="'+escapeHtml(name)+'" />'
             + '<div class="muted" style="text-align:right;">&nbsp;</div>'
-            + '<button class="trash" title="Delete">✕</button>';
+            + '<button class="trash" title="Delete" aria-label="Delete">✕</button>';
 
           var input = row.querySelector("input");
           input.addEventListener("input", function(){
@@ -2077,7 +2209,7 @@
               +   '<div class="muted" style="font-size:12px;">Initials</div>'
               + '</div>'
               + '<input type="text" value="'+escapeHtml(cur)+'" placeholder="e.g., JS" style="max-width:120px;" />'
-              + '<button class="trash" title="Clear">✕</button>';
+              + '<button class="trash" title="Clear" aria-label="Clear">✕</button>';
 
             var input = row.querySelector("input");
             input.addEventListener("input", function(){
@@ -2245,7 +2377,7 @@
           row.innerHTML =
             '<input type="text" value="'+escapeHtml(color.title)+'" />'
             + '<input type="color" value="'+escapeHtml(color.color)+'" style="height:36px; width:90px; border-radius:0px; border:1px solid var(--border); background:transparent; padding:4px;" />'
-            + '<button class="trash" title="Delete">✕</button>';
+            + '<button class="trash" title="Delete" aria-label="Delete">✕</button>';
 
           var titleInput = row.querySelectorAll("input")[0];
           var colorInput = row.querySelectorAll("input")[1];
@@ -2349,7 +2481,7 @@
               row.innerHTML =
                 '<input type="text" value="'+escapeHtml(noteLabel)+'" />'
                 + '<div class="muted" style="text-align:right;">' + escapeHtml(String(getRoomIdsUsingQuickNote(noteLabel).length || 0)) + ' rooms</div>'
-                + '<button class="trash" title="Delete">✕</button>';
+                + '<button class="trash" title="Delete" aria-label="Delete">✕</button>';
 
               var input = row.querySelector("input");
               input.addEventListener("input", function(){

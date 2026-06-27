@@ -378,7 +378,7 @@
           +     '<div class="feedbackText">' + text + '</div>'
           +     '<div class="feedbackMeta">' + (done ? 'Checked off' : 'Open item') + (stamp ? ' • Added ' + stamp : '') + '</div>'
           +   '</div>'
-          +   '<button class="trash" data-feedback-action="remove" data-feedback-index="' + idx + '" title="Remove" type="button">✕</button>'
+          +   '<button class="trash" data-feedback-action="remove" data-feedback-index="' + idx + '" title="Remove" type="button" aria-label="Remove">✕</button>'
           + '</div>';
       }).join("");
     }
@@ -506,10 +506,24 @@
     var tabs = document.getElementById("settingsTabs");
     var select = document.getElementById("settingsTabSelect");
     if(!tabs) return;
+    // Establish ARIA tab semantics (WCAG 4.1.2)
+    tabs.setAttribute("role", "tablist");
+    Array.prototype.forEach.call(tabs.querySelectorAll(".tabBtn"), function(b){
+      var tabId = b.getAttribute("data-tab");
+      if(!tabId) return;
+      b.setAttribute("role", "tab");
+      b.setAttribute("id", "tabbtn-" + tabId);
+      b.setAttribute("aria-controls", tabId);
+      var panel = document.getElementById(tabId);
+      if(panel){ panel.setAttribute("role", "tabpanel"); panel.setAttribute("aria-labelledby", "tabbtn-" + tabId); }
+    });
     function activateSettingsTab(tabId){
       if(!tabId) return;
       Array.prototype.forEach.call(tabs.querySelectorAll(".tabBtn"), function(b){
-        b.classList.toggle("active", b.getAttribute("data-tab") === tabId);
+        var on = b.getAttribute("data-tab") === tabId;
+        b.classList.toggle("active", on);
+        b.setAttribute("aria-selected", on ? "true" : "false");
+        b.setAttribute("tabindex", on ? "0" : "-1");
       });
       Array.prototype.forEach.call(document.querySelectorAll(".tabPanel"), function(p){
         p.classList.toggle("active", p.id === tabId);
@@ -523,6 +537,17 @@
       var tabId = btn.getAttribute("data-tab");
       if(!tabId) return;
       activateSettingsTab(tabId);
+    });
+    tabs.addEventListener("keydown", function(e){
+      var btns = Array.prototype.slice.call(tabs.querySelectorAll(".tabBtn"));
+      var i = btns.indexOf(document.activeElement);
+      if(i < 0) return;
+      var next = null;
+      if(e.key === "ArrowRight" || e.key === "ArrowDown") next = btns[(i + 1) % btns.length];
+      else if(e.key === "ArrowLeft" || e.key === "ArrowUp") next = btns[(i - 1 + btns.length) % btns.length];
+      else if(e.key === "Home") next = btns[0];
+      else if(e.key === "End") next = btns[btns.length - 1];
+      if(next){ e.preventDefault(); activateSettingsTab(next.getAttribute("data-tab")); next.focus(); }
     });
     if(select){
       select.addEventListener("change", function(){
@@ -610,6 +635,12 @@
     $("displayOnlyActiveSwitch").addEventListener("click", function(e){
       if(e) e.stopPropagation();
       toggleDisplayOnlyActive();
+    });
+    $("displayOnlyActiveSwitch").addEventListener("keydown", function(e){
+      if(e.key === " " || e.key === "Enter" || e.key === "Spacebar"){
+        e.preventDefault(); e.stopPropagation();
+        toggleDisplayOnlyActive();
+      }
     });
     $("displayOnlyActiveWrap").addEventListener("click", function(e){
       if(!window.matchMedia || !window.matchMedia("(max-width: 820px)").matches) return;
