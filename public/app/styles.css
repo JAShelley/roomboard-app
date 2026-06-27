@@ -820,10 +820,16 @@
 	      overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
 	      white-space:nowrap; border:0;
 	    }
-	    /* Keyboard focus ring for display cards (focusable for pick-up/put-down). */
+	    /* Keyboard focus ring for display cards (focusable for pick-up/put-down).
+	       The outer box-shadow ring is what stays visible — an inset outline alone
+	       gets painted over by the card's own content. z-index lifts the focused
+	       card above its neighbours so the ring isn't clipped by adjacent cards. */
 	    #displayGrid .room:focus-visible{
 	      outline:3px solid rgba(125,211,252,.95);
 	      outline-offset:-3px;
+	      box-shadow:0 0 0 4px rgba(125,211,252,.55), 0 0 0 8px rgba(125,211,252,.22), 0 18px 40px rgba(0,0,0,.45);
+	      position:relative;
+	      z-index:6;
 	    }
 	    /* A card currently "carried" by the keyboard move flow. */
 	    #displayGrid .room.isKbPickedUp{
