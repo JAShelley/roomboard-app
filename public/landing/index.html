@@ -46,10 +46,10 @@
       <a href="#faq">FAQ</a>
     </div>
     <div class="nav-actions">
-      <button class="menu-btn icon-btn" id="menuBtn" aria-label="Open menu">
+      <button class="menu-btn icon-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
       </button>
-      <button class="icon-btn theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle theme">
+      <button class="icon-btn theme-toggle" id="themeToggle" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle theme">
         <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>
         <svg class="moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
       </button>
@@ -495,16 +495,16 @@
     </div>
     <div class="showcase">
     <div class="tabs-demo reveal" id="tabsDemo">
-      <div class="tabbar" id="tabbar">
-        <span class="t active" data-p="p-rooms">Rooms</span>
-        <span class="t" data-p="p-staff">Staff</span>
-        <span class="t" data-p="p-display">Display</span>
-        <span class="t" data-p="p-timers">Timers</span>
-        <span class="t" data-p="p-brand">Branding</span>
-        <span class="t" data-p="p-tools">Tools</span>
+      <div class="tabbar" id="tabbar" role="tablist" aria-label="Settings sections">
+        <button type="button" class="t active" role="tab" id="tab-rooms" aria-selected="true" aria-controls="p-rooms" data-p="p-rooms">Rooms</button>
+        <button type="button" class="t" role="tab" id="tab-staff" aria-selected="false" tabindex="-1" aria-controls="p-staff" data-p="p-staff">Staff</button>
+        <button type="button" class="t" role="tab" id="tab-display" aria-selected="false" tabindex="-1" aria-controls="p-display" data-p="p-display">Display</button>
+        <button type="button" class="t" role="tab" id="tab-timers" aria-selected="false" tabindex="-1" aria-controls="p-timers" data-p="p-timers">Timers</button>
+        <button type="button" class="t" role="tab" id="tab-brand" aria-selected="false" tabindex="-1" aria-controls="p-brand" data-p="p-brand">Branding</button>
+        <button type="button" class="t" role="tab" id="tab-tools" aria-selected="false" tabindex="-1" aria-controls="p-tools" data-p="p-tools">Tools</button>
       </div>
-      <div class="panel" id="p-rooms">
-        <h4>Rooms &amp; board setup</h4>
+      <div class="panel" id="p-rooms" role="tabpanel" aria-labelledby="tab-rooms">
+        <h3>Rooms &amp; board setup</h3>
         <p>Name your rooms, set visit types with colors, and manage clinic-wide quick notes.</p>
         <div class="mini-rooms">
           <div class="mini-room" style="--c:var(--st-exam)"><span>Room 1</span><span class="mr-t">7:12</span></div>
@@ -519,8 +519,8 @@
           <span class="mini-type" style="--tc:var(--st-ready)">Discharge</span>
         </div>
       </div>
-      <div class="panel hidden" id="p-staff">
-        <h4>Staff &amp; provider badges</h4>
+      <div class="panel hidden" id="p-staff" role="tabpanel" aria-labelledby="tab-staff">
+        <h3>Staff &amp; provider badges</h3>
         <p>Every doctor or tech gets their own badge — shown on every room card they're assigned to.</p>
         <div class="staff-badges-grid">
           <span class="staff-badge-item"><img alt="French Bulldog" src="/app/french-bulldog-badge.png" onerror="this.style.display='none';this.parentNode.textContent='🐶'"></span>
@@ -535,8 +535,8 @@
           Unlimited staff members — add as many doctors and techs as your practice needs
         </div>
       </div>
-      <div class="panel hidden" id="p-display">
-        <h4>Display &amp; layout</h4>
+      <div class="panel hidden" id="p-display" role="tabpanel" aria-labelledby="tab-display">
+        <h3>Display &amp; layout</h3>
         <p>Grid or list, column count, card scale, and which fields show on every room card.</p>
         <div class="mini-field-grid">
           <label class="mini-field-toggle"><input type="checkbox" checked><span>Patient name</span></label>
@@ -548,8 +548,8 @@
         </div>
         <div class="toggle-row" style="margin-top:10px">Only active rooms <span class="sw"></span></div>
       </div>
-      <div class="panel hidden" id="p-timers">
-        <h4>Timers &amp; actions</h4>
+      <div class="panel hidden" id="p-timers" role="tabpanel" aria-labelledby="tab-timers">
+        <h3>Timers &amp; actions</h3>
         <p>Set when timers turn amber then red, and choose your stopwatch style.</p>
         <div class="mini-timer-thresholds">
           <div class="mini-thresh-row">
@@ -566,8 +566,8 @@
         <div class="toggle-row" style="margin-top:10px">Visit timer <span class="sw"></span></div>
         <div class="toggle-row">Cleaning timer <span class="sw"></span></div>
       </div>
-      <div class="panel hidden" id="p-brand">
-        <h4>Branding &amp; theme</h4>
+      <div class="panel hidden" id="p-brand" role="tabpanel" aria-labelledby="tab-brand">
+        <h3>Branding &amp; theme</h3>
         <p>Pick from 13 board themes, then add your clinic name or logo.</p>
         <!-- Theme picker row -->
         <div class="btp-row" id="btpRow">
@@ -614,8 +614,8 @@
           </div>
         </div>
       </div>
-      <div class="panel hidden" id="p-tools">
-        <h4>Tools &amp; downloads</h4>
+      <div class="panel hidden" id="p-tools" role="tabpanel" aria-labelledby="tab-tools">
+        <h3>Tools &amp; downloads</h3>
         <p>Everything in one place — desktop app, Chrome extension, and capture helper.</p>
         <div class="mini-tool-list">
           <div class="mini-tool-row">
@@ -749,7 +749,7 @@
 
     <div class="billing-toggle">
       <span class="bt-opt active" id="btMonthly">Monthly</span>
-      <button class="bt-switch billing-monthly" id="billingSwitch" aria-label="Toggle billing period"><span class="bt-knob"></span></button>
+      <button class="bt-switch billing-monthly" id="billingSwitch" role="switch" aria-checked="false" aria-label="Bill annually"><span class="bt-knob"></span></button>
       <span class="bt-opt" id="btAnnual">Annual <span class="bt-save">Save 17%</span></span>
     </div>
 
@@ -785,7 +785,7 @@
         <a class="btn primary plan-cta" href="/app/index.html?mode=startup&auth=signup">Start free trial</a>
         <ul class="plan-features">
           <li>Everything in Base</li>
-          <li>iPhone &amp; iPad app <span style="font-size:11px;opacity:.65;font-weight:500">(coming soon)</span></li>
+          <li>iPhone &amp; iPad app <span style="font-size:11px;color:var(--muted);font-weight:500">(coming soon)</span></li>
           <li>Custom clinic branding &amp; logo</li>
           <li>Stats dashboard</li>
           <li>2 boards (e.g. rooms + surgery)</li>
@@ -810,27 +810,27 @@
     </div>
     <div class="faq" id="faqList">
       <div class="qa">
-        <button class="qa-q">What kind of practices is RoomBoard for?<span class="chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+        <button class="qa-q" aria-expanded="false">What kind of practices is RoomBoard for?<span class="chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
         <div class="qa-a"><p>Any practice that moves patients through rooms — medical (MD), osteopathic (DO), dental, physical therapy, veterinary, and more. You define your own rooms, providers, and visit types, so it fits how your office actually runs.</p></div>
       </div>
       <div class="qa">
-        <button class="qa-q">How does the board stay in sync?<span class="chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+        <button class="qa-q" aria-expanded="false">How does the board stay in sync?<span class="chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
         <div class="qa-a"><p>Every device for your clinic shares one live board. A change on the front desk shows up on the wall display and on the phone in the back in real time, and a sync indicator tells you the board is current.</p></div>
       </div>
       <div class="qa">
-        <button class="qa-q">What does appointment capture actually do?<span class="chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+        <button class="qa-q" aria-expanded="false">What does appointment capture actually do?<span class="chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
         <div class="qa-a"><p>Instead of retyping a patient, you click the appointment in your existing scheduler. The native helper reads it (with on-device OCR as a backup for image-based schedulers), pre-fills a quick-send card, and you confirm the room. A browser extension covers web schedulers too.</p></div>
       </div>
       <div class="qa">
-        <button class="qa-q">Do I need to install anything to try it?<span class="chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+        <button class="qa-q" aria-expanded="false">Do I need to install anything to try it?<span class="chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
         <div class="qa-a"><p>No — open the board in any browser to start, on any computer, tablet, or wall display. There's an optional Chrome extension if you want to capture appointments straight from a web-based scheduler. Native desktop, phone, and watch apps are in development.</p></div>
       </div>
       <div class="qa">
-        <button class="qa-q">Is my patients' data safe?<span class="chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+        <button class="qa-q" aria-expanded="false">Is my patients' data safe?<span class="chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
         <div class="qa-a"><p>RoomBoard is designed so you never have to send protected health information to us. The board holds first names, room assignments, and appointment types — not medical records or clinical notes. Appointment capture keeps everything on your device until you choose to send it. Each clinic gets its own isolated account with encrypted connections, and no clinic can see another's data.</p></div>
       </div>
       <div class="qa">
-        <button class="qa-q">How much does it cost after the trial?<span class="chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+        <button class="qa-q" aria-expanded="false">How much does it cost after the trial?<span class="chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
         <div class="qa-a"><p>Pricing is per clinic, with unlimited team members. Base is $29.99/month (or $300/year) and includes the web board, appointment capture, always-on timers, real-time sync, and unlimited rooms and team members. Advanced is $49.99/month (or $500/year) and adds the iPhone &amp; iPad app, custom clinic branding &amp; logo, the Stats dashboard, and a second board for multi-area setups. The first 40 clinics can lock in Advanced at $29.99/month for life, and every additional clinic location gets 25% off. Both plans start with a 14-day free trial — you won't be charged until the trial ends, and you can cancel anytime before then.</p></div>
       </div>
     </div>
@@ -861,7 +861,7 @@
       <p class="footer-about">The live room board that keeps your whole clinic in sync — on the wall, the desk, and your wrist.</p>
     </div>
     <div class="footer-col">
-      <h4>Product</h4>
+      <h2>Product</h2>
       <a href="#features">Features</a>
       <a href="#capture">Capture</a>
       <a href="#devices">Devices</a>
@@ -869,12 +869,12 @@
       <a href="#pricing">Pricing</a>
     </div>
     <div class="footer-col">
-      <h4>Get it</h4>
+      <h2>Get it</h2>
       <a href="/app/index.html?mode=startup&next=board">Open web board</a>
       <a href="/app/index.html?mode=startup&auth=signup">Start free trial</a>
     </div>
     <div class="footer-col">
-      <h4>Support</h4>
+      <h2>Support</h2>
       <a href="/app/index.html?mode=startup&auth=login&next=board">Sign in</a>
       <a href="#faq">FAQ</a>
       <a href="mailto:roomboardsupport@gmail.com">Contact us</a>

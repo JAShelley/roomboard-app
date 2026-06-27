@@ -14,9 +14,11 @@
   }
   var themeToggle = document.getElementById("themeToggle");
   if (themeToggle) {
+    themeToggle.setAttribute("aria-pressed", root.getAttribute("data-theme") === "dark" ? "true" : "false");
     themeToggle.addEventListener("click", function () {
       var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
       root.setAttribute("data-theme", next);
+      themeToggle.setAttribute("aria-pressed", next === "dark" ? "true" : "false");
       try { localStorage.setItem("rb-theme", next); } catch (e) {}
     });
   }
@@ -43,9 +45,15 @@
   /* ---------- Mobile menu ---------- */
   var menuBtn = document.getElementById("menuBtn");
   var mobileMenu = document.getElementById("mobileMenu");
-  function closeMenu() { if (mobileMenu) mobileMenu.classList.remove("open"); }
+  function closeMenu() {
+    if (mobileMenu) mobileMenu.classList.remove("open");
+    if (menuBtn) menuBtn.setAttribute("aria-expanded", "false");
+  }
   if (menuBtn && mobileMenu) {
-    menuBtn.addEventListener("click", function () { mobileMenu.classList.toggle("open"); });
+    menuBtn.addEventListener("click", function () {
+      var open = mobileMenu.classList.toggle("open");
+      menuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
     mobileMenu.addEventListener("click", function (e) {
       if (e.target.tagName === "A") closeMenu();
     });
@@ -83,14 +91,18 @@
         if (other !== qa) {
           other.classList.remove("open");
           other.querySelector(".qa-a").style.maxHeight = null;
+          var oq = other.querySelector(".qa-q");
+          if (oq) oq.setAttribute("aria-expanded", "false");
         }
       });
       if (isOpen) {
         qa.classList.remove("open");
         ans.style.maxHeight = null;
+        btn.setAttribute("aria-expanded", "false");
       } else {
         qa.classList.add("open");
         ans.style.maxHeight = ans.scrollHeight + "px";
+        btn.setAttribute("aria-expanded", "true");
       }
     });
   });
@@ -98,11 +110,17 @@
   /* ---------- Settings tabs demo ---------- */
   var tabbar = document.getElementById("tabbar");
   if (tabbar) {
-    tabbar.addEventListener("click", function (e) {
-      var t = e.target.closest(".t");
-      if (!t) return;
-      [].slice.call(tabbar.querySelectorAll(".t")).forEach(function (x) { x.classList.remove("active"); });
+    var tabs = [].slice.call(tabbar.querySelectorAll(".t"));
+    function activateTab(t, focus) {
+      tabs.forEach(function (x) {
+        x.classList.remove("active");
+        x.setAttribute("aria-selected", "false");
+        x.setAttribute("tabindex", "-1");
+      });
       t.classList.add("active");
+      t.setAttribute("aria-selected", "true");
+      t.setAttribute("tabindex", "0");
+      if (focus) t.focus();
       var targetId = t.getAttribute("data-p");
       var panels = [].slice.call(document.querySelectorAll("#tabsDemo .panel"));
       panels.forEach(function (p) {
@@ -117,6 +135,20 @@
           requestAnimationFrame(function () { target.style.opacity = ""; });
         });
       }
+    }
+    tabbar.addEventListener("click", function (e) {
+      var t = e.target.closest(".t");
+      if (t) activateTab(t, false);
+    });
+    tabbar.addEventListener("keydown", function (e) {
+      var i = tabs.indexOf(document.activeElement);
+      if (i < 0) return;
+      var next = null;
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") next = tabs[(i + 1) % tabs.length];
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") next = tabs[(i - 1 + tabs.length) % tabs.length];
+      else if (e.key === "Home") next = tabs[0];
+      else if (e.key === "End") next = tabs[tabs.length - 1];
+      if (next) { e.preventDefault(); activateTab(next, true); }
     });
   }
 
@@ -171,6 +203,7 @@
       billingSwitch.classList.toggle("billing-annual", isAnnual);
       billingSwitch.classList.toggle("billing-monthly", !isAnnual);
     }
+    if (billingSwitch) billingSwitch.setAttribute("aria-checked", isAnnual ? "true" : "false");
     if (btMonthly) btMonthly.classList.toggle("active", !isAnnual);
     if (btAnnual) btAnnual.classList.toggle("active", isAnnual);
     if (pricingGrid) {
