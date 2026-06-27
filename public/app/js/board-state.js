@@ -323,7 +323,12 @@
     window.getBootPersistenceScope = getBootPersistenceScope;
       var REMOTE_CONFIG_REFRESH_THROTTLE_MS = 1200;
       var AUTO_PULL_INTERVAL_MS = 6000;
-      var REALTIME_ACTIVE_GRACE_MS = 8000;
+      // When the realtime channel is healthy it pushes every change, so the 6s
+      // auto-pull doesn't need to fetch the whole board on every tick. Instead we
+      // do one low-frequency reconciliation pull to catch any event the channel
+      // might have dropped. This is the main lever against idle-board egress: a
+      // screen left open used to refetch the full board ~every 12s forever.
+      var REALTIME_RECONCILE_INTERVAL_MS = 5 * 60 * 1000;
       var SHORT_INTERACTION_HOLD_MS = 450;
       var CHANGE_INTERACTION_HOLD_MS = 700;
       var TEXT_INPUT_HOLD_MS = 1200;

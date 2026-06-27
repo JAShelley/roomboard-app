@@ -3998,6 +3998,11 @@
       staleDisplayWatchdogTimer = setInterval(function(){
         if(!supabase || !currentPracticeId) return;
         if(saving || remoteRefreshInFlight || remoteConfigRefreshInFlight || watchdogRecoveryInFlight) return;
+        // A healthy realtime channel keeps the board live; an idle board with no
+        // changes is not "stale", so don't refetch just because it's quiet. The
+        // auto-pull reconciliation handles the rare dropped-event case. Only
+        // recover here when realtime is actually down.
+        if(realtimeChannelHealthy) return;
         var ageMs = Date.now() - Number(lastBoardActivityAt || 0);
         if(ageMs < STALE_DISPLAY_THRESHOLD_MS) return;
         recoverStaleDisplay();
@@ -4518,7 +4523,13 @@
 	      autoPullTimer = setInterval(function(){
 	        if(!supabase || !currentPracticeId) return;
 	        if(remoteRateLimitUntil > Date.now()) return;
-        if(realtimeChannelHealthy && (Date.now() - Math.max(lastRealtimeEventAt || 0, lastBoardActivityAt || 0)) < REALTIME_ACTIVE_GRACE_MS) return;
+        // Realtime is live: it pushes every change, so don't fast-poll the whole
+        // board. Only do an occasional reconciliation pull (safety net for a
+        // dropped event). When realtime is unhealthy, fall through to the 6s
+        // fallback poll so screens still recover quickly.
+        if(realtimeChannelHealthy){
+          if(Date.now() - Math.max(lastRemoteRefreshAt || 0, lastBoardActivityAt || 0) < REALTIME_RECONCILE_INTERVAL_MS) return;
+        }
 	        if(saving || isUiInteractionLocked()){
 	          queuePendingRemoteRefresh("Refresh queued", "board");
 	          return;
