@@ -1698,7 +1698,7 @@
 
       el.innerHTML =
         '<div class="logSelect">'
-          + '<input class="logCheck" type="checkbox" ' + (selectedLogIds[row.id] ? 'checked' : '') + '/>'
+          + '<input class="logCheck" type="checkbox" ' + (selectedLogIds[row.id] ? 'checked' : '') + ' aria-label="Select session for ' + escapeHtml(row.room_name || "unnamed room") + '"/>'
           + '<div class="logMain">'
             + '<div class="logTitle">'
               + '<span class="logName">' + escapeHtml(row.room_name || "(unnamed room)") + '</span>'

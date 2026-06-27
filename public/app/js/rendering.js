@@ -1513,7 +1513,7 @@
                 + '<div class="field"><label>Doctor</label><div class="viewBox">'+escapeHtml(room.doctor || '')+'</div></div>'
               + '</div>'
               + '<div class="row2 techRowCompact">'
-                + '<div class="field"><label>Initials</label><input data-field="tech" type="text" value="'+escapeHtml(room.tech)+'" placeholder="e.g., AJ" /></div>'
+                + '<div class="field"><label>Initials</label><input data-field="tech" type="text" value="'+escapeHtml(room.tech)+'" placeholder="e.g., AJ" aria-label="Tech initials" /></div>'
                 + '<div class="drReadyCompact" title="Room ready"><span class="drReadyIcon">🚪</span><div class="switch '+(room.roomReady ? "on" : "")+'" data-action="toggleRoomReady" role="switch" tabindex="0" aria-checked="'+(room.roomReady ? "true" : "false")+'" aria-label="Room ready"><div class="knob"></div></div></div>'
                 + '<div class="drReadyCompact" title="Doctor ready"><span class="drReadyIcon">🩺</span><div class="switch '+(room.doctorReady ? "on" : "")+'" data-action="toggleDoctorReady" role="switch" tabindex="0" aria-checked="'+(room.doctorReady ? "true" : "false")+'" aria-label="Doctor ready"><div class="knob"></div></div></div>'
               + '</div>'
@@ -1525,11 +1525,11 @@
               + (room.needsCleaning ? '<span class="pill" style="border-color: rgba(251,191,36,.55); background: rgba(251,191,36,.12);"><strong>NEEDS CLEANING</strong></span>' : '<span class="muted">'+escapeHtml(color.title)+'</span>')
             + '</div>'
             + '<div class="roomBody">'
-              + '<div class="field"><label>Patient name</label><input data-field="patientName" type="text" value="'+escapeHtml(room.patientName)+'" placeholder="e.g., Bella" /></div>'
+              + '<div class="field"><label>Patient name</label><input data-field="patientName" type="text" value="'+escapeHtml(room.patientName)+'" placeholder="e.g., Bella" aria-label="Patient name" /></div>'
               + '<div class="row2"><div class="field"><label>Type</label><select data-field="colorLabelId">'+createColorOptionsHtml(room.colorLabelId)+'</select></div></div>'
               + '<div class="row2">'
                 + '<div class="field"><label>Doctor</label><select data-field="doctor">'+createDoctorOptionsHtml(room.doctor)+'</select></div>'
-                + '<div class="field"><label>Tech</label><input data-field="tech" type="text" value="'+escapeHtml(room.tech)+'" placeholder="e.g., Alex" /></div>'
+                + '<div class="field"><label>Tech</label><input data-field="tech" type="text" value="'+escapeHtml(room.tech)+'" placeholder="e.g., Alex" aria-label="Tech name" /></div>'
               + '</div>'
 	              + '<div class="field full"><label>Quick notes</label>'+createQuickNotePickerHtml(room)+'</div>'
 	              + '<div class="field"><label>Status notes</label><textarea data-field="notes" placeholder="Status notes...">'+escapeHtml(room.notes)+'</textarea></div>'
@@ -2014,7 +2014,7 @@
           row.setAttribute("data-room-id", room.id);
           row.innerHTML =
             '<div class="dragHandle" draggable="true" title="Drag to reorder">⋮⋮</div>'
-            + '<input type="text" value="'+escapeHtml(room.name)+'" />'
+            + '<input type="text" value="'+escapeHtml(room.name)+'" aria-label="Room name" />'
             + '<button class="trash" title="Delete" aria-label="Delete">✕</button>';
 
           var handle = row.querySelector(".dragHandle");
@@ -2114,7 +2114,7 @@
           var row = document.createElement("div");
           row.className = "listRow";
           row.innerHTML =
-            '<input type="text" value="'+escapeHtml(name)+'" />'
+            '<input type="text" value="'+escapeHtml(name)+'" aria-label="Doctor name" />'
             + '<div class="muted" style="text-align:right;">&nbsp;</div>'
             + '<button class="trash" title="Delete" aria-label="Delete">✕</button>';
 
@@ -2208,7 +2208,7 @@
               +   '<div style="font-weight:600;">'+escapeHtml(docName || "(none)")+'</div>'
               +   '<div class="muted" style="font-size:12px;">Initials</div>'
               + '</div>'
-              + '<input type="text" value="'+escapeHtml(cur)+'" placeholder="e.g., JS" style="max-width:120px;" />'
+              + '<input type="text" value="'+escapeHtml(cur)+'" placeholder="e.g., JS" style="max-width:120px;" aria-label="Doctor initials" />'
               + '<button class="trash" title="Clear" aria-label="Clear">✕</button>';
 
             var input = row.querySelector("input");
@@ -2276,8 +2276,8 @@
 	              +   '<div class="doctorBadgeDoctorName">' + escapeHtml(docName || "(none)") + '</div>'
 	              + '</div>'
 	              + buildDoctorBadgeMarkup(docName, previewInitials)
-	              + '<input type="color" value="' + escapeHtml(badgeStyle.color || "#0b1220") + '" title="Badge color" />'
-	              + '<input type="color" value="' + escapeHtml(badgeStyle.textColor || "#e8eefc") + '" title="Text color" />'
+	              + '<input type="color" value="' + escapeHtml(badgeStyle.color || "#0b1220") + '" title="Badge color" aria-label="Badge color" />'
+	              + '<input type="color" value="' + escapeHtml(badgeStyle.textColor || "#e8eefc") + '" title="Text color" aria-label="Badge text color" />'
 	              + '<select title="Badge shape">'
 	              +   '<option value="square"' + (badgeStyle.shape === "square" ? ' selected' : '') + '>Square</option>'
 	              +   '<option value="triangle"' + (badgeStyle.shape === "triangle" ? ' selected' : '') + '>Triangle</option>'
@@ -2375,8 +2375,8 @@
           var row = document.createElement("div");
           row.className = "listRow";
           row.innerHTML =
-            '<input type="text" value="'+escapeHtml(color.title)+'" />'
-            + '<input type="color" value="'+escapeHtml(color.color)+'" style="height:36px; width:90px; border-radius:0px; border:1px solid var(--border); background:transparent; padding:4px;" />'
+            '<input type="text" value="'+escapeHtml(color.title)+'" aria-label="Type or color label name" />'
+            + '<input type="color" value="'+escapeHtml(color.color)+'" style="height:36px; width:90px; border-radius:0px; border:1px solid var(--border); background:transparent; padding:4px;" aria-label="Color" />'
             + '<button class="trash" title="Delete" aria-label="Delete">✕</button>';
 
           var titleInput = row.querySelectorAll("input")[0];
@@ -2479,7 +2479,7 @@
               var row = document.createElement("div");
               row.className = "listRow";
               row.innerHTML =
-                '<input type="text" value="'+escapeHtml(noteLabel)+'" />'
+                '<input type="text" value="'+escapeHtml(noteLabel)+'" aria-label="Quick note" />'
                 + '<div class="muted" style="text-align:right;">' + escapeHtml(String(getRoomIdsUsingQuickNote(noteLabel).length || 0)) + ' rooms</div>'
                 + '<button class="trash" title="Delete" aria-label="Delete">✕</button>';
 
