@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" href="/favicon.png?v=navy2">
 <link rel="apple-touch-icon" href="/favicon.png?v=navy2">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="./styles.css?v=20260626f">
+<link rel="stylesheet" href="./styles.css?v=20260626g">
 <meta property="og:title" content="RoomBoard" data-id="th-modified" ><meta name="description" content="RoomBoard display board website" data-id="th-modified" ><meta property="og:description" content="RoomBoard display board website" data-id="th-modified" ><meta property="og:type" content="website" data-id="th-modified" ></head>
 <body class="displayTabActive"><button aria-label="Back to top" id="toTopBtn" title="Back to top">↑</button>
 <div class="chip" data-state="idle" id="syncPill" title="Sync status">
@@ -63,20 +63,20 @@
   <div class="boardLoadAurora"></div>
   <div class="boardLoadGrid"></div>
   <div class="boardLoadCenter">
-    <div class="boardLoadMarkWrap">
-      <div class="boardLoadRings">
-        <div class="boardLoadRing"></div>
-        <div class="boardLoadRing"></div>
-        <div class="boardLoadRing"></div>
+    <div class="blMiniBoard" aria-hidden="true">
+      <div class="blMiniBar">
+        <span class="blMiniBrand">
+          <span class="blMiniGlyph">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="20"/></svg>
+          </span>
+          <span class="blMiniBars"><i></i><i></i></span>
+        </span>
+        <span class="blMiniLive"><i></i>LIVE</span>
       </div>
-      <div class="boardLoadMark">
-        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="6" y="9" width="36" height="30" rx="5"/>
-          <line x1="6" y1="18" x2="42" y2="18"/>
-          <line x1="18" y1="18" x2="18" y2="39"/>
-          <line x1="30" y1="18" x2="30" y2="39"/>
-        </svg>
-        <span class="boardLoadMarkScan"></span>
+      <div class="blMiniGrid">
+        <div class="blCard" style="--c:#34d399"><span class="blCardTop"><span class="blDot"></span><span class="blLine blLineRoom"></span></span><span class="blLine blLineName"></span><span class="blTimer" data-start="372">06:12</span></div>
+        <div class="blCard" style="--c:#fbbf24"><span class="blCardTop"><span class="blDot"></span><span class="blLine blLineRoom"></span></span><span class="blLine blLineName"></span><span class="blTimer" data-start="1144">19:04</span></div>
+        <div class="blCard" style="--c:#c084fc"><span class="blCardTop"><span class="blDot"></span><span class="blLine blLineRoom"></span></span><span class="blLine blLineName"></span><span class="blTimer" data-start="58">00:58</span></div>
       </div>
     </div>
     <div class="boardLoadWordmark"><span data-text="RoomBoard">RoomBoard</span></div>
@@ -85,6 +85,27 @@
   </div>
   <div class="boardLoadBar"><div class="boardLoadBarScan"></div></div>
 </div>
+<script>
+(function(){
+  function fmt(s){var m=Math.floor(s/60),x=s%60;return (m<10?"0":"")+m+":"+(x<10?"0":"")+x;}
+  var timer=null;
+  function tick(){
+    var ov=document.getElementById("boardLoadOverlay");
+    if(!ov||ov.hasAttribute("hidden")) return;
+    var cards=ov.querySelectorAll(".blTimer");
+    for(var i=0;i<cards.length;i++){
+      var el=cards[i];
+      var v=parseInt(el.getAttribute("data-start")||"0",10)+1;
+      el.setAttribute("data-start",String(v));
+      el.textContent=fmt(v);
+    }
+  }
+  function start(){ if(!timer){ timer=setInterval(tick,1000); } }
+  // Keep ticking; cheap and only formats while overlay is visible.
+  if(document.readyState!=="loading") start();
+  else document.addEventListener("DOMContentLoaded", start);
+})();
+</script>
 <div class="checklistBackdrop" id="checklistBackdrop"></div>
 <aside aria-label="Checklist" class="checklistPanel" id="checklistPanel">
 <div class="checklistPanelHeader">
