@@ -268,20 +268,10 @@ input:focus-visible,
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  background: rgba(16, 30, 51, 0.82);
-  border: 1px solid rgba(255, 255, 255, .12);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, .30), 0 2px 6px rgba(0, 0, 0, .18);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  padding: 4px 2px;
+  position: relative;
   animation: badgeFadeIn .7s cubic-bezier(0.22, 1, 0.36, 1) both;
   flex: 0 0 auto;
-}
-[data-theme="light"] .board-badge {
-  background: rgba(255, 255, 255, 0.90);
-  border-color: rgba(0, 0, 0, .09);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, .12), 0 2px 6px rgba(0, 0, 0, .07);
 }
 @keyframes badgeFadeIn {
   from { opacity: 0; transform: translateY(10px); }
@@ -294,13 +284,9 @@ input:focus-visible,
 
 .bb-icon {
   font-size: 18px;
-  width: 36px; height: 36px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, .07);
-  border: 1px solid rgba(255, 255, 255, .13);
+  width: 26px; height: 30px;
   display: grid; place-items: center; flex: none;
 }
-[data-theme="light"] .bb-icon { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.10); }
 .bb-dot {
   position: absolute;
   top: 10px; left: 46px;
@@ -308,8 +294,8 @@ input:focus-visible,
   box-shadow: 0 0 6px 1px currentColor;
 }
 .bb-body { display: flex; flex-direction: column; gap: 2px; }
-.bb-body strong { font-size: 13px; font-weight: 700; color: #eaf1ff; }
-.bb-body small   { font-size: 11px; color: #8195b4; }
+.bb-body strong { font-size: 13px; font-weight: 700; color: var(--ink); }
+.bb-body small   { font-size: 11px; color: var(--muted); }
 [data-theme="light"] .bb-body strong { color: #0f1b2d; }
 [data-theme="light"] .bb-body small  { color: #65748c; }
 
@@ -1625,10 +1611,10 @@ a.fo-spots:hover { color: var(--coral); text-decoration: underline; text-underli
 /* Theme picker buttons (Branding tab) */
 .btp-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
 .btp {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 5px 9px; border-radius: 8px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 4px; cursor: pointer;
   font-size: 11.5px; font-weight: 600; color: var(--muted);
-  border: 1.5px solid var(--line); background: var(--surface-2);
+  border: none; background: none; border-bottom: 2px solid transparent;
   transition: border-color .15s, color .15s; font-family: var(--font-body);
 }
 .btp::before {
@@ -1636,9 +1622,9 @@ a.fo-spots:hover { color: var(--coral); text-decoration: underline; text-underli
   background: var(--dot, #081120);
   box-shadow: inset 0 0 0 2px rgba(0,0,0,.12);
 }
-.btp.active { border-color: var(--teal-500); color: var(--teal-600); }
+.btp.active { border-bottom-color: var(--teal-500); color: var(--teal-600); }
 [data-theme="dark"] .btp.active { color: var(--teal-300); }
-.btp:hover:not(.active) { border-color: var(--line-strong); color: var(--ink-2); }
+.btp:hover:not(.active) { color: var(--ink-2); }
 
 /* Mini board preview (Branding tab) */
 .bbp {
