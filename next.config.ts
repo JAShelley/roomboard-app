@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
       { source: "/landing", destination: "/landing/index.html" },
       // Legal pages — clean URLs for the static marketing pages
       { source: "/terms", destination: "/landing/terms.html" },
+      { source: "/privacy", destination: "/landing/privacy.html" },
       // Legacy /site redirect for backward compatibility
       { source: "/site", destination: "/landing/index.html" },
     ];
