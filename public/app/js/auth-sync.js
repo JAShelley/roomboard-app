@@ -4299,6 +4299,9 @@
         resetKnownBoardVersion();
         window.__roomboardPracticeId = null;
         try{ window.localStorage.removeItem("roomboard.website.practiceBadge.v1"); }catch(e){}
+        // Drop the cached billing-access decision so it can't fail-open a
+        // different account that logs in next on this browser.
+        try{ window.localStorage.removeItem("roomboard.billing.access.v1"); }catch(e){}
         if(typeof window.refreshAccountSettingsForSession === "function") window.refreshAccountSettingsForSession(null);
         if(typeof window.refreshThemePrefsForSession === "function") window.refreshThemePrefsForSession(null);
 	        updateAuthUI(false);

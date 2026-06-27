@@ -605,12 +605,43 @@
   function billingSignOut(){
     try{ window.localStorage.removeItem(AUTH_STORAGE_KEY); }catch(e){}
     try{ window.sessionStorage.removeItem(AUTH_STORAGE_KEY); }catch(e){}
+    clearAccessCache();
     window.location.href = "/app/index.html?mode=startup&auth=login";
   }
 
+  // Remember the last *confirmed* access decision so a transient network error
+  // doesn't lock out a real subscriber — but also doesn't silently let in an
+  // account that has never once been confirmed as paying. Only a recent
+  // hasAccess===true lets us fail open; anything else fails closed (paywall).
+  var ACCESS_CACHE_KEY = "roomboard.billing.access.v1";
+  var ACCESS_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24h
+  function setAccessCache(ok){
+    try{ window.localStorage.setItem(ACCESS_CACHE_KEY, JSON.stringify({ ok: !!ok, ts: Date.now() })); }catch(e){}
+  }
+  function hasRecentConfirmedAccess(){
+    try{
+      var raw = window.localStorage.getItem(ACCESS_CACHE_KEY);
+      if(!raw) return false;
+      var c = JSON.parse(raw);
+      return !!(c && c.ok === true && (Date.now() - Number(c.ts || 0)) < ACCESS_CACHE_MAX_AGE_MS);
+    }catch(e){ return false; }
+  }
+  function clearAccessCache(){
+    try{ window.localStorage.removeItem(ACCESS_CACHE_KEY); }catch(e){}
+  }
+
+  // When the billing check can't reach a verdict (network error / timeout),
+  // fail open only for an account we recently confirmed as paying; otherwise
+  // fail closed and show the paywall so an unpaid account can't slip in.
+  function onUnverifiedAccess(onAccess){
+    if(hasRecentConfirmedAccess()){ onAccess(); return; }
+    showPaywall({ trialing: false, trialDaysLeft: 0, subscribed: false, hasCustomer: false });
+  }
+
   // Check /api/billing/status and call onAccess() if the practice has access;
-  // show the paywall otherwise. On network error, allow access so legitimate
-  // users are never blocked by a transient failure.
+  // show the paywall otherwise. On network error, fall back to the last
+  // confirmed access decision (see onUnverifiedAccess) so we never let an
+  // unpaid account in, but never lock out a known subscriber either.
   function checkBillingThenOpen(onAccess){
     var tokens = getStoredTokens();
     if(!tokens){
@@ -634,6 +665,8 @@
       // Clean the billing params out of the URL so a refresh doesn't re-confirm.
       try{ history.replaceState(null, "", window.location.pathname + "?mode=startup"); }catch(e){}
       var controller2 = typeof AbortController !== "undefined" ? new AbortController() : null;
+      // Just paid — if confirm is slow, let them in (the webhook will sync the
+      // subscription) rather than paywalling someone who just entered a card.
       var timer2 = setTimeout(function(){ if(controller2) controller2.abort(); onAccess(); }, 12000);
       var done2 = false;
       function finish2(fn){ if(done2) return; done2 = true; clearTimeout(timer2); fn(); }
@@ -646,8 +679,10 @@
       .then(function(r){ return r.json(); })
       .then(function(data){
         if(data.hasAccess){
+          setAccessCache(true);
           finish2(function(){ hidePaywall(); onAccess(); });
         } else {
+          setAccessCache(false);
           finish2(function(){
             showPaywall({
               trialing: !!data.trialing,
@@ -663,7 +698,7 @@
     }
 
     var controller = typeof AbortController !== "undefined" ? new AbortController() : null;
-    var timer = setTimeout(function(){ if(controller) controller.abort(); onAccess(); }, 8000);
+    var timer = setTimeout(function(){ if(controller) controller.abort(); onUnverifiedAccess(onAccess); }, 8000);
     var done = false;
     function finish(fn){ if(done) return; done = true; clearTimeout(timer); fn(); }
     fetch("/api/billing/status", {
@@ -675,8 +710,10 @@
     .then(function(r){ return r.json(); })
     .then(function(data){
       if(data.hasAccess){
+        setAccessCache(true);
         finish(function(){ hidePaywall(); onAccess(); });
       } else {
+        setAccessCache(false);
         finish(function(){
           showPaywall({
             trialing: !!data.trialing,
@@ -687,7 +724,7 @@
         });
       }
     })
-    .catch(function(){ finish(onAccess); });
+    .catch(function(){ finish(function(){ onUnverifiedAccess(onAccess); }); });
   }
 
   /* ── Board open ────────────────────────────────────────────────────── */
