@@ -979,15 +979,28 @@
       if(!grid) return;
       bumpRenderPerf("displayRenders");
       var renderMode = getDisplayRenderMode();
+      // Capture the previously-rendered structure before we wipe the grid, so we
+      // can tell a real structural rebuild apart from an in-place refresh of the
+      // same rooms (e.g. the background loadPracticeData re-render that lands a
+      // second or so after the board first paints). Hiding the grid (opacity:0)
+      // on that no-op refresh is what makes the already-correct board blink/
+      // reflow — see scheduleActiveDisplayFitAfterReturn's note.
+      var prevStructureSig = grid.dataset.displayStructure || "";
+      var prevHadCards = grid.children.length > 0;
       clearSurfaceRoomNodeMap("display");
       grid.innerHTML = "";
       var displayRooms = getDisplayRooms();
       var isList = (renderMode === "list");
       var groupByDoctor = shouldRenderActiveDisplayDoctorGroups(renderMode);
+      var nextStructureSig = buildDisplayStructureSignature(displayRooms, renderMode);
+      var sameStructure = prevHadCards && !!prevStructureSig && prevStructureSig === nextStructureSig;
       clearActiveDisplayFit();
       // Re-mark pending after clearActiveDisplayFit cleared it, so the grid
       // stays hidden while cards are being rebuilt and the scale re-applied.
-      if(document.body && document.body.classList.contains("displayTabActive")){
+      // Skip the hide when we're rebuilding the identical structure: the cards
+      // are recreated synchronously (no paint in between) and the re-fit lands
+      // the same scale, so hiding only causes a visible flash.
+      if(document.body && document.body.classList.contains("displayTabActive") && !sameStructure){
         markActiveDisplayFitPendingReturn();
       }
       grid.classList.toggle("activeDisplayFitSingle", renderMode === "grid" && groupByDoctor && displayRooms.length === 1);
