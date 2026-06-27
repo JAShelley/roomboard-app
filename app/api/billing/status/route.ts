@@ -40,6 +40,7 @@ async function fastBillingCheck(accessToken: string) {
   return {
     practiceId: String(row.practice_id || ""),
     stripeCustomerId: (pr.stripe_customer_id as string) || null,
+    stripeSubscriptionId: (pr.stripe_subscription_id as string) || null,
     subscriptionStatus: String(pr.subscription_status || "trialing"),
     plan: (pr.plan as string) || null,
     trialEndsAt: pr.trial_ends_at ? new Date(String(pr.trial_ends_at)).toISOString() : null,
@@ -62,26 +63,10 @@ export async function POST(request: Request) {
     if (!billing) {
       const { resolveSessionContext, getPracticeBilling } = await import("../_lib");
       const ctx = await resolveSessionContext({ accessToken, refreshToken });
-      const full = await getPracticeBilling(ctx.practiceId);
-      billing = {
-        practiceId: full.practiceId,
-        stripeCustomerId: full.stripeCustomerId,
-        subscriptionStatus: full.subscriptionStatus,
-        plan: full.plan,
-        trialEndsAt: full.trialEndsAt,
-        currentPeriodEnd: full.currentPeriodEnd,
-      };
+      billing = await getPracticeBilling(ctx.practiceId);
     }
 
-    const access = computeAccess({
-      practiceId: billing.practiceId,
-      stripeCustomerId: billing.stripeCustomerId,
-      stripeSubscriptionId: null,
-      subscriptionStatus: billing.subscriptionStatus,
-      plan: billing.plan,
-      trialEndsAt: billing.trialEndsAt,
-      currentPeriodEnd: billing.currentPeriodEnd,
-    });
+    const access = computeAccess(billing);
 
     return pulseJson({
       practiceId: billing.practiceId,

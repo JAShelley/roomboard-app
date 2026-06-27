@@ -613,7 +613,17 @@
   // users are never blocked by a transient failure.
   function checkBillingThenOpen(onAccess){
     var tokens = getStoredTokens();
-    if(!tokens){ onAccess(); return; }
+    if(!tokens){
+      // If returning from a cancelled Stripe checkout, no tokens means the
+      // session is gone — send to auth rather than silently granting access.
+      var cancelParams = new URLSearchParams(window.location.search);
+      if(cancelParams.get("billing") === "cancel"){
+        try{ history.replaceState(null, "", window.location.pathname + "?mode=startup"); }catch(e){}
+        enterAuth();
+        return;
+      }
+      onAccess(); return;
+    }
 
     // If returning from a completed Stripe checkout, confirm via the session ID
     // rather than the status endpoint — avoids webhook latency leaving the user
