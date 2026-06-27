@@ -738,16 +738,57 @@
     // Gate the board behind an active trial or subscription.
     checkBillingThenOpen(function(){
       hideAuthOverlay();
+      // Was the board hidden behind standalone mode? (main is display:none, so
+      // it can't be measured/fitted until it un-hides.) Only then do we need the
+      // hide-until-fitted dance below.
+      var wasStandalone = !!(document.body && document.body.classList.contains("roomboardStandaloneMode"));
       if(document.body){
+        // Keep the grid invisible (opacity:0) while we un-hide and fit it, so it
+        // never paints at the unfitted scale-1 size and then snaps — that snap is
+        // the "flash" of the board after the loading screen.
+        if(wasStandalone && typeof window.markActiveDisplayFitPendingReturn === "function"){
+          window.markActiveDisplayFitPendingReturn();
+        }
         document.body.classList.remove("roomboardStandaloneMode", "standaloneAuthMode", "standaloneSetupMode");
       }
       closeSettingsSurface();
       replaceMode("board");
-      window.setTimeout(function(){
+      if(!wasStandalone){
         if(typeof window.scheduleActiveDisplayFit === "function"){
           window.scheduleActiveDisplayFit("standalone-open-board");
         }
-      }, 0);
+        return;
+      }
+      // Fit on the next animation frame (runs before paint) rather than via a
+      // macrotask timeout (which paints the unfitted board first). Reveal the
+      // grid only after the fit's transform has been applied.
+      var revealAttempts = 0;
+      function fitThenReveal(){
+        revealAttempts++;
+        if(typeof window.scheduleActiveDisplayFit === "function"){
+          window.scheduleActiveDisplayFit("standalone-open-board");
+        }
+        var grid = document.getElementById("displayGrid");
+        var fitted = grid && grid.classList.contains("activeDisplayFit");
+        // Reveal once the board is measurably fitted, or give up after a few
+        // frames so it can never get stuck hidden.
+        if(fitted || revealAttempts >= 6){
+          window.requestAnimationFrame(function(){
+            if(typeof window.clearActiveDisplayFitPendingReturn === "function"){
+              window.clearActiveDisplayFitPendingReturn();
+            }
+          });
+          return;
+        }
+        window.requestAnimationFrame(fitThenReveal);
+      }
+      window.requestAnimationFrame(fitThenReveal);
+      // Safety net: never leave the grid hidden, even if the fit logic changes.
+      window.setTimeout(function(){
+        if(typeof window.clearActiveDisplayFitPendingReturn === "function"){
+          window.clearActiveDisplayFitPendingReturn();
+        }
+      }, 800);
     });
   }
 
