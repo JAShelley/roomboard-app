@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" href="/favicon.png?v=navy2">
 <link rel="apple-touch-icon" href="/favicon.png?v=navy2">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="./styles.css?v=20260626e">
+<link rel="stylesheet" href="./styles.css?v=20260626f">
 <meta property="og:title" content="RoomBoard" data-id="th-modified" ><meta name="description" content="RoomBoard display board website" data-id="th-modified" ><meta property="og:description" content="RoomBoard display board website" data-id="th-modified" ><meta property="og:type" content="website" data-id="th-modified" ></head>
 <body class="displayTabActive"><button aria-label="Back to top" id="toTopBtn" title="Back to top">↑</button>
 <div class="chip" data-state="idle" id="syncPill" title="Sync status">
@@ -60,13 +60,26 @@
 <div aria-hidden="true" class="mobileQuickViewPopupBackdrop" hidden id="mobileQuickViewPopupBackdrop"></div>
 <section aria-hidden="true" aria-label="Quick room details" class="mobileQuickViewPopup" hidden id="mobileQuickViewPopup"></section>
 <div aria-hidden="true" class="boardLoadOverlay" hidden id="boardLoadOverlay">
+  <div class="boardLoadAurora"></div>
+  <div class="boardLoadGrid"></div>
   <div class="boardLoadCenter">
-    <div class="boardLoadRings">
-      <div class="boardLoadRing"></div>
-      <div class="boardLoadRing"></div>
-      <div class="boardLoadRing"></div>
+    <div class="boardLoadMarkWrap">
+      <div class="boardLoadRings">
+        <div class="boardLoadRing"></div>
+        <div class="boardLoadRing"></div>
+        <div class="boardLoadRing"></div>
+      </div>
+      <div class="boardLoadMark">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="6" y="9" width="36" height="30" rx="5"/>
+          <line x1="6" y1="18" x2="42" y2="18"/>
+          <line x1="18" y1="18" x2="18" y2="39"/>
+          <line x1="30" y1="18" x2="30" y2="39"/>
+        </svg>
+        <span class="boardLoadMarkScan"></span>
+      </div>
     </div>
-    <div class="boardLoadWordmark">RoomBoard</div>
+    <div class="boardLoadWordmark"><span data-text="RoomBoard">RoomBoard</span></div>
     <div class="boardLoadClinic" id="boardLoadClinic"></div>
     <div class="boardLoadStep" id="boardLoadStep"></div>
   </div>
