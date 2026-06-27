@@ -1048,7 +1048,7 @@
     }
 
     var boardLoadOverlayShownAt = 0;
-    var BOARD_LOAD_OVERLAY_MIN_MS = 300;
+    var BOARD_LOAD_OVERLAY_MIN_MS = 1000;
 
     function showBoardLoadOverlay(clinicName){
       var el = document.getElementById("boardLoadOverlay");
