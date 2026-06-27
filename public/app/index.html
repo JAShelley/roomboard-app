@@ -31,8 +31,8 @@
 </div>
 <div class="right">
 <div class="headerToggleWrap" id="displayOnlyActiveWrap">
-<span class="headerToggleLabel">Only active</span>
-<div class="switch" id="displayOnlyActiveSwitch"><div class="knob"></div></div>
+<span class="headerToggleLabel" id="displayOnlyActiveLabel">Only active</span>
+<div class="switch" id="displayOnlyActiveSwitch" role="switch" tabindex="0" aria-checked="false" aria-labelledby="displayOnlyActiveLabel"><div class="knob"></div></div>
 </div>
 	<div class="headerSelectWrap" id="displaySortWrap">
 	<label class="headerSelectLabel" for="displaySortSelect">Sort</label>
@@ -122,7 +122,7 @@
 </div>
 <div class="checklistPanelBody" id="checklistPanelBody">
 <div class="checklistAddRow">
-<input class="checklistNewItemInput" id="checklistNewItemInput" placeholder="Add item…" type="text">
+<input class="checklistNewItemInput" id="checklistNewItemInput" placeholder="Add item…" type="text" aria-label="New checklist item">
 <button class="btn sm primary" id="checklistAddBtn" type="button">Add</button>
 </div>
 <button class="checklistMarkAllBtn" id="markAllDoneBtn" type="button" hidden>Mark all complete</button>
@@ -206,26 +206,26 @@
 <div class="miniRow" style="margin-top:10px;">
 <div class="field">
 <label>Practice name</label>
-<input autocomplete="organization" id="practiceName" placeholder="Clinic name" type="text">
+<input autocomplete="organization" id="practiceName" placeholder="Clinic name" type="text" aria-label="Practice name">
 </div>
 <div class="field">
 <label>Admin full name</label>
-<input autocomplete="name" id="fullName" placeholder="Your name" type="text">
+<input autocomplete="name" id="fullName" placeholder="Your name" type="text" aria-label="Admin full name">
 </div>
 </div>
 <div class="miniRow">
 <div class="field">
 <label>Phone</label>
-<input autocomplete="tel" id="practicePhone" placeholder="(555) 000-0000" type="tel">
+<input autocomplete="tel" id="practicePhone" placeholder="(555) 000-0000" type="tel" aria-label="Phone">
 </div>
 <div class="field">
 <label>City &amp; State</label>
-<input autocomplete="address-level2" id="practiceLocation" placeholder="e.g. Austin, TX" type="text">
+<input autocomplete="address-level2" id="practiceLocation" placeholder="e.g. Austin, TX" type="text" aria-label="City and State">
 </div>
 </div>
 <div class="field">
 <label>Specialty</label>
-<select id="practiceSpecialty">
+<select id="practiceSpecialty" aria-label="Specialty">
 <option value="General Practice">General Practice</option>
 <option value="Dental">Dental</option>
 <option value="Dermatology">Dermatology</option>
@@ -241,17 +241,17 @@
 </div>
 <div class="field" id="specialtyOtherField" hidden>
 <label>Describe your specialty</label>
-<input id="practiceSpecialtyOther" placeholder="e.g. Sports Medicine" type="text">
+<input id="practiceSpecialtyOther" placeholder="e.g. Sports Medicine" type="text" aria-label="Describe your specialty">
 </div>
 </div>
 <div class="miniRow" id="authCredentialsFields" style="margin-top:10px;">
 <div class="field">
 <label>Email</label>
-<input autocomplete="username" id="email" placeholder="name@clinic.com" type="text">
+<input autocomplete="username" id="email" placeholder="name@clinic.com" type="text" aria-label="Email">
 </div>
 <div class="field">
 <label>Password</label>
-<input autocomplete="current-password" id="password" placeholder="password" type="password">
+<input autocomplete="current-password" id="password" placeholder="password" type="password" aria-label="Password">
 </div>
 </div>
 <label class="sxCheckboxRow">
@@ -268,15 +268,15 @@
 <div hidden id="loggedInSummary">
 <div class="sxRow">
 <span class="sxRowLabel">Clinic</span>
-<input class="sxRowReadonly" id="loggedInPracticeName" readonly type="text">
+<input class="sxRowReadonly" id="loggedInPracticeName" readonly type="text" aria-label="Clinic">
 </div>
 <div class="sxRow">
 <span class="sxRowLabel">Name</span>
-<input class="sxRowReadonly" id="loggedInFullName" readonly type="text">
+<input class="sxRowReadonly" id="loggedInFullName" readonly type="text" aria-label="Name">
 </div>
 <div class="sxRow" style="border-bottom:none;">
 <span class="sxRowLabel">Email</span>
-<input class="sxRowReadonly" id="loggedInEmail" readonly type="text">
+<input class="sxRowReadonly" id="loggedInEmail" readonly type="text" aria-label="Email">
 </div>
 </div>
 <div class="sxContextLine" id="clinicContextLine">Not connected to a clinic yet.</div>
@@ -288,21 +288,21 @@
 <div class="miniRow">
 <div class="field">
 <label>Clinic name</label>
-<input id="editPracticeName" placeholder="Clinic name" type="text">
+<input id="editPracticeName" placeholder="Clinic name" type="text" aria-label="Clinic name">
 </div>
 <div class="field">
 <label>Phone</label>
-<input autocomplete="tel" id="editPracticePhone" placeholder="(555) 000-0000" type="tel">
+<input autocomplete="tel" id="editPracticePhone" placeholder="(555) 000-0000" type="tel" aria-label="Phone">
 </div>
 </div>
 <div class="miniRow">
 <div class="field">
 <label>City &amp; State</label>
-<input id="editPracticeLocation" placeholder="e.g. Austin, TX" type="text">
+<input id="editPracticeLocation" placeholder="e.g. Austin, TX" type="text" aria-label="City and State">
 </div>
 <div class="field">
 <label>Specialty</label>
-<select id="editPracticeSpecialty">
+<select id="editPracticeSpecialty" aria-label="Specialty">
 <option value="General Practice">General Practice</option>
 <option value="Dental">Dental</option>
 <option value="Dermatology">Dermatology</option>
@@ -366,21 +366,21 @@ Manage subscription
 <div class="miniRow" id="joinPracticeFields">
 <div class="field">
 <label>Full name</label>
-<input autocomplete="name" id="joinFullName" placeholder="Team member name" type="text">
+<input autocomplete="name" id="joinFullName" placeholder="Team member name" type="text" aria-label="Full name">
 </div>
 <div class="field">
 <label>Email</label>
-<input autocomplete="username" id="joinEmail" placeholder="name@clinic.com" type="text">
+<input autocomplete="username" id="joinEmail" placeholder="name@clinic.com" type="text" aria-label="Email">
 </div>
 </div>
 <div class="miniRow">
 <div class="field">
 <label>Password</label>
-<input autocomplete="new-password" id="joinPassword" placeholder="password" type="password">
+<input autocomplete="new-password" id="joinPassword" placeholder="password" type="password" aria-label="Password">
 </div>
 <div class="field">
 <label>Invite code</label>
-<input autocomplete="one-time-code" id="practiceInviteCode" placeholder="Clinic invite code" type="text">
+<input autocomplete="one-time-code" id="practiceInviteCode" placeholder="Clinic invite code" type="text" aria-label="Invite code">
 </div>
 </div>
 <div class="actions" id="joinPracticeActions">
@@ -388,7 +388,7 @@ Manage subscription
 </div>
 <div class="field" hidden id="practiceInviteBox">
 <label>Clinic invite code</label>
-<input id="practiceInviteCodeDisplay" readonly type="text">
+<input id="practiceInviteCodeDisplay" readonly type="text" aria-label="Clinic invite code">
 </div>
 <div class="actions" hidden id="practiceInviteActions">
 <button class="btn sm primary" id="copyPracticeInviteCodeBtn" type="button">Copy code</button>
@@ -400,7 +400,7 @@ Manage subscription
 <section class="sxSection" id="feedbackPanel">
 <div class="sxHead">Team feedback</div>
 <div class="settingsCollapsibleBody">
-<textarea class="sxFeedbackTextarea" id="feedbackInput" placeholder="Example: Too many clicks to update a room. Or: We love the Quick Add workflow and want more tools like that."></textarea>
+<textarea class="sxFeedbackTextarea" id="feedbackInput" placeholder="Example: Too many clicks to update a room. Or: We love the Quick Add workflow and want more tools like that." aria-label="Team feedback"></textarea>
 <div class="actions">
 <button class="btn sm primary" id="addFeedbackBtn" type="button">Add item</button>
 </div>
@@ -414,7 +414,7 @@ Manage subscription
 <div class="sxHead">Rooms</div>
 <div class="settingsCollapsibleBody">
 <div class="sxAddRow">
-<input id="newRoomName" placeholder="e.g., Room 10" type="text" style="flex:1;">
+<input id="newRoomName" placeholder="e.g., Room 10" type="text" style="flex:1;" aria-label="New room name">
 <button class="btn sm primary" id="addRoomBtn" type="button">Add</button>
 </div>
 <div id="roomsList" style="padding:0 16px 4px;"></div>
@@ -424,13 +424,13 @@ Manage subscription
 <div class="sxHead">Types &amp; color labels</div>
 <div class="settingsCollapsibleBody">
 <div class="sxAddRow">
-<input id="newColorTitle" placeholder="e.g., Waiting" type="text" style="flex:1;">
-<input id="newColorValue" type="color">
+<input id="newColorTitle" placeholder="e.g., Waiting" type="text" style="flex:1;" aria-label="New type or color label name">
+<input id="newColorValue" type="color" aria-label="Type color">
 <button class="btn sm primary" id="addColorBtn" type="button">Add</button>
 </div>
 <div class="sxRow">
 <span class="sxLabel">Default label</span>
-<select id="defaultColorLabelSelect" style="flex:1;"></select>
+<select id="defaultColorLabelSelect" style="flex:1;" aria-label="Default label"></select>
 </div>
 <div id="colorsList" style="padding:0 16px 4px;"></div>
 </div>
@@ -438,10 +438,10 @@ Manage subscription
 <section class="sxSection" id="defaultChecklistPanel">
 <div class="sxHead">Default patient checklist <span class="planBadge">Advanced</span></div>
 <div class="settingsCollapsibleBody">
-<div class="sxRow"><span class="sxLabel">Show checklist on patient cards</span><input checked id="patientChecklistEnabledToggle" type="checkbox"></div>
+<div class="sxRow"><span class="sxLabel">Show checklist on patient cards</span><input checked id="patientChecklistEnabledToggle" type="checkbox" aria-label="Show checklist on patient cards"></div>
 <p class="sxSubHead" style="font-weight:400;opacity:.75;">Every new patient starts with these items. Click a patient card on the board to open and check them off.</p>
 <div class="sxAddRow">
-<input id="newDefaultChecklistItem" placeholder="e.g., Verify weight" type="text" style="flex:1;">
+<input id="newDefaultChecklistItem" placeholder="e.g., Verify weight" type="text" style="flex:1;" aria-label="New default checklist item">
 <button class="btn sm primary" id="addDefaultChecklistBtn" type="button">Add</button>
 </div>
 <div id="defaultChecklistList" style="padding:0 16px 4px;"></div>
@@ -451,7 +451,7 @@ Manage subscription
 <div class="sxHead">Doctors</div>
 <div class="settingsCollapsibleBody">
 <div class="sxAddRow">
-<input id="newDoctorName" placeholder="e.g., Dr. Smith" type="text" style="flex:1;">
+<input id="newDoctorName" placeholder="e.g., Dr. Smith" type="text" style="flex:1;" aria-label="New doctor name">
 <button class="btn sm primary" id="addDoctorBtn" type="button">Add</button>
 </div>
 <div id="doctorsList" style="padding:0 16px 4px;"></div>
@@ -463,7 +463,7 @@ Manage subscription
 <div class="sxHead">Quick notes</div>
 <div class="settingsCollapsibleBody">
 <div class="sxAddRow">
-<input id="newQuickNoteLabel" placeholder="e.g., Needs translator" type="text" style="flex:1;">
+<input id="newQuickNoteLabel" placeholder="e.g., Needs translator" type="text" style="flex:1;" aria-label="New quick note">
 <button class="btn sm primary" id="addQuickNoteBtn" type="button">Add</button>
 </div>
 <div id="quickNotesList" style="padding:0 16px 4px;"></div>
@@ -475,15 +475,15 @@ Manage subscription
 <div class="sxRow">
 <span class="sxLabel">Badge size</span>
 <div class="sxSlider">
-<input id="doctorInitialBadgeScale" max="2" min="0.7" step="0.05" type="range" style="flex:1;">
-<input class="sxVal" id="doctorInitialBadgeScaleValue" inputmode="decimal" type="text">
+<input id="doctorInitialBadgeScale" max="2" min="0.7" step="0.05" type="range" style="flex:1;" aria-label="Badge size">
+<input class="sxVal" id="doctorInitialBadgeScaleValue" inputmode="decimal" type="text" aria-label="Badge size value">
 </div>
 </div>
 <div class="sxRow">
 <span class="sxLabel">Badge font size</span>
 <div class="sxSlider">
-<input id="doctorInitialBadgeFontSize" max="28" min="10" step="1" type="range" style="flex:1;">
-<input class="sxVal" id="doctorInitialBadgeFontSizeValue" inputmode="numeric" type="text">
+<input id="doctorInitialBadgeFontSize" max="28" min="10" step="1" type="range" style="flex:1;" aria-label="Badge font size">
+<input class="sxVal" id="doctorInitialBadgeFontSizeValue" inputmode="numeric" type="text" aria-label="Badge font size value">
 </div>
 </div>
 <div class="doctorBadgeStylesHeader" style="padding:6px 16px;">
@@ -506,14 +506,14 @@ Manage subscription
 <div class="sxRowGroup">
 <div class="sxRow">
 <span class="sxLabel">This window's theme</span>
-<select id="themePreset"></select>
+<select id="themePreset" aria-label="This window's theme"></select>
 </div>
 <div class="sxRow">
 <span class="sxLabel sxLabelMuted" id="themePresetHelp">Theme details will appear here.</span>
 </div>
 <div class="sxRow">
 <span class="sxLabel">Default theme (new windows &amp; sign-in)</span>
-<select id="themeDefaultPreset"></select>
+<select id="themeDefaultPreset" aria-label="Default theme for new windows and sign-in"></select>
 </div>
 </div>
 <div class="actions">
@@ -527,24 +527,24 @@ Manage subscription
 <div class="sxRowGroup">
 <div class="sxRow">
 <span class="sxLabel">Columns<span class="sxLabelNote">room cards per row</span></span>
-<input class="sxInputNum" id="displayCols" min="1" step="1" type="number">
+<input class="sxInputNum" id="displayCols" min="1" step="1" type="number" aria-label="Columns (room cards per row)">
 </div>
 <div class="sxRow">
 <span class="sxLabel">Rows<span class="sxLabelNote">0 = unlimited</span></span>
-<input class="sxInputNum" id="displayRows" min="0" step="1" type="number">
+<input class="sxInputNum" id="displayRows" min="0" step="1" type="number" aria-label="Rows (0 = unlimited)">
 </div>
 <div class="sxRow">
 <span class="sxLabel">Card scale</span>
 <div class="sxSlider">
-<input id="displayCardScale" max="1.6" min="0.8" step="0.05" type="range" style="flex:1;">
-<input class="sxVal" id="displayCardScaleValue" inputmode="decimal" type="text">
+<input id="displayCardScale" max="1.6" min="0.8" step="0.05" type="range" style="flex:1;" aria-label="Card scale">
+<input class="sxVal" id="displayCardScaleValue" inputmode="decimal" type="text" aria-label="Card scale value">
 </div>
 </div>
 <div class="sxRow">
 <span class="sxLabel">Line spacing</span>
 <div class="sxSlider">
-<input id="roomCardLineHeight" max="1.8" min="1" step="0.05" type="range" style="flex:1;">
-<input class="sxVal" id="roomCardLineHeightValue" inputmode="decimal" type="text">
+<input id="roomCardLineHeight" max="1.8" min="1" step="0.05" type="range" style="flex:1;" aria-label="Line spacing">
+<input class="sxVal" id="roomCardLineHeightValue" inputmode="decimal" type="text" aria-label="Line spacing value">
 </div>
 </div>
 </div>
@@ -554,14 +554,14 @@ Manage subscription
 <div class="sxHead">Room card fields</div>
 <div class="settingsCollapsibleBody">
 <div class="sxRowGroup">
-<div class="sxRow"><span class="sxLabel">Patient name</span><input checked id="showRoomCardPatient" type="checkbox"></div>
-<div class="sxRow"><span class="sxLabel">Type</span><input checked id="showRoomCardType" type="checkbox"></div>
-<div class="sxRow"><span class="sxLabel">Doctor name</span><input checked id="showRoomCardDoctorName" type="checkbox"></div>
-<div class="sxRow"><span class="sxLabel">Doctor badge</span><input checked id="showRoomCardDoctorBadge" type="checkbox"></div>
-<div class="sxRow"><span class="sxLabel">Tech name</span><input checked id="showRoomCardTech" type="checkbox"></div>
-<div class="sxRow"><span class="sxLabel">Ready badges</span><input checked id="showRoomCardReady" type="checkbox"></div>
-<div class="sxRow"><span class="sxLabel">Quick notes</span><input checked id="showRoomCardQuickNote" type="checkbox"></div>
-<div class="sxRow"><span class="sxLabel">Status notes</span><input checked id="showRoomCardStatusNotes" type="checkbox"></div>
+<div class="sxRow"><span class="sxLabel">Patient name</span><input checked id="showRoomCardPatient" type="checkbox" aria-label="Show patient name"></div>
+<div class="sxRow"><span class="sxLabel">Type</span><input checked id="showRoomCardType" type="checkbox" aria-label="Show type"></div>
+<div class="sxRow"><span class="sxLabel">Doctor name</span><input checked id="showRoomCardDoctorName" type="checkbox" aria-label="Show doctor name"></div>
+<div class="sxRow"><span class="sxLabel">Doctor badge</span><input checked id="showRoomCardDoctorBadge" type="checkbox" aria-label="Show doctor badge"></div>
+<div class="sxRow"><span class="sxLabel">Tech name</span><input checked id="showRoomCardTech" type="checkbox" aria-label="Show tech name"></div>
+<div class="sxRow"><span class="sxLabel">Ready badges</span><input checked id="showRoomCardReady" type="checkbox" aria-label="Show ready badges"></div>
+<div class="sxRow"><span class="sxLabel">Quick notes</span><input checked id="showRoomCardQuickNote" type="checkbox" aria-label="Show quick notes"></div>
+<div class="sxRow"><span class="sxLabel">Status notes</span><input checked id="showRoomCardStatusNotes" type="checkbox" aria-label="Show status notes"></div>
 </div>
 </div>
 </section>
@@ -571,23 +571,23 @@ Manage subscription
 <div class="sxRowGroup">
 <div class="sxRow">
 <span class="sxLabel">Base (px)</span>
-<input class="sxInputNum" id="fontBase" min="10" step="1" type="number">
+<input class="sxInputNum" id="fontBase" min="10" step="1" type="number" aria-label="Base font size (px)">
 </div>
 <div class="sxRow">
 <span class="sxLabel">Card (px)</span>
-<input class="sxInputNum" id="fontCard" min="10" step="1" type="number">
+<input class="sxInputNum" id="fontCard" min="10" step="1" type="number" aria-label="Card font size (px)">
 </div>
 <div class="sxRow">
 <span class="sxLabel">Display info (px)</span>
-<input class="sxInputNum" id="fontDisplay" min="10" step="1" type="number">
+<input class="sxInputNum" id="fontDisplay" min="10" step="1" type="number" aria-label="Display info font size (px)">
 </div>
 <div class="sxRow">
 <span class="sxLabel">Timer (px)</span>
-<input class="sxInputNum" id="fontTimer" min="12" step="1" type="number">
+<input class="sxInputNum" id="fontTimer" min="12" step="1" type="number" aria-label="Timer font size (px)">
 </div>
 <div class="sxRow">
 <span class="sxLabel">Input (px)</span>
-<input class="sxInputNum" id="fontInput" min="10" step="1" type="number">
+<input class="sxInputNum" id="fontInput" min="10" step="1" type="number" aria-label="Input font size (px)">
 </div>
 </div>
 </div>
@@ -598,15 +598,15 @@ Manage subscription
 <div class="sxRowGroup">
 <div class="sxRow">
 <span class="sxLabel">Font color</span>
-<input id="displayFontColor" type="color">
+<input id="displayFontColor" type="color" aria-label="Font color">
 </div>
 <div class="sxRow">
 <span class="sxLabel">Muted text</span>
-<input id="displayMutedColor" type="color">
+<input id="displayMutedColor" type="color" aria-label="Muted text color">
 </div>
 <div class="sxRow">
 <span class="sxLabel">Card text on colors</span>
-<select id="cardTextMode">
+<select id="cardTextMode" aria-label="Card text on colors">
 <option value="auto">Auto (best contrast)</option>
 <option value="light">Always light</option>
 <option value="dark">Always dark</option>
@@ -614,7 +614,7 @@ Manage subscription
 </div>
 <div class="sxRow" id="doctorHighlightWrap">
 <span class="sxLabel">Highlight doctor</span>
-<select id="doctorHighlightSelect">
+<select id="doctorHighlightSelect" aria-label="Highlight doctor">
 <option value="">None</option>
 </select>
 </div>
@@ -640,24 +640,24 @@ Manage subscription
 <div class="sxRowGroup">
 <div class="sxRow">
 <span class="sxLabel">Columns</span>
-<input class="sxInputNum" id="mobileQuickViewColumns" max="5" min="2" step="1" type="number">
+<input class="sxInputNum" id="mobileQuickViewColumns" max="5" min="2" step="1" type="number" aria-label="Mobile quick view columns">
 </div>
 <div class="sxRow">
 <span class="sxLabel">Tile gap (px)</span>
-<input class="sxInputNum" id="mobileQuickViewGap" max="16" min="4" step="1" type="number">
+<input class="sxInputNum" id="mobileQuickViewGap" max="16" min="4" step="1" type="number" aria-label="Mobile quick view tile gap (px)">
 </div>
 <div class="sxRow">
 <span class="sxLabel">Room name size</span>
 <div class="sxSlider">
-<input id="mobileQuickViewFontSize" max="32" min="12" step="1" type="range" style="flex:1;">
-<input class="sxVal" id="mobileQuickViewFontSizeValue" inputmode="decimal" type="text">
+<input id="mobileQuickViewFontSize" max="32" min="12" step="1" type="range" style="flex:1;" aria-label="Mobile quick view room name size">
+<input class="sxVal" id="mobileQuickViewFontSizeValue" inputmode="decimal" type="text" aria-label="Mobile quick view room name size value">
 </div>
 </div>
 <div class="sxRow">
 <span class="sxLabel">Timer size</span>
 <div class="sxSlider">
-<input id="mobileQuickViewTimerSize" max="20" min="10" step="1" type="range" style="flex:1;">
-<input class="sxVal" id="mobileQuickViewTimerSizeValue" inputmode="decimal" type="text">
+<input id="mobileQuickViewTimerSize" max="20" min="10" step="1" type="range" style="flex:1;" aria-label="Mobile quick view timer size">
+<input class="sxVal" id="mobileQuickViewTimerSizeValue" inputmode="decimal" type="text" aria-label="Mobile quick view timer size value">
 </div>
 </div>
 </div>
@@ -669,26 +669,26 @@ Manage subscription
 <div class="sxRowGroup">
 <div class="sxRow">
 <span class="sxLabel">Practice name color</span>
-<input id="practiceNameColor" type="color">
+<input id="practiceNameColor" type="color" aria-label="Practice name color">
 </div>
 <div class="sxRow">
 <span class="sxLabel">Logo scale</span>
 <div class="sxSlider">
-<input id="practiceLogoScale" max="5" min="0.6" step="0.05" type="range" style="flex:1;">
-<input class="sxVal" id="practiceLogoScaleValue" inputmode="decimal" type="text">
+<input id="practiceLogoScale" max="5" min="0.6" step="0.05" type="range" style="flex:1;" aria-label="Logo scale">
+<input class="sxVal" id="practiceLogoScaleValue" inputmode="decimal" type="text" aria-label="Logo scale value">
 </div>
 </div>
 <div class="sxRow">
 <span class="sxLabel">Show name badge in header</span>
-<input checked id="showPracticeNameBadge" type="checkbox">
+<input checked id="showPracticeNameBadge" type="checkbox" aria-label="Show name badge in header">
 </div>
 <div class="sxRow">
 <span class="sxLabel">Invert logo colors</span>
-<input id="practiceLogoInvert" type="checkbox">
+<input id="practiceLogoInvert" type="checkbox" aria-label="Invert logo colors">
 </div>
 </div>
 <div class="sxCardBody">
-<input accept="image/png,image/jpeg,image/webp,image/svg+xml" id="practiceLogoFile" type="file" style="width:100%;">
+<input accept="image/png,image/jpeg,image/webp,image/svg+xml" id="practiceLogoFile" type="file" style="width:100%;" aria-label="Upload clinic logo file">
 <div class="muted sxCardNote" id="practiceLogoHelp">Uploads replace the RoomBoard wordmark with your clinic logo for the whole clinic.</div>
 </div>
 <div class="practiceLogoPreview" id="practiceLogoPreviewWrap">
@@ -706,7 +706,7 @@ Manage subscription
 <div class="sxRowGroup">
 <div class="sxRow">
 <span class="sxLabel">Stopwatch style</span>
-<select id="stopwatchStyle">
+<select id="stopwatchStyle" aria-label="Stopwatch style">
 <option value="classic">Classic</option>
 <option value="minimal">Minimal</option>
 <option value="glass">Glass</option>
@@ -719,7 +719,7 @@ Manage subscription
 </div>
 <div class="sxRow">
 <span class="sxLabel">Discharge icon</span>
-<select id="dischargeIconStyle">
+<select id="dischargeIconStyle" aria-label="Discharge icon">
 <option value="paw">Paw + arrow + doorway</option>
 <option value="tooth">Tooth + arrow + doorway</option>
 <option value="door">Door only</option>
@@ -734,15 +734,15 @@ Manage subscription
 <div class="sxHead">Timer alerts</div>
 <div class="sxRow sxAlertRow">
 <span class="sxLabel">Alert 1 after<span class="sxLabelNote">seconds elapsed → card color changes</span></span>
-<input class="sxInputNum" id="timerAlert1AtSec" min="0" step="10" type="number">
+<input class="sxInputNum" id="timerAlert1AtSec" min="0" step="10" type="number" aria-label="Alert 1 after (seconds)">
 <span class="sxAlertBadge">sec</span>
-<input id="timerAlert1Color" type="color">
+<input id="timerAlert1Color" type="color" aria-label="Alert 1 color">
 </div>
 <div class="sxRow sxAlertRow">
 <span class="sxLabel">Alert 2 after<span class="sxLabelNote">overrides alert 1 color</span></span>
-<input class="sxInputNum" id="timerAlert2AtSec" min="0" step="10" type="number">
+<input class="sxInputNum" id="timerAlert2AtSec" min="0" step="10" type="number" aria-label="Alert 2 after (seconds)">
 <span class="sxAlertBadge">sec</span>
-<input id="timerAlert2Color" type="color">
+<input id="timerAlert2Color" type="color" aria-label="Alert 2 color">
 </div>
 </div>
 <details class="sxSection settingsCollapsible" hidden id="stopwatchDiagnosticsPanel">

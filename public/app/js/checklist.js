@@ -44,11 +44,11 @@
           var timeLabel = clFormatTime(item.created_at);
           return '<li class="checklistItem' + (item.done ? " isDone" : "") + '" data-idx="' + realIdx + '" draggable="true">'
             + '<span class="checklistDragHandle" aria-hidden="true">⠿</span>'
-            + '<button class="checklistItemCheck" data-action="toggle" data-idx="' + realIdx + '" type="button" aria-label="Toggle">'
+            + '<button class="checklistItemCheck" data-action="toggle" data-idx="' + realIdx + '" type="button" role="checkbox" aria-checked="' + (item.done ? "true" : "false") + '" aria-label="' + clEsc((item.text || "item") + (item.done ? " (complete)" : "")) + '">'
             + (item.done ? '<svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4.5L4 7.5L10 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : "")
             + '</button>'
             + '<div class="checklistItemMain">'
-              + '<span class="checklistItemText" data-action="edit" data-idx="' + realIdx + '">' + clEsc(item.text || "") + '</span>'
+              + '<span class="checklistItemText" data-action="edit" data-idx="' + realIdx + '" role="button" tabindex="0" aria-label="' + clEsc("Edit: " + (item.text || "item")) + '">' + clEsc(item.text || "") + '</span>'
               + (timeLabel ? '<span class="checklistItemTime">' + clEsc(timeLabel) + '</span>' : "")
             + '</div>'
             + '<button class="checklistItemDelete" data-action="delete" data-idx="' + realIdx + '" title="Remove" type="button" aria-label="Remove">×</button>'
@@ -341,6 +341,15 @@
         if(tag !== "INPUT" && tag !== "TEXTAREA" && tag !== "SELECT"){
           if(checklistPanelOpen) closeChecklist(); else openChecklist();
           return;
+        }
+      }
+      // Enter/Space activates a focused inline-edit label (keyboard equivalent of click)
+      if((e.key === "Enter" || e.key === " ")){
+        var ae = document.activeElement;
+        if(ae && ae.getAttribute && ae.getAttribute("data-action") === "edit"){
+          e.preventDefault();
+          var editIdx = ae.getAttribute("data-idx");
+          if(editIdx != null){ startInlineEdit(parseInt(editIdx, 10)); return; }
         }
       }
       if(e.key === "Escape" && checklistPanelOpen){ closeChecklist(); return; }

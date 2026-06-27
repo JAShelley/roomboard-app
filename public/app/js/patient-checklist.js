@@ -27,9 +27,9 @@
       return items.map(function(item, idx){
         var done = !!item.done;
         return '<li class="pclItem' + (done ? " isDone" : "") + '" data-pcl-idx="' + idx + '">'
-          + '<button class="pclCheck" data-pcl-check="' + pclEsc(room.id) + '" data-pcl-idx="' + idx + '" type="button" aria-label="Toggle">' + (done ? "✓" : "") + '</button>'
+          + '<button class="pclCheck" data-pcl-check="' + pclEsc(room.id) + '" data-pcl-idx="' + idx + '" type="button" role="checkbox" aria-checked="' + (done ? "true" : "false") + '" aria-label="' + pclEsc((item.text || "item") + (done ? " (complete)" : "")) + '">' + (done ? "✓" : "") + '</button>'
           + '<span class="pclText">' + pclEsc(item.text || "") + '</span>'
-          + '<button class="pclDel" data-pcl-del="' + pclEsc(room.id) + '" data-pcl-idx="' + idx + '" type="button" title="Remove" aria-label="Remove">×</button>'
+          + '<button class="pclDel" data-pcl-del="' + pclEsc(room.id) + '" data-pcl-idx="' + idx + '" type="button" title="Remove" aria-label="' + pclEsc("Remove " + (item.text || "item")) + '">×</button>'
           + '</li>';
       }).join("");
     }
@@ -55,7 +55,7 @@
               + '</div>'
               + '<ul class="pclList">' + pclItemsHtml(room) + '</ul>'
               + '<div class="pclAddRow">'
-                + '<input class="pclInput" data-pcl-input="' + pclEsc(room.id) + '" type="text" placeholder="Add item…" maxlength="120">'
+                + '<input class="pclInput" data-pcl-input="' + pclEsc(room.id) + '" type="text" placeholder="Add item…" maxlength="120" aria-label="Add checklist item">'
                 + '<button class="btn sm primary pclAddBtn" data-pcl-add="' + pclEsc(room.id) + '" type="button">Add</button>'
               + '</div>'
             + '</div>'

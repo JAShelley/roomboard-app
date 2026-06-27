@@ -1426,9 +1426,11 @@
 	      transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease;
 	    }
 	    input[type="text"]:focus, input[type="password"]:focus, input[type="tel"]:focus, select:focus, textarea:focus, input[type="number"]:focus{
-	      border-color: rgba(125,211,252,.38);
-	      box-shadow: 0 0 0 3px rgba(122,143,168,.12);
+	      border-color: rgba(125,211,252,.7);
+	      box-shadow: 0 0 0 3px rgba(125,211,252,.6); /* visible focus, ≥3:1 (WCAG 2.4.7) */
 	    }
+	    /* Visible focus for the custom header "Only active" switch (keyboard) */
+	    .switch:focus-visible{ outline: 3px solid rgba(125,211,252,.8); outline-offset: 2px; }
 	    input[type="text"]::placeholder, input[type="password"]::placeholder, textarea::placeholder{ color: var(--inputPlaceholder); }
 	    textarea{min-height:70px; resize:vertical;}
 	    .quickNotePicker{
@@ -1881,7 +1883,7 @@
       --settingsBtnBg: rgba(255,255,255,.06);
       --settingsBtnBgHover: rgba(255,255,255,.12);
       --settingsInputBg: rgba(8, 16, 32, .92);
-      --settingsFocusRing: rgba(122,143,168,.28);
+      --settingsFocusRing: rgba(125,211,252,.7); /* ≥3:1 visible focus indicator (WCAG 2.4.7/1.4.11) */
       --settingsAccent: #7dd3fc;
       --settingsAccent2: #5b8cff;
       --settingsHeaderBg: rgba(7, 15, 30, .86);
@@ -5644,7 +5646,8 @@ body.checklistOpen .checklistPanel {
 .checklistNewItemInput::placeholder { color: rgba(255,255,255,.3); }
 .checklistNewItemInput:focus {
   outline: none;
-  border-color: rgba(24,176,107,.5);
+  border-color: rgba(52,211,153,.9);
+  box-shadow: 0 0 0 3px rgba(52,211,153,.55); /* visible focus, ≥3:1 (WCAG 2.4.7) */
   background: rgba(255,255,255,.09);
 }
 

@@ -696,14 +696,6 @@ input:focus-visible,
 .feature.span2 { grid-column: span 2; }
 
 /* ---------- Product stats strip ---------- */
-.product-stats { padding: 0 0 80px; }
-.stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; max-width: 600px; margin: 0 auto; }
-.stat-card { padding: 40px 28px; border-radius: 20px; border: 1.5px solid var(--line); background: linear-gradient(135deg, var(--surface) 0%, rgba(12,134,127,.06) 100%); text-align: center; transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s ease, border-color .25s; }
-.stat-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(12,134,127,.15); border-color: var(--teal-500); }
-.stat-num { font-size: clamp(42px,5vw,56px); font-weight: 900; color: var(--teal-500,#11a39b); line-height: 1; margin-bottom: 10px; }
-.stat-unit { font-size: .45em; font-weight: 700; opacity: .85; }
-.stat-label { font-size: 14px; color: var(--muted); line-height: 1.5; }
-@media (max-width: 640px) { .stats-row { grid-template-columns: 1fr; } }
 
 /* ---------- Client reviews ---------- */
 .reviews-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1080px; margin: 0 auto; }
@@ -1260,8 +1252,8 @@ ul { padding: 0; margin: 0; }
 /* ---------- Trust bar ---------- */
 .trustbar { padding: 26px 0 4px; }
 .trustbar-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
-  list-style: none; margin: 0 auto; padding: 18px; max-width: 960px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  list-style: none; margin: 0 auto; padding: 18px; max-width: 1100px;
   background: var(--surface); border: 1.5px solid var(--line);
   border-radius: var(--radius); box-shadow: var(--shadow-sm);
 }
