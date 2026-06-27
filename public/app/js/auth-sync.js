@@ -1061,6 +1061,29 @@
       }
       boardLoadOverlayShownAt = Date.now();
       if(label) label.textContent = clinicName || "";
+      // Mirror the clinic logo (if one is already loaded in the header) into the
+      // mini-board bar so the boot screen shows the practice's own brand.
+      try{
+        var headerLogo = document.getElementById("brandLogoImage");
+        var overlayLogo = document.getElementById("boardLoadLogo");
+        var overlayGlyph = document.getElementById("boardLoadGlyph");
+        var overlayBars = document.getElementById("boardLoadBars");
+        if(overlayLogo && overlayGlyph){
+          var src = headerLogo && !headerLogo.hidden ? (headerLogo.currentSrc || headerLogo.src || "") : "";
+          if(src){
+            overlayLogo.src = src;
+            overlayLogo.dataset.currentSrc = src;
+            overlayLogo.onerror = function(){
+              overlayLogo.hidden = true;
+              overlayGlyph.hidden = false;
+              if(overlayBars) overlayBars.hidden = false;
+            };
+            overlayLogo.hidden = false;
+            overlayGlyph.hidden = true;
+            if(overlayBars) overlayBars.hidden = true;
+          }
+        }
+      }catch(e){}
       el.classList.remove("isHiding");
       el.removeAttribute("hidden");
       el.removeAttribute("aria-hidden");
@@ -2639,7 +2662,16 @@
 		        dischargeIconStyle: String(sourceSettings.dischargeIconStyle || "paw"),
 		        displayFontColor: String(sourceSettings.displayFontColor || "#e8eefc"),
 		        displayMutedColor: String(sourceSettings.displayMutedColor || "#a9b6d3"),
-		        cardTextMode: String(sourceSettings.cardTextMode || "auto")
+		        cardTextMode: String(sourceSettings.cardTextMode || "auto"),
+		        // Per-patient checklist is a practice-wide feature: the default
+		        // template and its on/off toggle must sync to every board/intake
+		        // device or seeding has nothing to seed from.
+		        defaultPatientChecklist: Array.isArray(sourceSettings.defaultPatientChecklist)
+		          ? sourceSettings.defaultPatientChecklist
+		              .map(function(it){ return typeof it === "string" ? it : String(it && it.text || ""); })
+		              .filter(function(t){ return t && t.trim(); })
+		          : [],
+		        patientChecklistEnabled: sourceSettings.patientChecklistEnabled !== false
 		        // NOTE: cardStyle is intentionally NOT shared. Like displayLayout,
 		        // it is a per-device/per-window preference (see WINDOW_UI_SETTING_KEYS).
 		        // Including it here let any other device's sync overwrite this
@@ -2680,6 +2712,12 @@
 		      if(sharedUi.displayFontColor != null) targetState.settings.displayFontColor = String(sharedUi.displayFontColor || "#e8eefc");
 		      if(sharedUi.displayMutedColor != null) targetState.settings.displayMutedColor = String(sharedUi.displayMutedColor || "#a9b6d3");
 		      if(sharedUi.cardTextMode != null) targetState.settings.cardTextMode = String(sharedUi.cardTextMode || "auto");
+		      if(sharedUi.defaultPatientChecklist != null) targetState.settings.defaultPatientChecklist = Array.isArray(sharedUi.defaultPatientChecklist)
+		        ? sharedUi.defaultPatientChecklist
+		            .map(function(it){ return typeof it === "string" ? it : String(it && it.text || ""); })
+		            .filter(function(t){ return t && t.trim(); })
+		        : [];
+		      if(sharedUi.patientChecklistEnabled != null) targetState.settings.patientChecklistEnabled = sharedUi.patientChecklistEnabled !== false;
 		      // cardStyle intentionally not applied from shared payload — it is a
 		      // per-device preference (matches displayLayout). See buildSharedBoardUiPayload.
 		    }

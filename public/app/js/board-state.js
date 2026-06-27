@@ -132,14 +132,13 @@
     }
     function seedRoomChecklistFromDefault(room){
       var plan = typeof window.roomboardGetCurrentPlan === "function" ? window.roomboardGetCurrentPlan() : null;
-      var existingLen = Array.isArray(room && room.checklist) ? room.checklist.length : -1;
-      console.log("[PCL seed] called — room:", room && room.id, "existingChecklist:", existingLen, "plan:", plan, "template:", JSON.stringify(state && state.settings && state.settings.defaultPatientChecklist));
       if(!room) return;
       if(Array.isArray(room.checklist) && room.checklist.length) return; // never clobber existing items
+      // Respect the practice-wide on/off toggle for the feature.
+      if(state && state.settings && state.settings.patientChecklistEnabled === false){ room.checklist = []; return; }
       // Base subscribers don't get the Advanced checklist feature, so don't seed.
       if(plan && String(plan).indexOf("base") !== -1){ room.checklist = []; return; }
       room.checklist = getDefaultPatientChecklistTemplate().map(makeChecklistItem);
-      console.log("[PCL seed] done — seeded", room.checklist.length, "items");
     }
     window.makeChecklistItem = makeChecklistItem;
     window.seedRoomChecklistFromDefault = seedRoomChecklistFromDefault;
@@ -1833,7 +1832,6 @@
       room.lastDischargeSnapshot = null;
       // Seed the patient checklist from the practice default when this room
       // goes from empty → occupied.
-      console.log("[PCL] saveQuickAdd — hadPatientBefore:", hadPatientBefore, "patientName:", room.patientName);
       if(!hadPatientBefore && room.patientName) seedRoomChecklistFromDefault(room);
 
       var selectedColor = getColorById(room.colorLabelId);
@@ -2034,6 +2032,27 @@ function applyFonts(){
       }
     }
 
+    function applyBoardLoadLogo(nextSrc){
+      var overlayLogo = document.getElementById("boardLoadLogo");
+      var overlayGlyph = document.getElementById("boardLoadGlyph");
+      var overlayBars = document.getElementById("boardLoadBars");
+      if(!overlayLogo || !overlayGlyph) return;
+      function showGlyph(){
+        overlayLogo.hidden = true;
+        overlayGlyph.hidden = false;
+        if(overlayBars) overlayBars.hidden = false;
+      }
+      if(!nextSrc){ showGlyph(); return; }
+      if(overlayLogo.dataset.currentSrc !== nextSrc){
+        overlayLogo.dataset.currentSrc = nextSrc;
+        overlayLogo.src = nextSrc;
+      }
+      overlayLogo.onerror = showGlyph;
+      overlayLogo.hidden = false;
+      overlayGlyph.hidden = true;
+      if(overlayBars) overlayBars.hidden = true;
+    }
+
     function applyPracticeLogo(){
       var wordmark = $("brandWordmark");
       var logo = $("brandLogoImage");
@@ -2045,6 +2064,7 @@ function applyFonts(){
         logo.hidden = true;
         logo.removeAttribute("src");
         delete logo.dataset.currentSrc;
+        applyBoardLoadLogo("");
         return;
       }
       var nextSrc = buildPracticeLogoSrc(logoUrl, updatedAt);
@@ -2059,6 +2079,7 @@ function applyFonts(){
       };
       logo.hidden = false;
       wordmark.hidden = true;
+      applyBoardLoadLogo(nextSrc);
     }
 
 	    function applyPracticeBranding(){
