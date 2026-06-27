@@ -1058,11 +1058,31 @@
 
     var boardLoadOverlayShownAt = 0;
     var BOARD_LOAD_OVERLAY_MIN_MS = 1000;
+    // Pending timers for the hide animation. Tracked so a show() arriving mid-hide
+    // can cancel the fade-out instead of letting the overlay disappear (and then
+    // flicker back) when the caller actually wants it to stay up.
+    var boardLoadHideDelayTimer = null;
+    var boardLoadHideFinishTimer = null;
+    function cancelBoardLoadHide(){
+      if(boardLoadHideDelayTimer){ clearTimeout(boardLoadHideDelayTimer); boardLoadHideDelayTimer = null; }
+      if(boardLoadHideFinishTimer){ clearTimeout(boardLoadHideFinishTimer); boardLoadHideFinishTimer = null; }
+    }
 
     function showBoardLoadOverlay(clinicName){
       var el = document.getElementById("boardLoadOverlay");
       if(!el) return;
       var label = document.getElementById("boardLoadClinic");
+      // A hide may be mid-flight (fading out, `isHiding` set but not yet `hidden`).
+      // Cancel it and bring the overlay fully back, otherwise the pending timer
+      // would still hide it and a later show would flicker it back in.
+      var wasHiding = !el.hidden && el.classList.contains("isHiding");
+      cancelBoardLoadHide();
+      if(wasHiding){
+        el.classList.remove("isHiding");
+        el.removeAttribute("aria-hidden");
+        if(label && clinicName) label.textContent = clinicName;
+        return;
+      }
       if(!el.hidden){
         // Already visible — just update the clinic label, preserve original shown time
         if(label && clinicName) label.textContent = clinicName;
@@ -1101,11 +1121,15 @@
     function hideBoardLoadOverlay(){
       var el = document.getElementById("boardLoadOverlay");
       if(!el || el.hidden) return;
+      // Already hiding — don't stack a second fade.
+      if(boardLoadHideDelayTimer || boardLoadHideFinishTimer) return;
       var elapsed = Date.now() - boardLoadOverlayShownAt;
       var remaining = Math.max(0, BOARD_LOAD_OVERLAY_MIN_MS - elapsed);
-      setTimeout(function(){
+      boardLoadHideDelayTimer = setTimeout(function(){
+        boardLoadHideDelayTimer = null;
         el.classList.add("isHiding");
-        setTimeout(function(){
+        boardLoadHideFinishTimer = setTimeout(function(){
+          boardLoadHideFinishTimer = null;
           el.setAttribute("hidden","");
           el.setAttribute("aria-hidden","true");
           el.classList.remove("isHiding");
