@@ -79,6 +79,7 @@ export async function POST(request: Request) {
       trialEndsAt: billing.trialEndsAt,
       currentPeriodEnd: billing.currentPeriodEnd,
       hasCustomer: !!billing.stripeCustomerId,
+      hasSubscription: !!billing.stripeSubscriptionId,
     });
   } catch (error) {
     const message = String(error instanceof Error ? error.message : error || "Could not load billing status.");
