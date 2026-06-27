@@ -11,8 +11,8 @@
   --teal-100: #e0f2fe;
   --teal-300: #7dd3fc;
   --teal-500: #0ea5e9;
-  --teal-600: #0284c7;
-  --teal-700: #0369a1;
+  --teal-600: #0369a1; /* darkened for WCAG AA text contrast (was #0284c7) */
+  --teal-700: #035683;
   --coral: #fb923c;
   --coral-soft: #fff7ed;
 
@@ -30,13 +30,13 @@
   --surface-2: #f8fafc;
   --ink: #0f1b2d;
   --ink-2: #33425a;
-  --muted: #65748c;
+  --muted: #54627a; /* darkened for WCAG AA contrast (was #65748c) */
   --line: #e4ebf3;
   --line-strong: #d3deea;
   --shadow-sm: 0 1px 2px rgba(15, 27, 45, .06), 0 2px 8px rgba(15, 27, 45, .05);
   --shadow-md: 0 12px 30px rgba(15, 27, 45, .10);
   --shadow-lg: 0 30px 70px rgba(11, 38, 53, .18);
-  --ring: rgba(14, 165, 233, .35);
+  --ring: #0369a1; /* solid, ≥3:1 for visible focus indicators (WCAG 1.4.11) */
 
   /* Type */
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -117,11 +117,11 @@ img { max-width: 100%; display: block; }
 
 .eyebrow-pulse {
   display: inline-block;
-  animation: eyebrowPulse 2.2s ease-in-out infinite;
+  animation: eyebrowPulse 2.6s ease-in-out infinite;
 }
 @keyframes eyebrowPulse {
-  0%, 100% { opacity: 1;  transform: scale(1); }
-  50%       { opacity: .4; transform: scale(.75); }
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%       { opacity: .6; transform: scale(.92); }
 }
 
 .section { padding: 96px 0; position: relative; }
@@ -145,6 +145,18 @@ img { max-width: 100%; display: block; }
 [data-theme="dark"] .btn.ghost:hover { color: var(--teal-300); }
 .btn.lg { padding: 16px 26px; font-size: 16px; border-radius: 14px; }
 .btn:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+
+/* Global visible focus indicator for keyboard users (WCAG 2.4.7 / 1.4.11) */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible,
+input:focus-visible,
+[role="tab"]:focus-visible,
+[role="switch"]:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
 
 /* ---------- Nav ---------- */
 .nav {
@@ -210,16 +222,10 @@ img { max-width: 100%; display: block; }
 .hero-col { text-align: center; max-width: 760px; width: 100%; }
 .hero h1 { font-size: clamp(42px, 5.5vw, 78px); margin: 16px 0 24px; line-height: 1.08; font-weight: 800; letter-spacing: -.03em; }
 .hero h1 .grad {
-  background: linear-gradient(110deg, var(--teal-300), var(--coral), var(--teal-300));
-  background-size: 200% auto;
+  background: linear-gradient(110deg, var(--teal-500), var(--coral));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: gradShift 6s ease-in-out infinite;
-}
-@keyframes gradShift {
-  0%, 100% { background-position: 0% center; }
-  50%       { background-position: 100% center; }
 }
 .hero-microtrust { font-size: 14px; color: var(--muted); margin: 8px 0 20px; text-align: center; }
 .hero .lede { font-size: 20px; color: var(--ink-2); max-width: 560px; line-height: 1.6; margin: 0 auto; }
@@ -949,7 +955,8 @@ img { max-width: 100%; display: block; }
 .step h3 { font-size: 20px; margin: 12px 0 12px; font-weight: 700; text-align: center; }
 .step p { color: var(--muted); font-size: 15px; text-align: center; line-height: 1.6; }
 .capture-tags { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 48px; }
-.tag { font-size: 13px; font-weight: 600; color: var(--ink-2); background: var(--surface); border: 1.5px solid var(--line-strong); padding: 10px 16px; border-radius: 999px; display: inline-flex; gap: 8px; align-items: center; transition: all .25s; }
+.tag { font-size: 13px; font-weight: 600; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); padding: 9px 15px; border-radius: 999px; display: inline-flex; gap: 8px; align-items: center; transition: border-color .2s ease, color .2s ease; }
+.tag:hover { border-color: color-mix(in srgb, var(--teal-500) 35%, var(--line)); color: var(--ink); }
 .tag svg { width: 15px; height: 15px; color: var(--teal-600); }
 
 /* ---------- Chrome extension callout ---------- */
@@ -1036,12 +1043,12 @@ img { max-width: 100%; display: block; }
 .showcase { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
 .tabs-demo { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-md); overflow: hidden; }
 .tabs-demo .tabbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 14px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
-.tabs-demo .t { font-size: 13px; font-weight: 600; padding: 8px 13px; border-radius: 9px; color: var(--muted); cursor: pointer; border: 1px solid transparent; transition: all .15s; }
+.tabs-demo .t { font-family: inherit; background: none; appearance: none; font-size: 13px; font-weight: 600; padding: 8px 13px; border-radius: 9px; color: var(--muted); cursor: pointer; border: 1px solid transparent; transition: all .15s; }
 .tabs-demo .t.active { color: var(--teal-700); background: var(--teal-50); border-color: color-mix(in srgb, var(--teal-500) 26%, transparent); }
 [data-theme="dark"] .tabs-demo .t.active { color: var(--teal-300); }
 .tabs-demo-wrap { position: relative; min-height: 196px; }
 .tabs-demo .panel { padding: 22px; min-height: 196px; opacity: 1; transition: opacity .22s ease; }
-.tabs-demo .panel h4 { font-family: var(--font-display); margin: 0 0 6px; font-size: 17px; }
+.tabs-demo .panel h3 { font-family: var(--font-display); margin: 0 0 6px; font-size: 17px; font-weight: 600; }
 .tabs-demo .panel p { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
 .tabs-demo .panel.hidden { display: none; opacity: 0; }
 .swatches { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -1132,7 +1139,7 @@ ul { padding: 0; margin: 0; }
 .footer { border-top: 1px solid var(--line); padding: 56px 0 34px; background: var(--surface); }
 .footer-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 30px; }
 .footer .brand { margin-bottom: 12px; }
-.footer-col h4 { font-family: var(--font-display); font-size: 14px; margin-bottom: 14px; color: var(--ink); }
+.footer-col h2 { font-family: var(--font-display); font-size: 14px; margin: 0 0 14px; font-weight: 600; color: var(--ink); }
 .footer-col a { display: block; color: var(--muted); font-size: 14px; padding: 5px 0; transition: color .15s; }
 .footer-col a:hover { color: var(--teal-600); }
 .footer-about { color: var(--muted); font-size: 14px; max-width: 280px; }
@@ -1155,7 +1162,7 @@ ul { padding: 0; margin: 0; }
 .board-demo          { animation: heroFadeUp .72s .22s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
 /* ---------- Reveal animation ---------- */
-.reveal { opacity: 0; transform: translateY(16px); transition: opacity .65s cubic-bezier(0.22, 1, 0.36, 1), transform .65s cubic-bezier(0.22, 1, 0.36, 1); transition-delay: var(--reveal-delay, 0ms); }
+.reveal { opacity: 0; transform: translateY(12px); transition: opacity .55s cubic-bezier(0.22, 1, 0.36, 1), transform .55s cubic-bezier(0.22, 1, 0.36, 1); transition-delay: var(--reveal-delay, 0ms); }
 .reveal.in { opacity: 1; transform: none; }
 
 /* ---------- To top ---------- */
@@ -1462,10 +1469,12 @@ a.fo-spots:hover { background: var(--coral); border-color: var(--coral); color: 
   border-radius: 0 2px 2px 0;
 }
 
-/* ---------- Directional reveal variants ---------- */
-.reveal.reveal-left  { transform: translateX(-38px); }
-.reveal.reveal-right { transform: translateX(38px); }
-.reveal.reveal-scale { transform: scale(0.90); }
+/* ---------- Reveal variants ---------- */
+/* One consistent, restrained motion across the page: a small upward fade.
+   No big slides or scale jumps — those read as gimmicky. */
+.reveal.reveal-left,
+.reveal.reveal-right,
+.reveal.reveal-scale { transform: translateY(12px); }
 
 /* Higher specificity clears the directional transform when .in is added */
 .reveal.reveal-left.in,
@@ -1478,9 +1487,9 @@ a.fo-spots:hover { background: var(--coral); border-color: var(--coral); color: 
 
 .stat.reveal .n {
   opacity: 0;
-  transform: perspective(600px) rotateX(-35deg) translateY(18px);
-  transition: opacity .75s cubic-bezier(0.22, 1, 0.36, 1),
-              transform .75s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateY(12px);
+  transition: opacity .55s cubic-bezier(0.22, 1, 0.36, 1),
+              transform .55s cubic-bezier(0.22, 1, 0.36, 1);
   transition-delay: var(--reveal-delay, 0ms);
 }
 .stat.reveal.in .n { opacity: 1; transform: none; }
@@ -1494,7 +1503,7 @@ a.fo-spots:hover { background: var(--coral); border-color: var(--coral); color: 
 }
 .stat.reveal.in .l { opacity: 1; transform: none; }
 
-/* ---------- Waitcost section — ambient pulse ---------- */
+/* ---------- Waitcost section — static ambient glow ---------- */
 .waitcost { position: relative; overflow: hidden; }
 .waitcost::after {
   content: "";
@@ -1505,23 +1514,17 @@ a.fo-spots:hover { background: var(--coral); border-color: var(--coral); color: 
     radial-gradient(ellipse 50% 40% at 12% 35%, rgba(245, 158, 11, .08), transparent 65%);
   pointer-events: none;
   z-index: 0;
-  animation: waitPulse 7s ease-in-out infinite;
 }
 /* Ensure content sits above the glow */
 .waitcost .wrap { position: relative; z-index: 1; }
 
-@keyframes waitPulse {
-  0%, 100% { opacity: .45; transform: scale(1); }
-  50%       { opacity: 1;   transform: scale(1.06); }
-}
-
-/* ---------- Count-up glow on finish ---------- */
+/* ---------- Count-up finish — subtle settle ---------- */
 .ws-n.counted {
-  animation: wsGlowFade .85s ease-out both;
+  animation: wsGlowFade .5s ease-out both;
 }
 @keyframes wsGlowFade {
-  0%   { filter: brightness(1.7) blur(3px); }
-  100% { filter: brightness(1) blur(0); }
+  0%   { filter: brightness(1.2); }
+  100% { filter: brightness(1); }
 }
 
 /* ---------- Section-head entrance ---------- */
@@ -1547,30 +1550,16 @@ a.fo-spots:hover { background: var(--coral); border-color: var(--coral); color: 
 .section-head.head-in h2       { opacity: 1; transform: none; }
 .section-head.head-in > p      { opacity: 1; transform: none; }
 
-/* ---------- Device icon spring bounce ---------- */
+/* ---------- Device icon entrance ---------- */
+/* A gentle settle, no rotation or overshoot. */
 .device.reveal .di {
-  transform: scale(0.5) rotate(-12deg);
-  transition: transform .75s cubic-bezier(0.34, 1.56, 0.64, 1);
-  transition-delay: calc(var(--reveal-delay, 0ms) + 80ms);
+  transform: translateY(8px) scale(0.97);
+  transition: transform .5s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--reveal-delay, 0ms) + 60ms);
 }
 .device.reveal.in .di { transform: none; }
 
-/* ---------- Featured pricing plan — spring pop ---------- */
-.plan.featured.reveal.reveal-scale.in {
-  animation: planPop .85s cubic-bezier(0.34, 1.45, 0.64, 1) both;
-  animation-delay: calc(var(--reveal-delay, 60ms));
-}
-@keyframes planPop {
-  from { opacity: 0; transform: scale(0.88) translateY(24px); }
-  to   { opacity: 1; transform: none; }
-}
-
-/* ---------- CTA card glow pulse ---------- */
-@keyframes ctaGlow {
-  0%, 100% { box-shadow: 0 0 50px 0   rgba(14, 165, 233, .20), var(--shadow-lg); }
-  50%       { box-shadow: 0 0 90px 18px rgba(14, 165, 233, .38), var(--shadow-lg); }
-}
-.cta-card.in { animation: ctaGlow 5s ease-in-out 1s infinite; }
+/* Featured pricing plan uses the standard reveal — no spring/overshoot pop. */
 
 /* ---------- Customize panel — mini elements ---------- */
 
