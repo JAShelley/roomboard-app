@@ -756,6 +756,14 @@
     });
     $("quickAddBody").addEventListener("keydown", function(e){
       var target = e.target;
+      // Keyboard activation for the ready toggles (role="switch" divs)
+      if(target && target.classList && target.classList.contains("switch") && target.getAttribute("data-action")){
+        if(e.key === " " || e.key === "Enter" || e.key === "Spacebar"){
+          e.preventDefault();
+          target.click();
+          return;
+        }
+      }
       if(!target || target.id !== "quickAddTimerInput") return;
       if(e.key !== "Enter") return;
       e.preventDefault();

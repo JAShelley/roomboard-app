@@ -1528,7 +1528,7 @@
 
     function setQuickAddSwitchState(id, on){
       var el = $(id);
-      if(el) el.classList.toggle("on", !!on);
+      if(el){ el.classList.toggle("on", !!on); el.setAttribute("aria-checked", on ? "true" : "false"); }
     }
 
     function getQuickAddSwitchState(id){
@@ -1769,16 +1769,16 @@
 	      body.innerHTML =
 	        '<div class="card">'
           + '<div class="quickAddGrid">'
-            + '<div class="field full"><label>Room</label><select id="quickAddRoomSelect">'+roomOptions+'</select></div>'
-            + '<div class="field full"><label>Patient name</label><input id="quickAddPatientName" type="text" value="'+escapeHtml(draft.patientName)+'" placeholder="e.g., Bella" /></div>'
-            + '<div class="field"><label>Type</label><select id="quickAddColorLabelId">'+colorOptions+'</select></div>'
-            + '<div class="field"><label>Doctor</label><select id="quickAddDoctor">'+doctorOptions+'</select></div>'
-            + '<div class="field"><label>Tech</label><input id="quickAddTech" type="text" value="'+escapeHtml(draft.tech)+'" placeholder="e.g., Alex" /></div>'
+            + '<div class="field full"><label for="quickAddRoomSelect">Room</label><select id="quickAddRoomSelect">'+roomOptions+'</select></div>'
+            + '<div class="field full"><label for="quickAddPatientName">Patient name</label><input id="quickAddPatientName" type="text" value="'+escapeHtml(draft.patientName)+'" placeholder="e.g., Bella" /></div>'
+            + '<div class="field"><label for="quickAddColorLabelId">Type</label><select id="quickAddColorLabelId">'+colorOptions+'</select></div>'
+            + '<div class="field"><label for="quickAddDoctor">Doctor</label><select id="quickAddDoctor">'+doctorOptions+'</select></div>'
+            + '<div class="field"><label for="quickAddTech">Tech</label><input id="quickAddTech" type="text" value="'+escapeHtml(draft.tech)+'" placeholder="e.g., Alex" /></div>'
             + '<div class="field"><label>Quick notes</label>'+quickNoteDropdown+'</div>'
-            + '<div class="field"><label>Room ready</label><div class="toggle"><span class="muted">Patient ready in room</span><div class="switch '+(draft.roomReady ? 'on' : '')+'" data-action="toggleQuickAddRoomReady" id="quickAddRoomReadySwitch"><div class="knob"></div></div></div></div>'
-            + '<div class="field"><label>Doctor ready</label><div class="toggle"><span class="muted">Doctor ready to go in</span><div class="switch '+(draft.doctorReady ? 'on' : '')+'" data-action="toggleQuickAddDoctorReady" id="quickAddDoctorReadySwitch"><div class="knob"></div></div></div></div>'
+            + '<div class="field"><label id="quickAddRoomReadyLabel">Room ready</label><div class="toggle"><span class="muted">Patient ready in room</span><div class="switch '+(draft.roomReady ? 'on' : '')+'" data-action="toggleQuickAddRoomReady" id="quickAddRoomReadySwitch" role="switch" tabindex="0" aria-checked="'+(draft.roomReady ? 'true' : 'false')+'" aria-labelledby="quickAddRoomReadyLabel"><div class="knob"></div></div></div></div>'
+            + '<div class="field"><label id="quickAddDoctorReadyLabel">Doctor ready</label><div class="toggle"><span class="muted">Doctor ready to go in</span><div class="switch '+(draft.doctorReady ? 'on' : '')+'" data-action="toggleQuickAddDoctorReady" id="quickAddDoctorReadySwitch" role="switch" tabindex="0" aria-checked="'+(draft.doctorReady ? 'true' : 'false')+'" aria-labelledby="quickAddDoctorReadyLabel"><div class="knob"></div></div></div></div>'
 	            + '<div class="field full quickAddTimerField"><label>' + escapeHtml(timerLabel) + '</label><div class="quickAddTimerSummary"><div class="quickAddTimerCurrent"><strong>' + escapeHtml(formatTime(timerDisplayMs)) + '</strong><span class="muted">' + (draft.timerDirty ? 'Will update on save' : ('Current ' + timerLabel.toLowerCase())) + '</span></div><button class="btn sm" data-action="toggleQuickAddTimerAdjust" type="button">' + (quickAddTimerAdjustOpen ? 'Hide' : 'Adjust') + '</button></div>' + timerAdjustControls + '</div>'
-	            + '<div class="field full"><label>Status notes</label><textarea id="quickAddNotes" placeholder="Status notes...">'+escapeHtml(draft.notes)+'</textarea></div>'
+	            + '<div class="field full"><label for="quickAddNotes">Status notes</label><textarea id="quickAddNotes" placeholder="Status notes...">'+escapeHtml(draft.notes)+'</textarea></div>'
           + '</div>'
           + '<div class="actions">'
             + '<button class="btn sm" data-action="cancelQuickAdd" type="button">Cancel</button>'
