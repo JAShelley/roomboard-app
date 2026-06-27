@@ -102,13 +102,22 @@
       }catch(e){}
     }
 
+    // Exposed so the standalone sign-in overlay can pre-check its
+    // "Keep this device signed in" box to match the saved preference.
+    window.roomboardGetKeepSignedIn = function(){ return getRememberMePreference(); };
+
     function getPreferredAuthStorage(){
-      // Always use localStorage — keeps users logged in across browser sessions
-      return window.localStorage;
+      // "Keep this device signed in" ON  → localStorage: the session survives
+      // browser close and reboots, so a wall display or front-desk machine
+      // stays signed in to the clinic. OFF → sessionStorage: the session is
+      // cleared when the browser fully closes (use on a shared/public computer).
+      return getRememberMePreference() ? window.localStorage : window.sessionStorage;
     }
 
     function getFallbackAuthStorage(){
-      return window.sessionStorage;
+      // The opposite store, so a session saved under the previous preference is
+      // still found and migrated on the next read (see the adapter's getItem).
+      return getRememberMePreference() ? window.sessionStorage : window.localStorage;
     }
 
     function createAuthStorageAdapter(){

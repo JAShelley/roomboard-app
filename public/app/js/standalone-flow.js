@@ -184,6 +184,11 @@
       /* error */
       ".rbAError{background:rgba(239,68,68,.10);border:1px solid rgba(239,68,68,.25);border-radius:10px;",
         "padding:10px 14px;font-size:13px;color:#fca5a5;margin-bottom:14px;display:none;}",
+      /* keep-signed-in checkbox */
+      ".rbACheck{display:flex;align-items:flex-start;gap:9px;margin:0 0 16px;cursor:pointer;}",
+      ".rbACheck input{margin:1px 0 0;width:16px;height:16px;flex:none;accent-color:#0ea5e9;cursor:pointer;}",
+      ".rbACheckText{font-size:13px;color:rgba(234,241,255,.82);line-height:1.4;}",
+      ".rbACheckHint{display:block;color:rgba(148,178,220,.5);font-size:12px;margin-top:2px;}",
       /* submit */
       ".rbASubmit{width:100%;padding:13px;border-radius:11px;border:none;cursor:pointer;",
         "font-size:15px;font-weight:700;letter-spacing:-.01em;margin-bottom:18px;",
@@ -285,6 +290,12 @@
           '<div class="rbAField"><label>Email</label><input id="rbaEmail" placeholder="name@clinic.com" type="email" autocomplete="username"></div>',
           '<div class="rbAField"><label>Password</label><input id="rbaPassword" placeholder="Password" type="password" autocomplete="current-password"></div>',
           '<div class="rbAError" id="rbAError"></div>',
+          '<label class="rbACheck">',
+            '<input id="rbaKeepSignedIn" type="checkbox" checked>',
+            '<span class="rbACheckText">Keep this device signed in',
+              '<span class="rbACheckHint">On a clinic display or front desk. Turn off on a shared or public computer.</span>',
+            '</span>',
+          '</label>',
           '<button class="rbASubmit" id="rbaSubmit" type="button">Sign in</button>',
           '<p class="rbAStatus" id="rbAStatus"></p>',
           '<div class="rbAFooterLinks">',
@@ -295,6 +306,12 @@
       '</div>',
     ].join("");
     document.body.appendChild(overlay);
+
+    // Pre-check "Keep this device signed in" to match the saved preference.
+    var keepSignedInEl = document.getElementById("rbaKeepSignedIn");
+    if(keepSignedInEl && typeof window.roomboardGetKeepSignedIn === "function"){
+      try{ keepSignedInEl.checked = window.roomboardGetKeepSignedIn() !== false; }catch(e){}
+    }
 
     var tabs       = overlay.querySelectorAll(".rbATab");
     var createWrap = document.getElementById("rbACreateFields");
@@ -357,6 +374,11 @@
 
     submitBtn.addEventListener("click", function(){
       hideErr();
+      // Mirror the keep-signed-in choice into the hidden form checkbox the auth
+      // handlers read (setRememberMePreference), so the choice made on the
+      // sign-in screen actually takes effect for both login and create.
+      var hiddenRemember = document.getElementById("rememberMe");
+      if(hiddenRemember && keepSignedInEl) hiddenRemember.checked = !!keepSignedInEl.checked;
       var email = gVal("rbaEmail"), pass = gVal("rbaPassword");
       if(!email || !pass){ showErr("Email and password are required."); return; }
 
