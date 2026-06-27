@@ -873,8 +873,11 @@
       var el = document.createElement("div");
       el.className = "activeRoomsEmpty";
       el.innerHTML =
-        '<div class="activeRoomsEmptyTitle">No active rooms</div>'
-        + '<div class="activeRoomsEmptyText">All rooms are clear right now.</div>';
+        '<div class="activeRoomsEmptyIcon" aria-hidden="true">'
+          + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
+        + '</div>'
+        + '<div class="activeRoomsEmptyTitle">All caught up!</div>'
+        + '<div class="activeRoomsEmptyText">Every room is clear right now — nice work keeping things moving. New patients will appear here the moment they\'re added.</div>';
       return el;
     }
 
@@ -971,6 +974,7 @@
       grid.classList.toggle("activeDisplayFitSingle", renderMode === "grid" && groupByDoctor && displayRooms.length === 1);
       grid.classList.toggle("mobileQuickViewGrid", renderMode === "quick" || renderMode === "mobilecards");
       grid.classList.toggle("activeDoctorGrouped", groupByDoctor);
+      grid.classList.toggle("activeEmptyState", renderMode === "grid" && groupByDoctor && !displayRooms.length);
       grid.dataset.layout = renderMode;
       grid.dataset.cardStyle = state.settings.cardStyle || "original";
       grid.dataset.roomCount = String(displayRooms.length);

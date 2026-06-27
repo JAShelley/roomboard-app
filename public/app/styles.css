@@ -687,31 +687,64 @@
       height:38px;
       padding:0;
     }
+    /* Active-only empty state — fill the open board area and center a
+       positive "all caught up" message instead of a small top-left box. */
+    #displayGrid.activeEmptyState{
+      display:flex !important;
+      align-items:center;
+      justify-content:center;
+      width:100%;
+      height:100%;
+      min-height:0;
+    }
     .activeRoomsEmpty{
-      grid-column:1 / -1;
-      width:min(420px, 100%);
-      min-height:126px;
+      width:min(620px, 90%);
       display:flex;
       flex-direction:column;
+      align-items:center;
       justify-content:center;
-      gap:6px;
-      padding:22px 24px;
-      border-radius:18px;
-      border:1px solid rgba(125,211,252,.18);
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025));
+      text-align:center;
+      gap:20px;
+      padding:32px;
       color:var(--displayFontColor, var(--text));
-      box-shadow:0 10px 24px rgba(0,0,0,.20);
+      animation:activeEmptyIn .5s cubic-bezier(.34,1.2,.5,1) both;
     }
+    .activeRoomsEmptyIcon{
+      width:96px;
+      height:96px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      color:#34d399;
+      background:radial-gradient(circle at 50% 38%, rgba(52,211,153,.24), rgba(52,211,153,.05));
+      border:1px solid rgba(52,211,153,.38);
+      box-shadow:0 0 0 10px rgba(52,211,153,.05), 0 20px 46px rgba(16,185,129,.20);
+      animation:activeEmptyPulse 2.8s ease-in-out infinite;
+    }
+    .activeRoomsEmptyIcon svg{ width:48px; height:48px; }
     .activeRoomsEmptyTitle{
-      font-size:18px;
+      font-size:clamp(26px, 3.4vw, 38px);
       font-weight:900;
-      line-height:1.1;
+      letter-spacing:-.01em;
+      line-height:1.05;
     }
     .activeRoomsEmptyText{
       color:var(--displayMutedColor, var(--muted));
-      font-size:13px;
-      line-height:1.35;
-      font-weight:700;
+      font-size:clamp(14px, 1.5vw, 17px);
+      line-height:1.5;
+      font-weight:600;
+      max-width:44ch;
+    }
+    @keyframes activeEmptyIn{
+      from{ opacity:0; transform:translateY(14px); }
+      to{ opacity:1; transform:translateY(0); }
+    }
+    @keyframes activeEmptyPulse{
+      0%,100%{ box-shadow:0 0 0 10px rgba(52,211,153,.05), 0 20px 46px rgba(16,185,129,.18); transform:translateY(0); }
+      50%{ box-shadow:0 0 0 16px rgba(52,211,153,.02), 0 26px 56px rgba(16,185,129,.28); transform:translateY(-3px); }
+    }
+    @media (prefers-reduced-motion: reduce){
+      .activeRoomsEmpty, .activeRoomsEmptyIcon{ animation:none !important; }
     }
     .gridWrap{
       /* rows control: if rows > 0, constrain height so it becomes a TV-friendly grid */
