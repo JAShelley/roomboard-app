@@ -5851,20 +5851,22 @@ body.checklistOpen .checklistPanel {
 .boardLoadCenter {
   position: relative; z-index: 2;
   display: flex; flex-direction: column;
-  align-items: center; gap: 20px;
-  transform: translateY(-5vh);
+  align-items: center; gap: 28px;
+}
+.boardLoadHead {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
 }
 
-/* Mini RoomBoard "booting up" */
+/* Mini RoomBoard "booting up" — 1.5x scale */
 .blMiniBoard {
   position: relative;
-  width: min(440px, 84vw);
-  padding: 14px;
-  border-radius: 20px;
+  width: min(660px, 92vw);
+  padding: 21px;
+  border-radius: 28px;
   background: linear-gradient(180deg, rgba(17,32,56,.78), rgba(9,17,32,.72));
   border: 1px solid rgba(120,170,225,.16);
   box-shadow:
-    0 30px 80px rgba(2,10,28,.65),
+    0 40px 100px rgba(2,10,28,.65),
     inset 0 1px 0 rgba(255,255,255,.06);
   -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   animation: boardLoadIn .6s cubic-bezier(.34,1.2,.5,1) both;
@@ -5882,55 +5884,55 @@ body.checklistOpen .checklistPanel {
 
 .blMiniBar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 4px 12px;
+  padding: 0 6px 18px;
 }
-.blMiniBrand { display: flex; align-items: center; gap: 9px; }
+.blMiniBrand { display: flex; align-items: center; gap: 13px; }
 .blMiniGlyph {
   display: grid; place-items: center;
-  width: 26px; height: 26px; border-radius: 8px;
+  width: 39px; height: 39px; border-radius: 12px;
   color: #cfe9ff;
   background: linear-gradient(155deg, rgba(14,165,233,.35), rgba(2,132,199,.14));
   border: 1px solid rgba(120,200,255,.3);
-  box-shadow: 0 4px 14px rgba(2,132,199,.4);
+  box-shadow: 0 6px 20px rgba(2,132,199,.4);
 }
-.blMiniGlyph svg { width: 16px; height: 16px; }
+.blMiniGlyph svg { width: 24px; height: 24px; }
 .blMiniLogo {
-  max-height: 28px; max-width: 150px; width: auto; object-fit: contain;
-  border-radius: 6px; display: block;
+  max-height: 42px; max-width: 225px; width: auto; object-fit: contain;
+  border-radius: 9px; display: block;
   filter: drop-shadow(0 2px 8px rgba(0,0,0,.45));
 }
-.blMiniBars { display: flex; flex-direction: column; gap: 4px; }
-.blMiniBars i { display: block; height: 5px; border-radius: 3px; background: rgba(160,190,225,.32); }
-.blMiniBars i:nth-child(1) { width: 70px; }
-.blMiniBars i:nth-child(2) { width: 44px; background: rgba(160,190,225,.18); }
+.blMiniBars { display: flex; flex-direction: column; gap: 6px; }
+.blMiniBars i { display: block; height: 7px; border-radius: 4px; background: rgba(160,190,225,.32); }
+.blMiniBars i:nth-child(1) { width: 105px; }
+.blMiniBars i:nth-child(2) { width: 66px; background: rgba(160,190,225,.18); }
 .blMiniLive {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 9.5px; font-weight: 800; letter-spacing: .14em;
+  display: inline-flex; align-items: center; gap: 9px;
+  font-size: 14px; font-weight: 800; letter-spacing: .14em;
   color: #6ee7b7;
-  padding: 4px 9px; border-radius: 999px;
+  padding: 6px 13px; border-radius: 999px;
   background: rgba(16,185,129,.12); border: 1px solid rgba(52,211,153,.3);
 }
 .blMiniLive i {
-  width: 6px; height: 6px; border-radius: 50%; background: #34d399;
+  width: 9px; height: 9px; border-radius: 50%; background: #34d399;
   box-shadow: 0 0 0 0 rgba(52,211,153,.6);
   animation: blLivePulse 1.6s ease-out infinite;
 }
 @keyframes blLivePulse {
   0% { box-shadow: 0 0 0 0 rgba(52,211,153,.55); }
-  100% { box-shadow: 0 0 0 7px rgba(52,211,153,0); }
+  100% { box-shadow: 0 0 0 10px rgba(52,211,153,0); }
 }
 
-.blMiniGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.blMiniGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
 .blCard {
   position: relative; overflow: hidden;
-  display: flex; flex-direction: column; gap: 9px;
-  padding: 11px 11px 12px;
-  min-height: 92px;
-  border-radius: 13px;
+  display: flex; flex-direction: column; gap: 13px;
+  padding: 16px 16px 18px;
+  min-height: 138px;
+  border-radius: 19px;
   background: linear-gradient(180deg, color-mix(in srgb, var(--c) 16%, rgba(13,22,40,.9)), rgba(11,18,32,.92));
   border: 1px solid color-mix(in srgb, var(--c) 35%, transparent);
-  border-top: 2.5px solid var(--c);
-  box-shadow: 0 10px 26px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
+  border-top: 3.5px solid var(--c);
+  box-shadow: 0 14px 34px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
   opacity: 0;
   animation: blCardIn .55s cubic-bezier(.34,1.3,.5,1) forwards, blCardBreathe 3s ease-in-out infinite;
 }
@@ -5951,21 +5953,21 @@ body.checklistOpen .checklistPanel {
 }
 @keyframes blCardShimmer { 0% { left: -70%; } 55%, 100% { left: 130%; } }
 
-.blCardTop { display: flex; align-items: center; gap: 7px; }
+.blCardTop { display: flex; align-items: center; gap: 10px; }
 .blDot {
-  flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%;
-  background: var(--c); box-shadow: 0 0 10px color-mix(in srgb, var(--c) 70%, transparent);
+  flex: 0 0 auto; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--c); box-shadow: 0 0 15px color-mix(in srgb, var(--c) 70%, transparent);
 }
-.blLine { display: block; height: 7px; border-radius: 4px; background: rgba(190,210,235,.22); }
+.blLine { display: block; height: 10px; border-radius: 6px; background: rgba(190,210,235,.22); }
 .blLineRoom { width: 52%; }
-.blLineName { width: 78%; height: 8px; background: rgba(200,218,240,.34); }
+.blLineName { width: 78%; height: 12px; background: rgba(200,218,240,.34); }
 .blTimer {
   margin-top: auto;
   align-self: flex-start;
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: 14px; font-weight: 800; letter-spacing: .04em;
+  font-size: 21px; font-weight: 800; letter-spacing: .04em;
   color: var(--c);
-  text-shadow: 0 0 14px color-mix(in srgb, var(--c) 35%, transparent);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--c) 35%, transparent);
 }
 
 .boardLoadWordmark {
