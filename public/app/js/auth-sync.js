@@ -3998,11 +3998,6 @@
       staleDisplayWatchdogTimer = setInterval(function(){
         if(!supabase || !currentPracticeId) return;
         if(saving || remoteRefreshInFlight || remoteConfigRefreshInFlight || watchdogRecoveryInFlight) return;
-        // A healthy realtime channel keeps the board live; an idle board with no
-        // changes is not "stale", so don't refetch just because it's quiet. The
-        // auto-pull reconciliation handles the rare dropped-event case. Only
-        // recover here when realtime is actually down.
-        if(realtimeChannelHealthy) return;
         var ageMs = Date.now() - Number(lastBoardActivityAt || 0);
         if(ageMs < STALE_DISPLAY_THRESHOLD_MS) return;
         recoverStaleDisplay();
