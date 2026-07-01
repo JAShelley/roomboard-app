@@ -21,3 +21,7 @@ native-stats-mac/
 .swift-module-cache/
 ios/
 public/stats-viewer/
+
+# TS incremental build cache
+tsconfig.tsbuildinfo
+*.tsbuildinfo

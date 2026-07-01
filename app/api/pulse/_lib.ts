@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient, type User } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient, type User } from "@supabase/supabase-js";
 
 type PulseSession = {
   accessToken: string;
@@ -71,12 +71,27 @@ type SendPayload = {
   doctorReady: boolean;
 };
 
-const corsHeaders: Record<string, string> = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Pulse-Refresh-Token",
-  "Access-Control-Max-Age": "86400",
-};
+// CORS is a browser-only control; the native Pulse apps ignore it entirely.
+// Its only job here is to stop arbitrary websites from scripting these
+// endpoints in a signed-in user's browser. Set PULSE_ALLOWED_ORIGIN in prod to
+// your app's origin (e.g. https://app.roomboard.com) to lock it down; when it's
+// unset we fall back to "*" so nothing breaks before it's configured.
+function getCorsAllowOrigin() {
+  return (process.env.PULSE_ALLOWED_ORIGIN || "").trim() || "*";
+}
+
+function buildCorsHeaders(): Record<string, string> {
+  const allowOrigin = getCorsAllowOrigin();
+  const headers: Record<string, string> = {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Pulse-Refresh-Token",
+    "Access-Control-Max-Age": "86400",
+  };
+  // When we pin to a specific origin, caches must key on Origin.
+  if (allowOrigin !== "*") headers.Vary = "Origin";
+  return headers;
+}
 
 function getRequiredEnv(name: string) {
   const value = process.env[name];
@@ -96,25 +111,33 @@ function getSupabaseServiceRoleKey() {
   return getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY");
 }
 
-function createAnonClient() {
-  return createClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+// The Supabase schema isn't codegen'd into a `Database` type here, so we type
+// these clients loosely (`any` schema) to keep row access ergonomic. Every
+// query is still explicitly scoped by practice_id, so this is a typing choice,
+// not a security one.
+function createAnonClient(): SupabaseClient<any> {
+  return createClient<any>(getSupabaseUrl(), getSupabaseAnonKey(), {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
 
-function createServiceClient() {
-  return createClient(getSupabaseUrl(), getSupabaseServiceRoleKey(), {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+let serviceClient: SupabaseClient<any> | null = null;
+function createServiceClient(): SupabaseClient<any> {
+  if (!serviceClient) {
+    serviceClient = createClient<any>(getSupabaseUrl(), getSupabaseServiceRoleKey(), {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  }
+  return serviceClient;
 }
 
 export function optionsResponse() {
-  return new NextResponse(null, { status: 204, headers: corsHeaders });
+  return new NextResponse(null, { status: 204, headers: buildCorsHeaders() });
 }
 
 export function pulseJson(data: unknown, init?: ResponseInit) {
   const headers = new Headers(init?.headers || {});
-  for (const [key, value] of Object.entries(corsHeaders)) headers.set(key, value);
+  for (const [key, value] of Object.entries(buildCorsHeaders())) headers.set(key, value);
   return NextResponse.json(data, { ...init, headers });
 }
 
@@ -215,6 +238,23 @@ export async function resolvePulseSession(input: {
   refreshedSession.email = String(refreshedUser.email || refreshedSession.email || "").trim();
   refreshedSession.userId = String(refreshedUser.id || refreshedSession.userId || "").trim();
   return { session: refreshedSession, user: refreshedUser };
+}
+
+// Distinct marker so routes can map this to HTTP 402 (Payment Required) and the
+// client can tell "you're not paying" apart from "please sign in".
+export const BILLING_REQUIRED = "billing_required";
+
+// Server-side paywall. The Pulse routes run under the service-role key and
+// bypass RLS, so the subscription check the browser does in auth-sync.js is NOT
+// enough on its own — anyone with a valid login token could otherwise call these
+// endpoints directly. Reuse billing/_lib's computeAccess so there is one source
+// of truth for what "has access" means.
+export async function assertPracticeHasAccess(practiceId: string) {
+  const { getPracticeBilling, computeAccess } = await import("../billing/_lib");
+  const billing = await getPracticeBilling(practiceId);
+  if (!computeAccess(billing).hasAccess) {
+    throw new Error(`${BILLING_REQUIRED}: Your RoomBoard subscription is inactive. Update billing to continue.`);
+  }
 }
 
 export async function getPracticeIdForUser(userId: string) {
@@ -508,6 +548,7 @@ async function upsertBoardState(practiceId: string, boardData: BoardData) {
 export async function loadPulseBoard(input: { accessToken?: string; refreshToken?: string }) {
   const { session, user } = await resolvePulseSession(input);
   const practiceId = await getPracticeIdForUser(String(user.id || session.userId || "").trim());
+  await assertPracticeHasAccess(practiceId);
   const boardData = await fetchPracticeBoardData(practiceId);
   return { session, practiceId, boardData };
 }
@@ -518,6 +559,7 @@ export async function sendPulseAppointment(
 ) {
   const { session, user } = await resolvePulseSession(sessionInput);
   const practiceId = await getPracticeIdForUser(String(user.id || session.userId || "").trim());
+  await assertPracticeHasAccess(practiceId);
   const boardData = await fetchPracticeBoardData(practiceId);
   const room = boardData.rooms.find((entry) => entry.id === String(payload.roomId || "").trim());
   if (!room) throw new Error("That room could not be found in the shared board.");

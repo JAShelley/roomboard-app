@@ -35,7 +35,11 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     const message = String(error instanceof Error ? error.message : error || "Could not send the appointment.");
-    const status = /login required|expired|sign in/i.test(message) ? 401 : 400;
+    const status = message.startsWith("billing_required")
+      ? 402
+      : /login required|expired|sign in/i.test(message)
+        ? 401
+        : 400;
     return pulseError(message, status);
   }
 }
