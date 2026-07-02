@@ -760,9 +760,13 @@
     if (!room) throw new Error("That room could not be found.");
 
     const hadPatientBefore = hasAssignedPatient(room);
+    const previousPatientName = room.patientName;
     if (typeof window.holdRemoteUpdates === "function") window.holdRemoteUpdates(2500);
 
     applyFormToRoom(room, appState);
+    if (typeof window.syncRoomChecklistWithPatientChange === "function") {
+      window.syncRoomChecklistWithPatientChange(room, previousPatientName);
+    }
 
     if (typeof window.syncRoomSessionAfterOccupancyChange === "function") {
       await window.syncRoomSessionAfterOccupancyChange(room, hadPatientBefore, {

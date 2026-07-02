@@ -3,6 +3,7 @@ import {
   getPracticeBilling,
   getServiceClient,
   planForPriceId,
+  type PracticeBilling,
   requireEnv,
 } from "./_lib";
 
@@ -18,6 +19,94 @@ export function getStripe() {
 
 export function getWebhookSecret() {
   return requireEnv("STRIPE_WEBHOOK_SECRET");
+}
+
+function expandableId(value: unknown): string | null {
+  if (typeof value === "string") return value.trim() || null;
+  if (value && typeof value === "object" && "id" in value) {
+    return String((value as { id?: unknown }).id || "").trim() || null;
+  }
+  return null;
+}
+
+function hasDefaultPaymentMethod(record: unknown): boolean {
+  const source = record as {
+    default_payment_method?: unknown;
+    default_source?: unknown;
+    invoice_settings?: { default_payment_method?: unknown } | null;
+  } | null;
+  if (!source) return false;
+  return !!(
+    expandableId(source.default_payment_method) ||
+    expandableId(source.default_source) ||
+    expandableId(source.invoice_settings?.default_payment_method)
+  );
+}
+
+function isMissingPaymentMethodColumn(message: string) {
+  return /has_payment_method|schema cache|column/i.test(message);
+}
+
+export async function hasPaymentMethodForBilling(
+  billing: Pick<PracticeBilling, "stripeCustomerId" | "stripeSubscriptionId" | "hasPaymentMethod">,
+): Promise<boolean> {
+  if (billing.hasPaymentMethod === true) return true;
+  if (!billing.stripeCustomerId) return false;
+
+  const stripe = getStripe();
+  try {
+    const customer = await stripe.customers.retrieve(billing.stripeCustomerId);
+    if ("deleted" in customer && customer.deleted) return false;
+    if (hasDefaultPaymentMethod(customer)) return true;
+  } catch {
+    return false;
+  }
+
+  if (billing.stripeSubscriptionId) {
+    try {
+      const subscription = await stripe.subscriptions.retrieve(billing.stripeSubscriptionId);
+      if (hasDefaultPaymentMethod(subscription)) return true;
+    } catch {
+      return false;
+    }
+  }
+
+  try {
+    const methods = await stripe.paymentMethods.list({
+      customer: billing.stripeCustomerId,
+      type: "card",
+      limit: 1,
+    });
+    return methods.data.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+async function updatePracticePaymentMethodFlag(
+  customerId: string | null | undefined,
+  practiceId: string | null | undefined,
+  hasPaymentMethod: boolean,
+) {
+  const service = getServiceClient();
+  const payload = { has_payment_method: hasPaymentMethod };
+  const patch = (tbl: ReturnType<typeof service.from>) =>
+    (tbl.update as (v: Record<string, unknown>) => typeof tbl)(payload);
+
+  if (customerId) {
+    const byCustomer = await patch(service.from("practices")).eq("stripe_customer_id", customerId).select("id");
+    if (byCustomer.error && !isMissingPaymentMethodColumn(byCustomer.error.message)) {
+      throw new Error(byCustomer.error.message);
+    }
+    if (!byCustomer.error && Array.isArray(byCustomer.data) && byCustomer.data.length > 0) return;
+  }
+
+  if (practiceId) {
+    const byPractice = await patch(service.from("practices")).eq("id", practiceId);
+    if (byPractice.error && !isMissingPaymentMethodColumn(byPractice.error.message)) {
+      throw new Error(byPractice.error.message);
+    }
+  }
 }
 
 // Ensure the practice has a Stripe customer; create + persist if missing.
@@ -66,18 +155,30 @@ export async function syncSubscriptionToPractice(subscription: Stripe.Subscripti
   const patch = (tbl: ReturnType<typeof service.from>, payload: Record<string, unknown>) =>
     (tbl.update as (v: Record<string, unknown>) => typeof tbl)(payload);
 
+  let matchedByCustomer = false;
+  let matchedPracticeId = fallbackPracticeId;
+
   if (customerId) {
     const byCustomer = await patch(service.from("practices"), update)
       .eq("stripe_customer_id", customerId)
       .select("id");
     if (byCustomer.error) throw new Error(byCustomer.error.message);
-    if (Array.isArray(byCustomer.data) && byCustomer.data.length > 0) return;
+    if (Array.isArray(byCustomer.data) && byCustomer.data.length > 0) {
+      matchedByCustomer = true;
+      matchedPracticeId = String((byCustomer.data[0] as Record<string, unknown>).id || fallbackPracticeId);
+    }
   }
-  if (fallbackPracticeId) {
+  if (!matchedByCustomer && fallbackPracticeId) {
     const byId = await patch(service.from("practices"), {
       ...update,
       stripe_customer_id: customerId || undefined,
     }).eq("id", fallbackPracticeId);
     if (byId.error) throw new Error(byId.error.message);
   }
+
+  const hasPaymentMethod = await hasPaymentMethodForBilling({
+    stripeCustomerId: customerId || null,
+    stripeSubscriptionId: subscription.id,
+  });
+  await updatePracticePaymentMethodFlag(customerId, matchedPracticeId || fallbackPracticeId, hasPaymentMethod);
 }

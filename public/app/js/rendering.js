@@ -1640,7 +1640,13 @@
         var hadPatientBefore = roomHasAssignedPatient(room);
         room.patientName = value;
         shouldRefreshDisplay = true;
-        if(!hadPatientBefore && roomHasAssignedPatient(room)){
+        // Runs per keystroke, so only handle the empty↔occupied transitions:
+        // clearing the name drops the old patient's checklist (otherwise the
+        // next patient inherits it — seeding never clobbers existing items),
+        // and the first character seeds fresh. Mid-name edits are left alone.
+        if(!roomHasAssignedPatient(room)){
+          room.checklist = [];
+        } else if(!hadPatientBefore){
           if(typeof window.seedRoomChecklistFromDefault === "function") window.seedRoomChecklistFromDefault(room);
         }
         if(hadPatientBefore !== roomHasAssignedPatient(room)){
@@ -1822,7 +1828,8 @@
 	        quickNotes: quickNotes,
 	        roomReady: !!room.roomReady,
         doctorReady: !!room.doctorReady,
-        timer: serializeTimerForRoomState(room.timer)
+        timer: serializeTimerForRoomState(room.timer),
+        checklist: Array.isArray(room.checklist) ? JSON.parse(JSON.stringify(room.checklist)) : []
       };
     }
 
@@ -1857,6 +1864,8 @@
 	      setRoomQuickNotes(room, Array.isArray(snapshot.quickNotes) ? snapshot.quickNotes : (snapshot.quickNote || ""));
 	      room.roomReady = !!snapshot.roomReady;
       room.doctorReady = !!snapshot.doctorReady;
+      // snapshot is already a deep copy; older snapshots predate the checklist field.
+      room.checklist = Array.isArray(snapshot.checklist) ? snapshot.checklist : [];
       room.timer = hydrateTimerFromRoomState(snapshot.timer);
       room.cleaningTimer = { elapsedMs: 0, running: false, startedAt: null, startedAtIso: null, updatedAtIso: serverNowIso || isoNow() };
       room.needsCleaning = false;

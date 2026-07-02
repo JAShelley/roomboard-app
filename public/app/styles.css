@@ -188,7 +188,32 @@
     #authBanner[hidden]{
       display:none !important;
     }
-    #statusLine{color:var(--muted); font-size:10px; line-height:1; margin-left:2px; margin-top:-1px}
+    .brandSubRow{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-height:24px;
+      margin-top:2px;
+      min-width:0;
+    }
+    #statusLine{
+      display:inline-flex;
+      align-items:center;
+      min-height:22px;
+      max-width:min(360px, 42vw);
+      padding:3px 8px;
+      border:1px solid var(--practiceBadgeBorder);
+      border-radius:999px;
+      background:var(--practiceBadgeBg);
+      color:var(--practiceBadgeText);
+      font-size:10px;
+      font-weight:800;
+      line-height:1;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      box-shadow:0 8px 18px rgba(0,0,0,.14);
+    }
     .right{display:flex; gap:6px; align-items:stretch; flex-wrap:wrap; justify-content:flex-end; padding-top:2px;}
     .right > :is(.chip, .tabs, .btn, .iconBtn, .headerSelectWrap, .headerToggleWrap){min-height:46px;}
     body.displayTabActive .right{
@@ -416,6 +441,26 @@
     .headerToggleWrap{
       max-width:none;
       padding-right:10px;
+    }
+    .brandActiveToggle{
+      min-height:22px;
+      padding:2px 6px 2px 8px;
+      gap:5px;
+      background:rgba(255,255,255,.045);
+    }
+    .brandActiveToggle .headerToggleLabel{
+      font-size:9px;
+    }
+    .brandActiveToggle .switch{
+      width:30px;
+      height:17px;
+    }
+    .brandActiveToggle .knob{
+      width:13px;
+      height:13px;
+    }
+    .brandActiveToggle .switch.on .knob{
+      left:14px;
     }
     .headerSelectWrap.isActive,
     .headerToggleWrap.isActive{
@@ -5069,15 +5114,48 @@ body.mobileQuickViewPopupOpen{
 	  #openSettingsBtn{
 	    width:100%;
 	  }
+  .brandSubRow{
+    width:100%;
+    gap:6px;
+  }
+  #statusLine{
+    max-width:min(60vw, 100%);
+  }
+  .brandActiveToggle{
+    width:auto;
+    min-height:24px;
+    padding:2px 6px 2px 8px;
+    border-radius:999px;
+    box-shadow:0 6px 18px rgba(0,0,0,.18);
+  }
+  .brandActiveToggle .headerToggleLabel{
+    display:inline;
+    font-size:8px;
+  }
+  .brandActiveToggle .switch{
+    display:block;
+    width:28px;
+    height:16px;
+  }
+  .brandActiveToggle .knob{
+    width:12px;
+    height:12px;
+  }
+  .brandActiveToggle .switch.on .knob{
+    left:13px;
+  }
+  .brandActiveToggle::before{
+    content:none;
+  }
 	  .right.mobileSortExpanded > #openQuickAddBtn,
 	  .right.mobileSortExpanded > #toggleMobileQuickViewBtn,
 	  .right.mobileSortExpanded > #viewToggleBtn,
 	  .right.mobileSortExpanded > #openSettingsBtn{
 	    display:none !important;
 	  }
-	  .right:not(.mobileSortExpanded) > #displaySortWrap{
-	    display:none !important;
-	  }
+  .right > #displaySortWrap{
+    grid-column:1 / -1;
+  }
 	  .headerIconBtn{
 	    width:100%;
 	    min-width:0;

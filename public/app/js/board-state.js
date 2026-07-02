@@ -140,8 +140,23 @@
       if(plan && String(plan).indexOf("base") !== -1){ room.checklist = []; return; }
       room.checklist = getDefaultPatientChecklistTemplate().map(makeChecklistItem);
     }
+    // Seeding only fills empty checklists (the guard above protects manual
+    // items), so every path that removes or replaces a patient must clear the
+    // old items first or the next patient inherits them. Call this after
+    // room.patientName changes on any save-style action (not per keystroke —
+    // a name edit mid-typing would wipe checklist state).
+    function syncRoomChecklistWithPatientChange(room, previousPatientName){
+      if(!room) return;
+      var prev = String(previousPatientName || "").replace(/\s/g, "").toLowerCase();
+      var next = String(room.patientName || "").replace(/\s/g, "").toLowerCase();
+      if(prev === next) return;
+      if(!next){ room.checklist = []; return; } // patient removed
+      if(prev) room.checklist = []; // different patient: drop the old items
+      seedRoomChecklistFromDefault(room);
+    }
     window.makeChecklistItem = makeChecklistItem;
     window.seedRoomChecklistFromDefault = seedRoomChecklistFromDefault;
+    window.syncRoomChecklistWithPatientChange = syncRoomChecklistWithPatientChange;
 
     var DEFAULT_SETTINGS = {
       doctorInitials: {},
@@ -1825,6 +1840,7 @@
       var room = findRoomById(draft.roomId);
       if(!room) return;
       var hadPatientBefore = roomHasAssignedPatient(room);
+      var previousPatientName = room.patientName;
 
       room.patientName = String(draft.patientName || "").trim();
       room.colorLabelId = draft.colorLabelId || room.colorLabelId;
@@ -1835,9 +1851,9 @@
 	      room.notes = String(draft.notes || "").trim();
       room.doctorReady = !!draft.doctorReady;
       room.lastDischargeSnapshot = null;
-      // Seed the patient checklist from the practice default when this room
-      // goes from empty → occupied.
-      if(!hadPatientBefore && room.patientName) seedRoomChecklistFromDefault(room);
+      // Seed the checklist when a patient arrives; clear it (and reseed) when
+      // the patient is removed or replaced without a discharge.
+      syncRoomChecklistWithPatientChange(room, previousPatientName);
 
       var selectedColor = getColorById(room.colorLabelId);
       if(selectedColor) room.reason = selectedColor.title;
@@ -2061,11 +2077,13 @@ function applyFonts(){
     function applyPracticeLogo(){
       var wordmark = $("brandWordmark");
       var logo = $("brandLogoImage");
+      var statusLine = $("statusLine");
       if(!wordmark || !logo) return;
       var logoUrl = String(state && state.settings ? (state.settings.practiceLogoUrl || "") : "").trim();
       var updatedAt = String(state && state.settings ? (state.settings.practiceLogoUpdatedAt || "") : "").trim();
       if(!logoUrl){
         wordmark.hidden = false;
+        if(statusLine) statusLine.hidden = false;
         logo.hidden = true;
         logo.removeAttribute("src");
         delete logo.dataset.currentSrc;
@@ -2081,9 +2099,11 @@ function applyFonts(){
       logo.onerror = function(){
         this.hidden = true;
         wordmark.hidden = false;
+        if(statusLine) statusLine.hidden = false;
       };
       logo.hidden = false;
       wordmark.hidden = true;
+      if(statusLine) statusLine.hidden = true;
       applyBoardLoadLogo(nextSrc);
     }
 

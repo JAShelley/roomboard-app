@@ -217,7 +217,7 @@
           : "Not connected to a clinic yet.";
       }
       if(statusLine && currentPracticeName && statusLine.textContent === "Loading…"){
-        statusLine.textContent = currentPracticeName + " ready.";
+        statusLine.textContent = currentPracticeName;
       }
       // Clinic name + BOARD button in top-right header
       var clinicHeaderArea = $("clinicHeaderArea");
@@ -822,11 +822,13 @@
       var annualBtn = $("billingAnnualBtn");
       var upgradeSection = $("billingUpgradeSection");
       var plan = String(data && data.plan || "").toLowerCase();
-      var trialDaysLeft = Number(data && data.trialDaysLeft || 0);
-      var hasAccess = !!(data && data.hasAccess);
-      var subscribed = !!(data && data.subscribed);
-      var trialing = !!(data && data.trialing);
-      var currentPeriodEnd = (data && data.currentPeriodEnd) || null;
+	      var trialDaysLeft = Number(data && data.trialDaysLeft || 0);
+	      var hasAccess = !!(data && data.hasAccess);
+	      var subscribed = !!(data && data.subscribed);
+	      var trialing = !!(data && data.trialing);
+	      var hasPaymentMethod = !!(data && data.hasPaymentMethod);
+	      var trialNeedsCard = !!(trialing && !hasPaymentMethod);
+	      var currentPeriodEnd = (data && data.currentPeriodEnd) || null;
       var isAdvanced = plan.indexOf("advanced") !== -1;
       var isMonthly = plan.indexOf("monthly") !== -1;
       currentBillingAccess = hasAccess;
@@ -841,21 +843,25 @@
         else badge.classList.add("isBlocked");
         badge.textContent = subscribed
           ? (isAdvanced ? "Advanced" : "Base") + " · " + (isMonthly ? "Monthly" : "Annual")
-          : trialing ? "Trial · " + trialDaysLeft + "d left"
-          : "Billing required";
-      }
+	          : trialNeedsCard ? "Card required"
+	          : trialing ? "Trial · " + trialDaysLeft + "d left"
+	          : "Billing required";
+	      }
 
-      if(currentValue){
-        if(trialing) currentValue.textContent = "Free trial";
-        else if(subscribed) currentValue.textContent = isAdvanced
-          ? "Advanced · " + (isMonthly ? "Monthly" : "Annual")
-          : "Base · " + (isMonthly ? "Monthly" : "Annual");
+	      if(currentValue){
+	        if(trialNeedsCard) currentValue.textContent = "Trial pending";
+	        else if(trialing) currentValue.textContent = "Free trial";
+	        else if(subscribed) currentValue.textContent = isAdvanced
+	          ? "Advanced · " + (isMonthly ? "Monthly" : "Annual")
+	          : "Base · " + (isMonthly ? "Monthly" : "Annual");
         else currentValue.textContent = "No active plan";
       }
 
-      if(currentMeta){
-        if(trialing){
-          currentMeta.textContent = trialDaysLeft + " day" + (trialDaysLeft === 1 ? "" : "s") + " remaining";
+	      if(currentMeta){
+	        if(trialNeedsCard){
+	          currentMeta.textContent = "Add a card to start your trial.";
+	        } else if(trialing){
+	          currentMeta.textContent = trialDaysLeft + " day" + (trialDaysLeft === 1 ? "" : "s") + " remaining";
         } else if(subscribed && currentPeriodEnd){
           currentMeta.textContent = "Renews " + formatBillingDate(currentPeriodEnd);
         } else if(!subscribed && !trialing){
@@ -3255,7 +3261,7 @@
         }
         if(typeof window.applyChecklistData === "function") window.applyChecklistData(results[6] && results[6].data ? results[6].data : null);
         hideBoardLoadOverlay();
-        setStatus((currentPracticeName || "Clinic") + " ready.");
+        setStatus(currentPracticeName || "Clinic");
         setSyncUI("ok", "Clinic loaded");
         return true;
       }catch(e){

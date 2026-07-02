@@ -52,6 +52,7 @@ export type PracticeBilling = {
   plan: string | null;
   trialEndsAt: string | null;
   currentPeriodEnd: string | null;
+  hasPaymentMethod?: boolean;
 };
 
 export type SessionContext = {
@@ -104,14 +105,19 @@ export function computeAccess(billing: PracticeBilling) {
   const trialMs = billing.trialEndsAt ? Date.parse(billing.trialEndsAt) : 0;
   const trialing = status === "trialing" && Number.isFinite(trialMs) && trialMs > now;
   const subscribed = status === "active" || status === "past_due";
-  const hasAccess = subscribed || (trialing && !!billing.stripeCustomerId && !!billing.stripeSubscriptionId);
+  const hasCustomer = !!billing.stripeCustomerId;
+  const hasSubscription = !!billing.stripeSubscriptionId;
+  const hasPaymentMethod =
+    billing.hasPaymentMethod === undefined ? hasCustomer && hasSubscription : !!billing.hasPaymentMethod;
+  const hasAccess = subscribed || (trialing && hasCustomer && hasSubscription && hasPaymentMethod);
   const trialDaysLeft = trialing ? Math.max(0, Math.ceil((trialMs - now) / 86_400_000)) : 0;
-  return { hasAccess, trialing, subscribed, trialDaysLeft };
+  return { hasAccess, trialing, subscribed, trialDaysLeft, hasPaymentMethod };
 }
 
 export async function findPracticeIdByCustomer(customerId: string): Promise<string | null> {
   const service = getServiceClient();
   const res = await service.from("practices").select("id").eq("stripe_customer_id", customerId).maybeSingle();
   if (res.error) return null;
-  return res.data ? String((res.data as Record<string, unknown>).id) : null;
+  const row = res.data as Record<string, unknown> | null;
+  return row ? String(row.id) : null;
 }

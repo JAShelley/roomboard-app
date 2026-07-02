@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { computeAccess, getServiceClient, requireEnv } from "../_lib";
+import { computeAccess, getServiceClient, requireEnv, type PracticeBilling } from "../_lib";
 import { optionsResponse, pulseJson, pulseError } from "../../pulse/_lib";
 
 export async function OPTIONS() {
@@ -31,9 +31,10 @@ async function fastBillingCheck(accessToken: string) {
     .eq("user_id", userId)
     .maybeSingle();
 
-  if (res.error || !res.data) return null;
+  const data = res.data as Record<string, unknown> | null;
+  if (res.error || !data) return null;
 
-  const row = res.data as Record<string, unknown>;
+  const row = data;
   const pr = (Array.isArray(row.practices) ? row.practices[0] : row.practices) as Record<string, unknown> | null;
   if (!pr) return null;
 
@@ -45,6 +46,22 @@ async function fastBillingCheck(accessToken: string) {
     plan: (pr.plan as string) || null,
     trialEndsAt: pr.trial_ends_at ? new Date(String(pr.trial_ends_at)).toISOString() : null,
     currentPeriodEnd: pr.current_period_end ? new Date(String(pr.current_period_end)).toISOString() : null,
+  };
+}
+
+async function billingWithPaymentMethodStatus(billing: PracticeBilling): Promise<PracticeBilling> {
+  const needsCardCheck =
+    billing.subscriptionStatus === "trialing" &&
+    !!billing.stripeCustomerId &&
+    !!billing.stripeSubscriptionId;
+  if (!needsCardCheck) {
+    return { ...billing, hasPaymentMethod: false };
+  }
+
+  const { hasPaymentMethodForBilling } = await import("../_stripe");
+  return {
+    ...billing,
+    hasPaymentMethod: await hasPaymentMethodForBilling(billing),
   };
 }
 
@@ -66,6 +83,7 @@ export async function POST(request: Request) {
       billing = await getPracticeBilling(ctx.practiceId);
     }
 
+    billing = await billingWithPaymentMethodStatus(billing);
     const access = computeAccess(billing);
 
     return pulseJson({
@@ -80,6 +98,7 @@ export async function POST(request: Request) {
       currentPeriodEnd: billing.currentPeriodEnd,
       hasCustomer: !!billing.stripeCustomerId,
       hasSubscription: !!billing.stripeSubscriptionId,
+      hasPaymentMethod: access.hasPaymentMethod,
     });
   } catch (error) {
     const message = String(error instanceof Error ? error.message : error || "Could not load billing status.");

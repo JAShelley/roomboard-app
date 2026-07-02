@@ -206,6 +206,29 @@
       ".rbAFooterLinks a{color:rgba(148,178,220,.45);font-size:12.5px;text-decoration:none;transition:color .15s;}",
       ".rbAFooterLinks a:hover{color:rgba(148,178,220,.8);}",
       ".rbADivider{height:1px;background:rgba(255,255,255,.07);margin:16px 0;}",
+      /* plan picker inside create form */
+      ".rbAPlanSection{margin-bottom:4px;}",
+      ".rbAPlanSectionLabel{font-size:11px;font-weight:700;color:rgba(148,178,220,.65);",
+        "text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;display:block;}",
+      ".rbAPlanToggle{display:flex;background:rgba(255,255,255,.055);border-radius:8px;padding:3px;gap:3px;margin-bottom:10px;}",
+      ".rbAPlanToggleBtn{flex:1;background:none;border:none;color:rgba(200,218,255,.4);font-size:12px;font-weight:600;",
+        "padding:7px;border-radius:6px;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;}",
+      ".rbAPlanToggleBtn.active{background:rgba(255,255,255,.10);color:#eaf1ff;}",
+      ".rbAPlanSaveBadge{font-size:10px;font-weight:700;color:#34d399;margin-left:4px;}",
+      ".rbAPlanTiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;}",
+      ".rbAPlanTile{border:1.5px solid rgba(255,255,255,.09);border-radius:11px;padding:12px;cursor:pointer;",
+        "transition:border-color .15s,background .15s;background:rgba(255,255,255,.03);position:relative;}",
+      ".rbAPlanTile:hover{border-color:rgba(14,165,233,.35);background:rgba(14,165,233,.05);}",
+      ".rbAPlanTile.selected{border-color:rgba(14,165,233,.6);background:rgba(14,165,233,.08);",
+        "box-shadow:0 0 0 3px rgba(14,165,233,.12);}",
+      ".rbAPlanTileAdv{border-color:rgba(14,165,233,.25);}",
+      ".rbAPlanTileAdv.selected{border-color:rgba(14,165,233,.6);}",
+      ".rbAPlanPopular{position:absolute;top:-9px;left:50%;transform:translateX(-50%);",
+        "background:linear-gradient(90deg,#0ea5e9,#0369a1);color:#fff;font-size:9px;font-weight:800;",
+        "letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:99px;white-space:nowrap;}",
+      ".rbAPlanName{font-size:12px;font-weight:700;color:#eaf1ff;margin-bottom:2px;}",
+      ".rbAPlanPrice{font-size:19px;font-weight:800;color:#eaf1ff;letter-spacing:-.03em;line-height:1;}",
+      ".rbAPlanPer{font-size:11px;font-weight:500;color:rgba(148,178,220,.5);margin-left:2px;}",
       /* mobile: hide left panel, stack form */
       "@media(max-width:760px){",
         ".rbALeft{display:none;}",
@@ -285,6 +308,24 @@
             '</div>',
             '<div class="rbAField"><label>Specialty</label><select id="rbaSpecialty">'+specOpts+'</select></div>',
             '<div class="rbAField" id="rbaSpecialtyOtherWrap" style="display:none"><label>Describe specialty</label><input id="rbaSpecialtyOther" placeholder="e.g. Sports Medicine" type="text"></div>',
+            '<div class="rbAPlanSection">',
+              '<span class="rbAPlanSectionLabel">Your plan</span>',
+              '<div class="rbAPlanToggle" id="rbaPlanPeriodToggle">',
+                '<button class="rbAPlanToggleBtn active" data-period="monthly" type="button">Monthly</button>',
+                '<button class="rbAPlanToggleBtn" data-period="annual" type="button">Annual <span class="rbAPlanSaveBadge">save 17%</span></button>',
+              '</div>',
+              '<div class="rbAPlanTiles">',
+                '<div class="rbAPlanTile" data-plan="base-monthly" id="rbaPlanBase">',
+                  '<div class="rbAPlanName">Base</div>',
+                  '<div><span class="rbAPlanPrice rbAPlanPriceVal" data-monthly="$29.99" data-annual="$25">$29.99</span><span class="rbAPlanPer rbAPlanPerVal" data-monthly="/mo" data-annual="/mo">/mo</span></div>',
+                '</div>',
+                '<div class="rbAPlanTile rbAPlanTileAdv selected" data-plan="advanced-monthly" id="rbaPlanAdv">',
+                  '<div class="rbAPlanPopular">Most popular</div>',
+                  '<div class="rbAPlanName">Advanced</div>',
+                  '<div><span class="rbAPlanPrice rbAPlanPriceVal" data-monthly="$49.99" data-annual="$41.67">$49.99</span><span class="rbAPlanPer rbAPlanPerVal" data-monthly="/mo" data-annual="/mo">/mo</span></div>',
+                '</div>',
+              '</div>',
+            '</div>',
             '<div class="rbADivider"></div>',
           '</div>',
           '<div class="rbAField"><label>Email</label><input id="rbaEmail" placeholder="name@clinic.com" type="email" autocomplete="username"></div>',
@@ -361,6 +402,47 @@
 
     tabs.forEach(function(t){ t.addEventListener("click", function(){ applyMode(t.getAttribute("data-mode")); }); });
     if(specSel) specSel.addEventListener("change", function(){ specOther.style.display = specSel.value === "Other" ? "" : "none"; });
+
+    // Plan picker — default to advanced-monthly (most popular)
+    window.__roomboardSelectedPlan = "advanced-monthly";
+    var planPeriodToggle = document.getElementById("rbaPlanPeriodToggle");
+    var planBaseTile     = document.getElementById("rbaPlanBase");
+    var planAdvTile      = document.getElementById("rbaPlanAdv");
+    function getSignupPeriod(){
+      var active = planPeriodToggle && planPeriodToggle.querySelector(".rbAPlanToggleBtn.active");
+      return active ? (active.getAttribute("data-period") || "monthly") : "monthly";
+    }
+    function syncPlanTileSelection(plan){
+      window.__roomboardSelectedPlan = plan;
+      var isBase = plan.indexOf("base") === 0;
+      if(planBaseTile) planBaseTile.classList.toggle("selected", isBase);
+      if(planAdvTile)  planAdvTile.classList.toggle("selected", !isBase);
+    }
+    if(planPeriodToggle){
+      planPeriodToggle.addEventListener("click", function(e){
+        var btn = e.target && e.target.closest ? e.target.closest(".rbAPlanToggleBtn") : null;
+        if(!btn) return;
+        var period = btn.getAttribute("data-period") || "monthly";
+        planPeriodToggle.querySelectorAll(".rbAPlanToggleBtn").forEach(function(b){
+          b.classList.toggle("active", b === btn);
+        });
+        // Update prices shown
+        overlay.querySelectorAll(".rbAPlanPriceVal").forEach(function(el){
+          el.textContent = el.getAttribute("data-" + period) || el.textContent;
+        });
+        // Update selected plan period
+        var currentPlan = window.__roomboardSelectedPlan || "advanced-monthly";
+        var base = currentPlan.indexOf("base") === 0 ? "base" : "advanced";
+        syncPlanTileSelection(base + "-" + period);
+      });
+    }
+    if(planBaseTile) planBaseTile.addEventListener("click", function(){
+      syncPlanTileSelection("base-" + getSignupPeriod());
+    });
+    if(planAdvTile) planAdvTile.addEventListener("click", function(){
+      syncPlanTileSelection("advanced-" + getSignupPeriod());
+    });
+
     if(forgotLink) forgotLink.addEventListener("click", function(e){
       e.preventDefault();
       var el = document.getElementById("rbaEmail");
@@ -504,8 +586,9 @@
     overlay.setAttribute("aria-label", "Subscription required");
 
     var heading, sub;
-    if(info.trialing && !info.hasCustomer){
-      heading = "Start your " + info.trialDaysLeft + "-day free trial.";
+    var trialNeedsCard = !!(info.trialing && (!info.hasCustomer || !info.hasPaymentMethod));
+    if(trialNeedsCard){
+      heading = "Add a card to start your trial.";
       sub = "Enter a card now — you won’t be charged until your trial ends.";
     } else if(info.trialing && info.trialDaysLeft > 0){
       heading = "Choose a plan to continue.";
@@ -658,7 +741,7 @@
   // fail closed and show the paywall so an unpaid account can't slip in.
   function onUnverifiedAccess(onAccess){
     if(hasRecentConfirmedAccess()){ onAccess(); return; }
-    showPaywall({ trialing: false, trialDaysLeft: 0, subscribed: false, hasCustomer: false });
+    showPaywall({ trialing: false, trialDaysLeft: 0, subscribed: false, hasCustomer: false, hasPaymentMethod: false });
   }
 
   // Check /api/billing/status and call onAccess() if the practice has access;
@@ -711,7 +794,8 @@
               trialing: !!data.trialing,
               trialDaysLeft: data.trialDaysLeft || 0,
               subscribed: !!data.subscribed,
-              hasCustomer: !!data.hasCustomer
+              hasCustomer: !!data.hasCustomer,
+              hasPaymentMethod: !!data.hasPaymentMethod
             });
           });
         }
@@ -742,7 +826,8 @@
             trialing: !!data.trialing,
             trialDaysLeft: data.trialDaysLeft || 0,
             subscribed: !!data.subscribed,
-            hasCustomer: !!data.hasCustomer
+            hasCustomer: !!data.hasCustomer,
+            hasPaymentMethod: !!data.hasPaymentMethod
           });
         });
       }
@@ -870,11 +955,12 @@
       if(!route.standalone) return;
       if(state && state.loggedIn && state.hasPractice){
         if(state.newAccount){
-          // New clinic: hide the signup overlay and immediately show the plan
-          // picker. Card is required upfront — the user never reaches the board
-          // without going through Stripe checkout first.
+          // New clinic: use the plan they selected in the signup form (defaults
+          // to advanced-monthly) and go straight to Stripe checkout.
           hideAuthOverlay();
-          showPaywall({ trialing: true, trialDaysLeft: 14, hasCustomer: false });
+          var preSelectedPlan = window.__roomboardSelectedPlan || "advanced-monthly";
+          window.__roomboardSelectedPlan = null;
+          startCheckout(preSelectedPlan, null);
         } else {
           openBoard();
         }

@@ -1,10 +1,21 @@
 import type Stripe from "stripe";
-import { getStripe, syncSubscriptionToPractice } from "../_stripe";
-import { resolveSessionContext, computeAccess, getPracticeBilling } from "../_lib";
+import { getStripe, hasPaymentMethodForBilling, syncSubscriptionToPractice } from "../_stripe";
+import { resolveSessionContext, computeAccess, getPracticeBilling, type PracticeBilling } from "../_lib";
 import { optionsResponse, pulseJson, pulseError } from "../../pulse/_lib";
 
 export async function OPTIONS() {
   return optionsResponse();
+}
+
+async function accessForBilling(billing: PracticeBilling) {
+  const needsCardCheck =
+    billing.subscriptionStatus === "trialing" &&
+    !!billing.stripeCustomerId &&
+    !!billing.stripeSubscriptionId;
+  return computeAccess({
+    ...billing,
+    hasPaymentMethod: needsCardCheck ? await hasPaymentMethodForBilling(billing) : false,
+  });
 }
 
 // Called when the user returns from Stripe checkout with ?billing=success&session_id=...
@@ -28,13 +39,15 @@ export async function POST(request: Request) {
 
     if (session.status !== "complete") {
       const billing = await getPracticeBilling(ctx.practiceId);
-      const access = computeAccess(billing);
+      const access = await accessForBilling(billing);
       return pulseJson({
         hasAccess: access.hasAccess,
         trialing: access.trialing,
         subscribed: access.subscribed,
         trialDaysLeft: access.trialDaysLeft,
         hasCustomer: !!billing.stripeCustomerId,
+        hasSubscription: !!billing.stripeSubscriptionId,
+        hasPaymentMethod: access.hasPaymentMethod,
       });
     }
 
@@ -44,13 +57,15 @@ export async function POST(request: Request) {
     }
 
     const billing = await getPracticeBilling(ctx.practiceId);
-    const access = computeAccess(billing);
+    const access = await accessForBilling(billing);
     return pulseJson({
       hasAccess: access.hasAccess,
       trialing: access.trialing,
       subscribed: access.subscribed,
       trialDaysLeft: access.trialDaysLeft,
       hasCustomer: !!billing.stripeCustomerId,
+      hasSubscription: !!billing.stripeSubscriptionId,
+      hasPaymentMethod: access.hasPaymentMethod,
     });
   } catch (error) {
     const message = String(error instanceof Error ? error.message : error || "Confirm failed.");

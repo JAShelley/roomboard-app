@@ -14,6 +14,7 @@ alter table public.practices
   add column if not exists stripe_subscription_id text,
   add column if not exists subscription_status text not null default 'trialing',
   add column if not exists plan text,
+  add column if not exists has_payment_method boolean not null default false,
   add column if not exists trial_ends_at timestamptz not null default (now() + interval '14 days'),
   add column if not exists current_period_end timestamptz;
 
@@ -34,7 +35,8 @@ update public.practices
 -- 3. Access helper --------------------------------------------------------
 -- A practice has board access if it is actively subscribed (or in a
 -- short past_due grace handled by Stripe) OR still inside its free trial
--- WITH a Stripe customer on file (card required to start trial).
+-- WITH a Stripe customer, subscription, and saved payment method on file
+-- (card required to start trial).
 -- SECURITY DEFINER so the function runs as its owner (postgres) and can read
 -- stripe_customer_id even though the authenticated role has no SELECT on that column.
 create or replace function public.practice_has_access(p_practice_id uuid)
@@ -53,7 +55,8 @@ as $$
          or (p.subscription_status = 'trialing'
              and p.trial_ends_at > now()
              and p.stripe_customer_id is not null
-             and p.stripe_subscription_id is not null)
+             and p.stripe_subscription_id is not null
+             and p.has_payment_method is true)
        )
   );
 $$;

@@ -629,7 +629,7 @@
         displayFull: true,
         timerBindings: true
       });
-      setStatus(state.settings.displayOnlyActive ? "Showing only active rooms" : "Showing all rooms");
+      if($("statusLine") && currentPracticeName) $("statusLine").textContent = currentPracticeName;
     }
     $("openQuickAddBtn").addEventListener("click", function(){ openQuickAdd(); });
     $("displayOnlyActiveSwitch").addEventListener("click", function(e){
@@ -657,7 +657,7 @@
 	        displayFull: true,
 	        timerBindings: true
 	      });
-	      setStatus(state.settings.displaySortMode === "time" ? "Sorting by time" : "Sorting by room");
+	      if($("statusLine") && currentPracticeName) $("statusLine").textContent = currentPracticeName;
 	    });
 	    $("doctorHighlightSelect").addEventListener("change", function(){
 	      state.settings.highlightDoctor = String(this.value || "").trim();
