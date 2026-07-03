@@ -217,7 +217,7 @@
           : "Not connected to a clinic yet.";
       }
       if(statusLine && currentPracticeName && statusLine.textContent === "Loading…"){
-        statusLine.textContent = currentPracticeName;
+        statusLine.textContent = currentPracticeName + " ready.";
       }
       // Clinic name + BOARD button in top-right header
       var clinicHeaderArea = $("clinicHeaderArea");
@@ -947,7 +947,7 @@
         if(!data.url) throw new Error("Stripe did not return a checkout URL.");
         window.location.href = data.url;
       }catch(e){
-        alert(getErrorMessage(e));
+        if(typeof window.toast === "function") window.toast(getErrorMessage(e));
         setStatus("Checkout failed: " + getErrorMessage(e));
       }finally{
         setBillingBusy(false);
@@ -965,7 +965,7 @@
         window.open(data.url, "_blank", "noopener,noreferrer");
         setStatus("");
       }catch(e){
-        alert(getErrorMessage(e));
+        if(typeof window.toast === "function") window.toast(getErrorMessage(e));
         setStatus("Billing portal failed: " + getErrorMessage(e));
       }finally{
         setBillingBusy(false);
@@ -3261,7 +3261,7 @@
         }
         if(typeof window.applyChecklistData === "function") window.applyChecklistData(results[6] && results[6].data ? results[6].data : null);
         hideBoardLoadOverlay();
-        setStatus(currentPracticeName || "Clinic");
+        setStatus((currentPracticeName || "Clinic") + " ready.");
         setSyncUI("ok", "Clinic loaded");
         return true;
       }catch(e){
@@ -4183,7 +4183,7 @@
         setRememberMePreference(!!($("rememberMe") && $("rememberMe").checked));
         var existingSession = await supabase.auth.getSession();
         if(!practiceName || !fullName || (!(existingSession && existingSession.data && existingSession.data.session) && (!email || !password))){
-          alert((existingSession && existingSession.data && existingSession.data.session)
+          showAuthFeedback((existingSession && existingSession.data && existingSession.data.session)
             ? "Practice name and full name are required."
             : "Practice name, full name, email, and password are required.");
           return;
@@ -4259,7 +4259,7 @@
         var inviteCode = normalizeInviteCode(($("practiceInviteCode").value || "").trim());
         setRememberMePreference(!!($("rememberMe") && $("rememberMe").checked));
         if(!fullName || !email || !password || !inviteCode){
-          alert("Full name, email, password, and invite code are required to join a clinic.");
+          showAuthFeedback("Full name, email, password, and invite code are required to join a clinic.");
           return;
         }
         if(!currentPracticeId){
@@ -4281,7 +4281,7 @@
         await withTimeout(finishAuthenticatedFlow({ attempts: 8, waitMs: 250 }), 15000, "Clinic join");
       }catch(e){
         console.error("joinPractice failed:", e);
-        alert(getErrorMessage(e));
+        showAuthFeedback(humanizeAuthError(getErrorMessage(e)));
         setStatus("Clinic join failed: " + getErrorMessage(e));
         setSyncUI("err", "Join failed");
       } finally {
@@ -4310,7 +4310,7 @@
         var loaded = await withTimeout(finishAuthenticatedFlow({ attempts: 8, waitMs: 250 }), 15000, "Clinic login");
         if(!loaded){
           hideBoardLoadOverlay();
-          alert("This login worked, but no clinic is linked to the account yet.");
+          showAuthFeedback("This login worked, but no clinic is linked to the account yet.");
         }
       }catch(e){
         hideBoardLoadOverlay();
@@ -4366,6 +4366,7 @@
 
     window.roomboardAuthLogin  = function(){ if(supabase) login(); };
     window.roomboardAuthSignup = function(){ if(supabase) signup(); };
+    window.roomboardAuthJoin   = function(){ if(supabase) joinPractice(); };
     if($("billingRefreshBtn")){
       $("billingRefreshBtn").addEventListener("click", function(){
         setBillingBusy(true);

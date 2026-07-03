@@ -257,9 +257,8 @@ function uuid(){
       if(activeSwitch){ activeSwitch.classList.toggle("on", onlyActive); activeSwitch.setAttribute("aria-checked", onlyActive ? "true" : "false"); }
       if(activeWrap) activeWrap.classList.toggle("isActive", onlyActive);
       if(sortSelect) sortSelect.value = (state && state.settings && state.settings.displaySortMode === "time") ? "time" : "room";
-      var activeIsInToolbar = !!(toolbar && activeWrap && toolbar.contains(activeWrap));
-      if(toolbar) toolbar.classList.toggle("activeSortBeforeToggle", activeIsInToolbar && !quickViewOn && onlyActive);
-      if(toolbar) toolbar.classList.toggle("mobileSortExpanded", activeIsInToolbar && isMobileToolbar && !quickViewOn && onlyActive);
+      if(toolbar) toolbar.classList.toggle("activeSortBeforeToggle", !quickViewOn && onlyActive);
+      if(toolbar) toolbar.classList.toggle("mobileSortExpanded", isMobileToolbar && !quickViewOn && onlyActive);
 	      if(sortWrap){
 	        sortWrap.classList.remove("isActive");
 	        sortWrap.style.display = (!quickViewOn && onlyActive) ? "flex" : "none";

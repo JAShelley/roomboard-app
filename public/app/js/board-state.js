@@ -2077,13 +2077,11 @@ function applyFonts(){
     function applyPracticeLogo(){
       var wordmark = $("brandWordmark");
       var logo = $("brandLogoImage");
-      var statusLine = $("statusLine");
       if(!wordmark || !logo) return;
       var logoUrl = String(state && state.settings ? (state.settings.practiceLogoUrl || "") : "").trim();
       var updatedAt = String(state && state.settings ? (state.settings.practiceLogoUpdatedAt || "") : "").trim();
       if(!logoUrl){
         wordmark.hidden = false;
-        if(statusLine) statusLine.hidden = false;
         logo.hidden = true;
         logo.removeAttribute("src");
         delete logo.dataset.currentSrc;
@@ -2099,11 +2097,9 @@ function applyFonts(){
       logo.onerror = function(){
         this.hidden = true;
         wordmark.hidden = false;
-        if(statusLine) statusLine.hidden = false;
       };
       logo.hidden = false;
       wordmark.hidden = true;
-      if(statusLine) statusLine.hidden = true;
       applyBoardLoadLogo(nextSrc);
     }
 

@@ -8,7 +8,9 @@
 
   function normalizeAuthMode(value){
     var mode = String(value || "").toLowerCase();
-    return mode === "create" || mode === "signup" || mode === "sign-up" ? "create" : "login";
+    if(mode === "create" || mode === "signup" || mode === "sign-up") return "create";
+    if(mode === "join" || mode === "join-clinic") return "join";
+    return "login";
   }
 
   // Opt-in: when a link carries ?next=board, skip the Setup step and go
@@ -244,8 +246,9 @@
     injectAuthOverlayStyles();
     if(document.getElementById("rbAuthOverlay")){ setOverlayMode(initMode); return; }
 
-    var SPECIALTIES = ["General Practice","Dental","Dermatology","Cardiology","Pediatrics",
-      "Orthopedics","Ophthalmology","Obstetrics & Gynecology","ENT","Urgent Care","Other"];
+    var SPECIALTIES = ["General Practice","Dental","DO / Osteopathic","Physical Therapy","Veterinary",
+      "Dermatology","Cardiology","Pediatrics","Orthopedics","Ophthalmology","Obstetrics & Gynecology",
+      "ENT","Urgent Care","Other"];
     var specOpts = SPECIALTIES.map(function(s){ return '<option value="'+s+'">'+s+'</option>'; }).join("");
 
     var overlay = document.createElement("div");
@@ -296,6 +299,14 @@
           '<div class="rbATabs" id="rbATabs">',
             '<button class="rbATab" data-mode="login" type="button">Sign in</button>',
             '<button class="rbATab" data-mode="create" type="button">Create clinic</button>',
+            '<button class="rbATab" data-mode="join" type="button">Join clinic</button>',
+          '</div>',
+          '<div id="rbAJoinFields" style="display:none">',
+            '<div class="rbARow">',
+              '<div class="rbAField"><label>Your name</label><input id="rbaJoinFullName" placeholder="Full name" type="text" autocomplete="name"></div>',
+              '<div class="rbAField"><label>Invite code</label><input id="rbaInviteCode" placeholder="Clinic invite code" type="text" autocomplete="one-time-code"></div>',
+            '</div>',
+            '<div class="rbADivider"></div>',
           '</div>',
           '<div id="rbACreateFields" style="display:none">',
             '<div class="rbARow">',
@@ -356,24 +367,29 @@
 
     var tabs       = overlay.querySelectorAll(".rbATab");
     var createWrap = document.getElementById("rbACreateFields");
+    var joinWrap   = document.getElementById("rbAJoinFields");
     var submitBtn  = document.getElementById("rbaSubmit");
     var errorDiv   = document.getElementById("rbAError");
     var specSel    = document.getElementById("rbaSpecialty");
     var specOther  = document.getElementById("rbaSpecialtyOtherWrap");
-    var curMode    = (initMode === "create") ? "create" : "login";
+    var curMode    = (initMode === "create") ? "create" : (initMode === "join") ? "join" : "login";
 
     var formTitle = document.getElementById("rbAFormTitle");
     var formSub   = document.getElementById("rbAFormSub");
     var forgotLink = document.getElementById("rbaForgotLink");
 
+    function submitLabelFor(mode){
+      return mode === "create" ? "Create clinic" : (mode === "join" ? "Join clinic" : "Sign in");
+    }
     function applyMode(mode){
       curMode = mode;
       tabs.forEach(function(t){ t.classList.toggle("active", t.getAttribute("data-mode") === mode); });
       createWrap.style.display = mode === "create" ? "" : "none";
-      submitBtn.textContent = mode === "create" ? "Create clinic" : "Sign in";
-      if(forgotLink) forgotLink.style.display = mode === "create" ? "none" : "";
-      if(formTitle) formTitle.textContent = mode === "create" ? "Set up your clinic" : "Welcome back";
-      if(formSub) formSub.textContent = mode === "create" ? "Create your RoomBoard account." : "Sign in to your clinic account.";
+      if(joinWrap) joinWrap.style.display = mode === "join" ? "" : "none";
+      submitBtn.textContent = submitLabelFor(mode);
+      if(forgotLink) forgotLink.style.display = mode === "login" ? "" : "none";
+      if(formTitle) formTitle.textContent = mode === "create" ? "Set up your clinic" : (mode === "join" ? "Join your clinic" : "Welcome back");
+      if(formSub) formSub.textContent = mode === "create" ? "Create your RoomBoard account." : (mode === "join" ? "Enter your name and your clinic's invite code." : "Sign in to your clinic account.");
       hideErr();
     }
     var statusEl = document.getElementById("rbAStatus");
@@ -382,7 +398,8 @@
     var busyWatchdog = null;
     function setBusy(b){
       submitBtn.disabled = !!b;
-      submitBtn.textContent = b ? (curMode === "create" ? "Creating clinic…" : "Signing in…") : (curMode === "create" ? "Create clinic" : "Sign in");
+      var busyLabel = curMode === "create" ? "Creating clinic…" : (curMode === "join" ? "Joining clinic…" : "Signing in…");
+      submitBtn.textContent = b ? busyLabel : submitLabelFor(curMode);
       if(!b && statusEl) statusEl.textContent = "";
       // Safety net: never let the button hang on "Signing in…" forever. If the
       // overlay is still up after 18s, reset and surface a clear message.
@@ -478,6 +495,15 @@
         if(spec === "Other") sVal("practiceSpecialtyOther", gVal("rbaSpecialtyOther"));
         setBusy(true);
         if(typeof window.roomboardAuthSignup === "function") window.roomboardAuthSignup();
+      } else if(curMode === "join"){
+        var joinName = gVal("rbaJoinFullName"), inviteCode = gVal("rbaInviteCode");
+        if(!joinName || !inviteCode){ showErr("Your name and the clinic invite code are required."); return; }
+        sVal("joinFullName", joinName);
+        sVal("joinEmail", email);
+        sVal("joinPassword", pass);
+        sVal("practiceInviteCode", inviteCode);
+        setBusy(true);
+        if(typeof window.roomboardAuthJoin === "function") window.roomboardAuthJoin();
       } else {
         sVal("email", email);
         sVal("password", pass);
@@ -616,10 +642,11 @@
       '      <div class="rbPaywallTierName">Base</div>',
       '      <div class="rbPaywallTierPrice"><span class="rbPaywallAmount" data-monthly="$29.99" data-annual="$300">$29.99</span><span class="rbPaywallPer" data-monthly="/ mo" data-annual="/ yr">/ mo</span></div>',
       '      <ul class="rbPaywallFeatures">',
-      '        <li>Live room board</li>',
-      '        <li>Timers &amp; alerts</li>',
-      '        <li>Doctor badges</li>',
-      '        <li>Quick notes</li>',
+      '        <li>Web board with unlimited rooms</li>',
+      '        <li>Real-time sync across all screens</li>',
+      '        <li>Always-on timers &amp; status flags</li>',
+      '        <li>Unlimited team members</li>',
+      '        <li>Appointment capture</li>',
       '      </ul>',
       '      <button class="rbPaywallBtn rbPaywallBtnSecondary" data-plan="base-monthly">Get Base</button>',
       '    </div>',
@@ -629,9 +656,10 @@
       '      <div class="rbPaywallTierPrice"><span class="rbPaywallAmount" data-monthly="$49.99" data-annual="$500">$49.99</span><span class="rbPaywallPer" data-monthly="/ mo" data-annual="/ yr">/ mo</span></div>',
       '      <ul class="rbPaywallFeatures">',
       '        <li>Everything in Base</li>',
-      '        <li>Desktop capture app</li>',
-      '        <li>Stats &amp; history</li>',
-      '        <li>Priority support</li>',
+      '        <li>Custom clinic branding &amp; logo</li>',
+      '        <li>Stats dashboard</li>',
+      '        <li>Practice &amp; per-patient checklists</li>',
+      '        <li>iPhone &amp; iPad app <span style="opacity:.65">(coming soon)</span></li>',
       '      </ul>',
       '      <button class="rbPaywallBtn rbPaywallBtnPrimary" data-plan="advanced-monthly">Get Advanced</button>',
       '    </div>',
@@ -690,9 +718,12 @@
       if(data.url){ window.location.href = data.url; return; }
       if(btn){ btn.disabled = false; btn.querySelector("span") && (btn.querySelector("span").textContent = btn.querySelector("span").getAttribute("data-orig") || "Get " + plan); }
       var msg = data.error || data.message || "Could not start checkout.";
-      alert("Checkout error (" + plan + "): " + msg);
+      if(typeof window.toast === "function") window.toast("Checkout error: " + msg);
     })
-    .catch(function(e){ if(btn){ btn.disabled = false; } alert("Checkout failed: " + (e && e.message || "network error")); });
+    .catch(function(e){
+      if(btn){ btn.disabled = false; }
+      if(typeof window.toast === "function") window.toast("Checkout failed: " + (e && e.message || "network error"));
+    });
   }
 
   function openBillingPortal(){
