@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function SetupPage() {
-  redirect("/roomboard/index.html?mode=setup");
+  redirect("/app/index.html?mode=setup");
 }

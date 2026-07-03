@@ -231,6 +231,10 @@
       ".rbAPlanName{font-size:12px;font-weight:700;color:#eaf1ff;margin-bottom:2px;}",
       ".rbAPlanPrice{font-size:19px;font-weight:800;color:#eaf1ff;letter-spacing:-.03em;line-height:1;}",
       ".rbAPlanPer{font-size:11px;font-weight:500;color:rgba(148,178,220,.5);margin-left:2px;}",
+      ".rbAPlanFoundingNote{display:none;font-size:11.5px;line-height:1.4;padding:8px 10px;border-radius:8px;margin-top:8px;}",
+      ".rbAPlanFoundingNote.show{display:block;}",
+      ".rbAPlanFoundingNote.positive{background:rgba(52,211,153,.10);color:#34d399;border:1px solid rgba(52,211,153,.25);}",
+      ".rbAPlanFoundingNote.warning{background:rgba(251,191,36,.10);color:#fbbf24;border:1px solid rgba(251,191,36,.25);}",
       /* mobile: hide left panel, stack form */
       "@media(max-width:760px){",
         ".rbALeft{display:none;}",
@@ -336,6 +340,7 @@
                   '<div><span class="rbAPlanPrice rbAPlanPriceVal" data-monthly="$49.99" data-annual="$41.67">$49.99</span><span class="rbAPlanPer rbAPlanPerVal" data-monthly="/mo" data-annual="/mo">/mo</span></div>',
                 '</div>',
               '</div>',
+              '<div class="rbAPlanFoundingNote" id="rbaPlanFoundingNote"></div>',
             '</div>',
             '<div class="rbADivider"></div>',
           '</div>',
@@ -429,12 +434,28 @@
       var active = planPeriodToggle && planPeriodToggle.querySelector(".rbAPlanToggleBtn.active");
       return active ? (active.getAttribute("data-period") || "monthly") : "monthly";
     }
+    var foundingNote = document.getElementById("rbaPlanFoundingNote");
+    function updateFoundingNote(plan){
+      if(!foundingNote) return;
+      if(plan === "advanced-monthly"){
+        foundingNote.textContent = "🚀 Founding offer: lock in Advanced at $29.99/mo for life (first 40 clinics).";
+        foundingNote.className = "rbAPlanFoundingNote show positive";
+      } else if(plan === "advanced-annual"){
+        foundingNote.textContent = "Founding-offer pricing is monthly-only — switching to Annual bills the standard Advanced rate ($500/yr), not the founding price.";
+        foundingNote.className = "rbAPlanFoundingNote show warning";
+      } else {
+        foundingNote.textContent = "";
+        foundingNote.className = "rbAPlanFoundingNote";
+      }
+    }
     function syncPlanTileSelection(plan){
       window.__roomboardSelectedPlan = plan;
       var isBase = plan.indexOf("base") === 0;
       if(planBaseTile) planBaseTile.classList.toggle("selected", isBase);
       if(planAdvTile)  planAdvTile.classList.toggle("selected", !isBase);
+      updateFoundingNote(plan);
     }
+    updateFoundingNote("advanced-monthly");
     if(planPeriodToggle){
       planPeriodToggle.addEventListener("click", function(e){
         var btn = e.target && e.target.closest ? e.target.closest(".rbAPlanToggleBtn") : null;

@@ -1,19 +1,19 @@
 # RoomBoard
 
-RoomBoard now serves a split static board application from `public/roomboard` and uses the Next app only as a lightweight redirect shell.
+RoomBoard now serves a split static board application from `public/app` and uses the Next app only as a lightweight redirect shell.
 
 ## Structure
-- `public/roomboard/index.html`: board markup
-- `public/roomboard/styles.css`: board styling
-- `public/roomboard/config.js`: runtime Supabase public config
-- `public/roomboard/js/compat.js`: shared helpers and compatibility utilities
-- `public/roomboard/js/board-state.js`: defaults, state, persistence, and board logic
-- `public/roomboard/js/rendering.js`: display and settings rendering
-- `public/roomboard/js/settings.js`: settings drawer behavior and section actions
-- `public/roomboard/js/auth-sync.js`: Supabase auth, sync, and persistence flows
-- `public/roomboard/js/init.js`: board bootstrap
-- `public/roomboard/js/ux.js`: back-to-top and small UX helpers
-- `public/roomboard/js/theme.js`: theme presets and theme persistence
+- `public/app/index.html`: board markup
+- `public/app/styles.css`: board styling
+- `public/app/config.js`: runtime Supabase public config
+- `public/app/js/compat.js`: shared helpers and compatibility utilities
+- `public/app/js/board-state.js`: defaults, state, persistence, and board logic
+- `public/app/js/rendering.js`: display and settings rendering
+- `public/app/js/settings.js`: settings drawer behavior and section actions
+- `public/app/js/auth-sync.js`: Supabase auth, sync, and persistence flows
+- `public/app/js/init.js`: board bootstrap
+- `public/app/js/ux.js`: back-to-top and small UX helpers
+- `public/app/js/theme.js`: theme presets and theme persistence
 
 ## Run
 ```bash
@@ -23,11 +23,11 @@ npm run dev
 Then open:
 
 - [http://localhost:3000](http://localhost:3000)
-- [http://localhost:3000/roomboard/index.html](http://localhost:3000/roomboard/index.html)
+- [http://localhost:3000/app/index.html](http://localhost:3000/app/index.html)
 
 ## Verification
-- `public/roomboard/smoke-test-checklist.md`
-- `public/roomboard/settings-save-model.md`
+- `public/app/smoke-test-checklist.md`
+- `public/app/settings-save-model.md`
 
 ## Pulse addon backend
 The Pulse browser addon can now use Next.js API routes instead of writing to Supabase tables directly.
@@ -50,7 +50,7 @@ https://your-roomboard-app.vercel.app
 ```
 
 ## Desktop app build
-RoomBoard can be packaged as a desktop app with Electron. The desktop wrapper serves `public/roomboard` over a tiny built-in local server so Supabase auth still runs on `http://127.0.0.1` instead of failing on `file://`. On Mac, appointment capture runs from RoomBoard's menu bar integration instead of a separate visible capture window.
+RoomBoard can be packaged as a desktop app with Electron. The desktop wrapper serves `public/app` over a tiny built-in local server so Supabase auth still runs on `http://127.0.0.1` instead of failing on `file://`. On Mac, appointment capture runs from RoomBoard's menu bar integration instead of a separate visible capture window.
 
 Commands:
 
@@ -107,7 +107,7 @@ Build from this `RoomBoard/` folder:
 xcodebuild -project ios/RoomBoardMobile/RoomBoardMobile.xcodeproj -scheme RoomBoardMobile -destination generic/platform=iOS -derivedDataPath ios/RoomBoardMobile/DerivedData CODE_SIGNING_ALLOWED=NO build
 ```
 
-The website download cards use `window.__ROOMBOARD_WINDOWS_DOWNLOAD_URL__` and `window.__ROOMBOARD_MAC_DOWNLOAD_URL__` from `public/roomboard/config.js`. Update `window.__ROOMBOARD_RELEASE_TAG__` there when publishing a new app release tag.
+The website download cards use `window.__ROOMBOARD_WINDOWS_DOWNLOAD_URL__` and `window.__ROOMBOARD_MAC_DOWNLOAD_URL__` from `public/app/config.js`. Update `window.__ROOMBOARD_RELEASE_TAG__` there when publishing a new app release tag.
 
 ## Vercel deployment
 Deploy the Next.js website from the `RoomBoard` folder, not the repository root.
@@ -158,7 +158,7 @@ Use stable installer filenames:
 RoomBoard-Capture-Setup-Windows-x64.exe
 ```
 
-After the Windows capture installer is built and attached to a release, set these values in `public/roomboard/config.js`:
+After the Windows capture installer is built and attached to a release, set these values in `public/app/config.js`:
 
 ```js
 window.__ROOMBOARD_CAPTURE_WINDOWS_DOWNLOAD_URL__ = "./downloads/RoomBoard-Capture-Setup-Windows-x64.exe";
@@ -204,7 +204,7 @@ dist-capture/RoomBoard-Capture-Setup-Windows-x64.exe
 For the static website download button, copy that file to:
 
 ```text
-public/roomboard/downloads/RoomBoard-Capture-Setup-Windows-x64.exe
+public/app/downloads/RoomBoard-Capture-Setup-Windows-x64.exe
 ```
 
 Legacy standalone Mac capture installer command, run from a Mac:
@@ -269,7 +269,7 @@ https://github.com/JAShelley/Roomboard/releases/download/v0.1.0/RoomBoard-macOS.
 1. Push this repository to GitHub and make sure GitHub Actions is enabled.
 2. Create and push a capture version tag such as `capture-v0.1.0`, or run the `Release Capture Windows Installer` workflow manually.
 3. Wait for the workflow to finish.
-4. Use the stable download URL in `public/roomboard/config.js`:
+4. Use the stable download URL in `public/app/config.js`:
 
 ```text
 https://github.com/OWNER/REPO/releases/download/capture-v0.1.0/RoomBoard-Capture-Setup-Windows-x64.exe

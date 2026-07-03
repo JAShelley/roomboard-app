@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function BoardPage() {
-  redirect("/roomboard/index.html?mode=board");
+  redirect("/app/index.html?mode=board");
 }

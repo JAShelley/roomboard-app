@@ -27,6 +27,13 @@
       "runtimeArgs": ["/tmp/serve-roomboard-design.py"],
       "port": 4002,
       "autoPort": true
+    },
+    {
+      "name": "capture-ui",
+      "runtimeExecutable": "/usr/bin/python3",
+      "runtimeArgs": ["/tmp/serve-capture-ui.py"],
+      "port": 4003,
+      "autoPort": true
     }
   ]
 }

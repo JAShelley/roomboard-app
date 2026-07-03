@@ -25,6 +25,6 @@
 - Display card scale, room card field visibility, and display text override colors: this window only
 
 ## Notes
-- The board is now split into separate HTML, CSS, and JavaScript files under `public/roomboard`.
+- The board is now split into separate HTML, CSS, and JavaScript files under `public/app`.
 - JavaScript is grouped by responsibility into `compat`, `board-state`, `rendering`, `settings`, `auth-sync`, `ux`, and `theme`.
 - The smoke-test checklist for validating these save paths lives in `smoke-test-checklist.md`.
