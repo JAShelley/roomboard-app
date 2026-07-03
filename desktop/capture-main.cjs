@@ -1,6 +1,9 @@
 const { app } = require("electron");
 const path = require("path");
 const { createCaptureService } = require("./capture-service.cjs");
+const { setupAutoUpdate } = require("./auto-update.cjs");
+
+const CAPTURE_UPDATE_FEED_URL = "https://github.com/JAShelley/roomboard-app/releases/download/capture-latest/";
 
 let captureService = null;
 let isQuitting = false;
@@ -45,6 +48,7 @@ app.whenReady().then(() => {
     isQuitting: () => isQuitting,
     macTrayActiveTitle: "RoomBoard ON",
     macTrayIdleTitle: "RoomBoard",
+    openReviewOnCapture: true,
     quitApp: () => {
       isQuitting = true;
       app.quit();
@@ -56,6 +60,10 @@ app.whenReady().then(() => {
   captureService.createTray();
   captureService.createReviewWindow({ showOnReady: false });
   captureService.registerHotkey();
+  setupAutoUpdate({
+    feedUrl: CAPTURE_UPDATE_FEED_URL,
+    sendStatus: captureService.sendStatus
+  });
 }).catch((error) => {
   console.error("RoomBoard Capture startup failed:", error);
   app.quit();

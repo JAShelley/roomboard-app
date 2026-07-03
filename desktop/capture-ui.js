@@ -9,14 +9,25 @@
     boardData: null,
     captured: null,
     lastHover: null,
-    lastStatus: null
+    lastStatus: null,
+    authMode: "login"
   };
 
   const els = {
     email: document.getElementById("emailInput"),
     password: document.getElementById("passwordInput"),
     connectionPanel: document.getElementById("connectionPanel"),
-    login: document.getElementById("loginBtn"),
+    authModeSwitch: document.getElementById("authModeSwitch"),
+    createFields: document.getElementById("createFields"),
+    joinFields: document.getElementById("joinFields"),
+    practiceName: document.getElementById("practiceNameInput"),
+    fullName: document.getElementById("fullNameInput"),
+    joinFullName: document.getElementById("joinFullNameInput"),
+    inviteCode: document.getElementById("inviteCodeInput"),
+    authSubmit: document.getElementById("authSubmitBtn"),
+    logout: document.getElementById("logoutBtn"),
+    authLoadingBar: document.getElementById("authLoadingBar"),
+    authLoadingMessage: document.getElementById("authLoadingMessage"),
     loadBoard: document.getElementById("loadBoardBtn"),
     refreshStatus: document.getElementById("refreshStatusBtn"),
     arm: document.getElementById("armCaptureBtn"),
@@ -62,9 +73,20 @@
     populateSelect(els.colorLabel, [], "Load board first");
     populateSelect(els.doctor, [""], "No doctor");
     populateSelect(els.quickNote, [""], "No quick note");
+    setAuthMode("login");
+    updateAuthUiForSession();
 
-    els.login.addEventListener("click", login);
-    els.loadBoard.addEventListener("click", loadBoard);
+    els.authModeSwitch?.addEventListener("click", (event) => {
+      const button = event.target?.closest?.(".authModeBtn");
+      if (!button) return;
+      setAuthMode(button.getAttribute("data-auth-mode") || "login");
+    });
+    els.authSubmit.addEventListener("click", handleAuthSubmit);
+    els.logout?.addEventListener("click", logout);
+    els.inviteCode?.addEventListener("input", () => {
+      els.inviteCode.value = normalizeInviteCode(els.inviteCode.value);
+    });
+    els.loadBoard.addEventListener("click", () => { loadBoard().catch(() => {}); });
     els.refreshStatus.addEventListener("click", refreshStatus);
     els.arm.addEventListener("click", armCapture);
     els.stop.addEventListener("click", stopCapture);
@@ -115,33 +137,214 @@
     localStorage.setItem(key, JSON.stringify(value));
   }
 
+  function setAuthMode(mode) {
+    const nextMode = ["login", "create", "join"].includes(mode) ? mode : "login";
+    state.authMode = nextMode;
+    els.authModeSwitch?.querySelectorAll(".authModeBtn").forEach((button) => {
+      button.classList.toggle("active", button.getAttribute("data-auth-mode") === nextMode);
+    });
+    if (els.createFields) els.createFields.hidden = nextMode !== "create";
+    if (els.joinFields) els.joinFields.hidden = nextMode !== "join";
+    if (els.authSubmit) {
+      els.authSubmit.textContent = nextMode === "create" ? "Create clinic" : nextMode === "join" ? "Join clinic" : "Sign in";
+    }
+  }
+
+  function showAuthLoading(message) {
+    if (!els.authLoadingBar) return;
+    els.authLoadingBar.hidden = false;
+    if (els.authLoadingMessage) els.authLoadingMessage.textContent = message || "Working…";
+  }
+
+  function hideAuthLoading() {
+    if (els.authLoadingBar) els.authLoadingBar.hidden = true;
+  }
+
+  function updateAuthUiForSession() {
+    const loggedIn = !!(state.auth?.accessToken || state.auth?.refreshToken);
+    if (els.logout) els.logout.hidden = !loggedIn;
+    if (els.authModeSwitch) els.authModeSwitch.hidden = loggedIn;
+    if (els.createFields && loggedIn) els.createFields.hidden = true;
+    if (els.joinFields && loggedIn) els.joinFields.hidden = true;
+    if (els.authSubmit) els.authSubmit.hidden = loggedIn;
+  }
+
+  function normalizeInviteCode(value) {
+    return String(value == null ? "" : value).toUpperCase().replace(/[^A-Z0-9]/g, "").trim();
+  }
+
+  async function handleAuthSubmit() {
+    if (state.authMode === "create") return signupClinic();
+    if (state.authMode === "join") return joinClinic();
+    return login();
+  }
+
   async function login() {
     try {
+      showAuthLoading("Signing in…");
       setStatus(els.connectionStatus, "Signing in...");
       const email = String(els.email.value || "").trim();
       const password = String(els.password.value || "");
       state.auth = await loginToSupabase(email, password);
       writeJson(AUTH_STORAGE_KEY, state.auth);
       els.password.value = "";
+      updateAuthUiForSession();
       setStatus(els.connectionStatus, `Signed in as ${state.auth.email || email}.`, "ok");
       await loadBoard();
     } catch (error) {
       setStatus(els.connectionStatus, getErrorMessage(error), "error");
+    } finally {
+      hideAuthLoading();
+    }
+  }
+
+  async function signupClinic() {
+    try {
+      showAuthLoading("Creating your clinic…");
+      const practiceName = String(els.practiceName?.value || "").trim();
+      const fullName = String(els.fullName?.value || "").trim();
+      const email = String(els.email.value || "").trim();
+      const password = String(els.password.value || "");
+      if (!practiceName || !fullName || !email || !password) {
+        throw new Error("Clinic name, your name, email, and password are required.");
+      }
+
+      setStatus(els.connectionStatus, "Creating your account...");
+      state.auth = await signUpSupabase(email, password, fullName);
+      writeJson(AUTH_STORAGE_KEY, state.auth);
+
+      setStatus(els.connectionStatus, "Setting up your clinic...");
+      await callRpc("create_practice_with_admin", {
+        practice_name: practiceName,
+        admin_full_name: fullName
+      });
+
+      els.password.value = "";
+      updateAuthUiForSession();
+      setStatus(els.connectionStatus, `Clinic created. Signed in as ${state.auth.email || email}.`, "ok");
+      await loadBoard();
+    } catch (error) {
+      setStatus(els.connectionStatus, getErrorMessage(error), "error");
+    } finally {
+      hideAuthLoading();
+    }
+  }
+
+  async function joinClinic() {
+    try {
+      showAuthLoading("Joining clinic…");
+      const fullName = String(els.joinFullName?.value || "").trim();
+      const email = String(els.email.value || "").trim();
+      const password = String(els.password.value || "");
+      const inviteCode = normalizeInviteCode(els.inviteCode?.value || "");
+      if (!fullName || !email || !password || !inviteCode) {
+        throw new Error("Full name, email, password, and invite code are required to join a clinic.");
+      }
+
+      setStatus(els.connectionStatus, "Signing in...");
+      state.auth = await signInOrSignUpForJoin(email, password, fullName);
+      writeJson(AUTH_STORAGE_KEY, state.auth);
+
+      setStatus(els.connectionStatus, "Joining clinic...");
+      await callRpc("join_practice_with_invite_code", {
+        invite_code: inviteCode,
+        member_full_name: fullName
+      });
+
+      els.password.value = "";
+      updateAuthUiForSession();
+      setStatus(els.connectionStatus, `Joined clinic. Signed in as ${state.auth.email || email}.`, "ok");
+      await loadBoard();
+    } catch (error) {
+      setStatus(els.connectionStatus, getErrorMessage(error), "error");
+    } finally {
+      hideAuthLoading();
+    }
+  }
+
+  async function signInOrSignUpForJoin(email, password, fullName) {
+    try {
+      return await loginToSupabase(email, password);
+    } catch (error) {
+      if (!isRetryableJoinSignInError(error)) throw error;
+      return signUpSupabase(email, password, fullName);
+    }
+  }
+
+  function isRetryableJoinSignInError(error) {
+    const message = normalizeSpaces(getErrorMessage(error)).toLowerCase();
+    return message.includes("invalid login credentials")
+      || message.includes("email not confirmed")
+      || message.includes("invalid_credentials")
+      || message.includes("user not found");
+  }
+
+  async function signUpSupabase(email, password, fullName) {
+    if (!email || !password) throw new Error("Email and password are required.");
+    const data = await fetchJson(`${SUPABASE_URL}/auth/v1/signup`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, password, data: { full_name: fullName || "" } })
+    });
+    if (!data?.access_token) {
+      throw new Error("Sign up succeeded, but there is no active session yet. Disable email confirmation in Supabase Auth for the immediate clinic setup flow.");
+    }
+    return mapAuthPayload(data, email);
+  }
+
+  async function callRpc(name, body) {
+    return fetchJson(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
+      method: "POST",
+      headers: authHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify(body || {})
+    });
+  }
+
+  async function logout() {
+    const accessToken = state.auth?.accessToken || "";
+    state.auth = null;
+    state.practiceId = null;
+    state.boardData = null;
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    els.password.value = "";
+    populateSelect(els.room, [], "Load board first");
+    populateSelect(els.colorLabel, [], "Load board first");
+    populateSelect(els.doctor, [""], "No doctor");
+    populateSelect(els.quickNote, [""], "No quick note");
+    updateAuthUiForSession();
+    setAuthMode("login");
+    setStatus(els.connectionStatus, "Signed out.");
+    if (accessToken) {
+      fetchJson(`${SUPABASE_URL}/auth/v1/logout`, {
+        method: "POST",
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${accessToken}` }
+      }).catch(() => {});
     }
   }
 
   async function loadBoard() {
-    if (!state.auth?.accessToken && !state.auth?.refreshToken) {
-      throw new Error("Sign in before loading the board.");
-    }
+    try {
+      if (!state.auth?.accessToken && !state.auth?.refreshToken) {
+        throw new Error("Sign in before loading the board.");
+      }
 
-    setStatus(els.connectionStatus, "Loading board...");
-    await ensureValidAuthSession();
-    const practiceId = await fetchPracticeId(false);
-    state.boardData = await fetchPracticeBoardData(practiceId);
-    writeJson(AUTH_STORAGE_KEY, state.auth);
-    populateBoardControls();
-    setStatus(els.connectionStatus, "Board loaded for your clinic.", "ok");
+      showAuthLoading("Loading your board…");
+      setStatus(els.connectionStatus, "Loading board...");
+      await ensureValidAuthSession();
+      const practiceId = await fetchPracticeId(false);
+      state.boardData = await fetchPracticeBoardData(practiceId);
+      writeJson(AUTH_STORAGE_KEY, state.auth);
+      populateBoardControls();
+      setStatus(els.connectionStatus, "Board loaded for your clinic.", "ok");
+    } catch (error) {
+      setStatus(els.connectionStatus, getErrorMessage(error), "error");
+      throw error;
+    } finally {
+      hideAuthLoading();
+    }
   }
 
   async function refreshStatus() {

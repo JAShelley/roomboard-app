@@ -11,7 +11,9 @@
     "main": "desktop/capture-main.cjs",
     "name": "roomboard-capture-mac",
     "description": "Mac appointment capture app for sending scheduler appointments into RoomBoard.",
-    "dependencies": {}
+    "dependencies": {
+      "electron-updater": "^6.3.9"
+    }
   },
   "files": [
     "desktop/capture-main.cjs",
@@ -22,10 +24,16 @@
     "desktop/capture-ui.js",
     "desktop/capture-overlay.html",
     "desktop/capture-overlay.js",
-    "package.json",
-    "!node_modules/**",
-    "!**/node_modules/**"
+    "desktop/auto-update.cjs",
+    "package.json"
   ],
+  "asarUnpack": [
+    "node_modules/electron-updater/**"
+  ],
+  "publish": {
+    "provider": "generic",
+    "url": "https://github.com/JAShelley/roomboard-app/releases/download/capture-latest/"
+  },
   "extraResources": [
     {
       "from": "build/icon.png",

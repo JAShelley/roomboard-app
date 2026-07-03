@@ -15,7 +15,7 @@
   },
   "files": [
     "desktop/**/*",
-    "public/roomboard/**/*",
+    "public/app/**/*",
     "package.json",
     "!node_modules/**",
     "!**/node_modules/**",

@@ -21,6 +21,40 @@
         <span>Connection</span>
         <span class="statusLine summaryStatus" id="connectionStatus">Not connected.</span>
       </summary>
+
+      <div class="authLoadingBar" hidden id="authLoadingBar">
+        <span class="spinner" aria-hidden="true"></span>
+        <span id="authLoadingMessage">Working…</span>
+      </div>
+
+      <div class="authModeSwitch" id="authModeSwitch">
+        <button class="authModeBtn active" data-auth-mode="login" type="button">Log in</button>
+        <button class="authModeBtn" data-auth-mode="create" type="button">Create clinic</button>
+        <button class="authModeBtn" data-auth-mode="join" type="button">Join clinic</button>
+      </div>
+
+      <div class="twoCol" hidden id="createFields">
+        <label>
+          Clinic name
+          <input autocomplete="organization" id="practiceNameInput" type="text">
+        </label>
+        <label>
+          Your name
+          <input autocomplete="name" id="fullNameInput" type="text">
+        </label>
+      </div>
+
+      <div class="twoCol" hidden id="joinFields">
+        <label>
+          Your name
+          <input autocomplete="name" id="joinFullNameInput" type="text">
+        </label>
+        <label>
+          Invite code
+          <input autocomplete="one-time-code" id="inviteCodeInput" type="text">
+        </label>
+      </div>
+
       <div class="twoCol">
         <label>
           Email
@@ -32,8 +66,9 @@
         </label>
       </div>
       <div class="actions">
-        <button class="primary" id="loginBtn" type="button">Sign in</button>
+        <button class="primary" id="authSubmitBtn" type="button">Sign in</button>
         <button id="loadBoardBtn" type="button">Load board</button>
+        <button class="quiet" hidden id="logoutBtn" type="button">Sign out</button>
       </div>
     </details>
 

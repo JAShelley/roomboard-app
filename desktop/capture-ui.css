@@ -20,6 +20,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -125,12 +129,63 @@ h2 {
 }
 
 .connectionPanel > .twoCol,
-.connectionPanel > .actions {
+.connectionPanel > .actions,
+.connectionPanel > .authModeSwitch,
+.connectionPanel > .authLoadingBar {
   margin-inline: 14px;
 }
 
 .connectionPanel > .actions {
   margin-bottom: 14px;
+}
+
+.authModeSwitch {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.authModeBtn {
+  background: var(--soft);
+  border-color: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  min-height: 32px;
+  padding: 6px 8px;
+}
+
+.authModeBtn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ecfeff;
+}
+
+.authLoadingBar {
+  align-items: center;
+  background: var(--accent-soft);
+  border-radius: 8px;
+  color: #115e59;
+  display: flex;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 8px;
+  padding: 8px 10px;
+}
+
+.spinner {
+  animation: authSpin 0.7s linear infinite;
+  border: 2px solid rgba(17, 94, 89, 0.25);
+  border-radius: 50%;
+  border-top-color: #115e59;
+  flex: 0 0 auto;
+  height: 14px;
+  width: 14px;
+}
+
+@keyframes authSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .summaryStatus {

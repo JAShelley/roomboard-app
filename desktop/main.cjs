@@ -26,7 +26,7 @@ let captureService = null;
 let isQuitting = false;
 
 function getStaticRoot() {
-  return path.resolve(__dirname, "..", "public", "roomboard");
+  return path.resolve(__dirname, "..", "public", "app");
 }
 
 function desktopPath(filename) {

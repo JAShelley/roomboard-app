@@ -1,7 +1,7 @@
 {
   "name": "roomboard",
   "description": "Desktop RoomBoard app for clinic room status display and workflow updates.",
-  "version": "0.1.0",
+  "version": "0.1.6",
   "author": "RoomBoard",
   "license": "UNLICENSED",
   "main": "desktop/main.cjs",
@@ -17,8 +17,8 @@
     "desktop:pack": "electron-builder --dir",
     "predesktop:dist": "npm run desktop:assets",
     "desktop:dist": "electron-builder",
-    "predesktop:dist:win": "npm run desktop:assets",
-    "desktop:dist:win": "electron-builder --win nsis",
+    "predesktop:dist:win": "npm run desktop:assets && npm run capture:helper:build",
+    "desktop:dist:win": "electron-builder --config electron-builder.windows.json --win nsis",
     "predesktop:dist:mac": "npm run desktop:assets && npm run capture:helper:build:mac",
     "desktop:dist:mac": "electron-builder --mac",
     "predesktop:dist:mac:release": "npm run desktop:assets && npm run capture:helper:build:mac",
@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
+    "electron-updater": "^6.3.9",
     "next": "^15.0.0",
     "posthog-js": "^1.391.2",
     "react": "^19.0.0",
@@ -67,7 +68,7 @@
     "afterAllArtifactBuild": "scripts/notarize-mac-artifacts.cjs",
     "files": [
       "desktop/**/*",
-      "public/roomboard/**/*",
+      "public/app/**/*",
       "package.json"
     ],
     "extraResources": [

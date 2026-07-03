@@ -1,0 +1,166 @@
+name: Release Capture Mac Installer
+
+on:
+  push:
+    tags:
+      - "capture-v*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Release tag to create or update, for example capture-v0.1.5
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release-capture-mac:
+    runs-on: macos-latest
+
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "true"
+      CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+      APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+      APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Verify Apple signing secrets
+        shell: bash
+        run: |
+          missing=()
+          [ -n "$CSC_LINK" ] || missing+=("MAC_CSC_LINK")
+          [ -n "$CSC_KEY_PASSWORD" ] || missing+=("MAC_CSC_KEY_PASSWORD")
+          [ -n "$APPLE_TEAM_ID" ] || missing+=("APPLE_TEAM_ID")
+
+          has_apple_id_credentials=false
+          if [ -n "$APPLE_ID" ] && [ -n "$APPLE_APP_SPECIFIC_PASSWORD" ]; then
+            has_apple_id_credentials=true
+          fi
+
+          has_api_key_credentials=false
+          if [ -n "$APPLE_API_KEY_P8" ] && [ -n "$APPLE_API_KEY_ID" ] && [ -n "$APPLE_API_ISSUER" ]; then
+            has_api_key_credentials=true
+          fi
+
+          if [ "$has_apple_id_credentials" != "true" ] && [ "$has_api_key_credentials" != "true" ]; then
+            missing+=("APPLE_ID + APPLE_APP_SPECIFIC_PASSWORD or APPLE_API_KEY_P8 + APPLE_API_KEY_ID + APPLE_API_ISSUER")
+          fi
+
+          if [ ${#missing[@]} -gt 0 ]; then
+            printf 'Missing required GitHub Actions secrets:\n'
+            printf ' - %s\n' "${missing[@]}"
+            exit 1
+          fi
+
+      - name: Prepare Apple notarization API key
+        if: env.APPLE_API_KEY_P8 != ''
+        shell: bash
+        run: |
+          api_key_path="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY_ID}.p8"
+          printf '%s' "$APPLE_API_KEY_P8" > "$api_key_path"
+          echo "APPLE_API_KEY=$api_key_path" >> "$GITHUB_ENV"
+
+      - name: Build Capture Mac installer
+        env:
+          ROOMBOARD_REQUIRE_NOTARIZATION: "1"
+        run: npm run capture:dist:mac
+
+      - name: Verify Mac signing and Apple assessment
+        shell: bash
+        run: |
+          shopt -s nullglob
+          apps=(dist-capture-mac/mac*/RoomBoard\ Capture.app)
+          if [ ${#apps[@]} -eq 0 ]; then
+            echo "No packaged Mac app found for verification."
+            exit 1
+          fi
+          npm run mac:verify -- "${apps[0]}"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: roomboard-capture-mac-release-${{ github.run_number }}
+          path: |
+            dist-capture-mac/*.dmg
+            dist-capture-mac/*.zip
+            dist-capture-mac/latest*.yml
+          if-no-files-found: error
+
+      - name: Resolve release tag
+        id: release_tag
+        shell: bash
+        run: |
+          if [ -n "${{ github.event.inputs.release_tag }}" ]; then
+            echo "tag=${{ github.event.inputs.release_tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release_tag.outputs.tag }}
+        shell: bash
+        run: |
+          shopt -s nullglob
+          assets=(dist-capture-mac/*.dmg dist-capture-mac/*.zip dist-capture-mac/latest*.yml)
+
+          if [ ${#assets[@]} -eq 0 ]; then
+            echo "No capture Mac release assets were generated."
+            exit 1
+          fi
+
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" \
+              --target "$GITHUB_SHA" \
+              --title "RoomBoard Capture $RELEASE_TAG" \
+              --notes "RoomBoard Capture installer release. Mac and Windows assets upload to this same release." \
+              || gh release view "$RELEASE_TAG" >/dev/null
+          fi
+
+          gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+
+      - name: Publish rolling auto-update alias (capture-latest)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          shopt -s nullglob
+          assets=(dist-capture-mac/*.dmg dist-capture-mac/*.zip dist-capture-mac/latest*.yml)
+
+          if [ ${#assets[@]} -eq 0 ]; then
+            echo "No capture Mac release assets were generated."
+            exit 1
+          fi
+
+          if ! gh release view capture-latest >/dev/null 2>&1; then
+            gh release create capture-latest \
+              --target "$GITHUB_SHA" \
+              --title "RoomBoard Capture (auto-update feed)" \
+              --notes "Rolling alias that always holds the newest Capture build. Used only by the app's auto-updater — for a real download, use the versioned release above." \
+              --prerelease \
+              || gh release view capture-latest >/dev/null
+          fi
+
+          gh release upload capture-latest "${assets[@]}" --clobber
