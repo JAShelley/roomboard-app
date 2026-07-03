@@ -165,13 +165,8 @@ input:focus-visible,
 }
 .nav.scrolled { border-color: var(--line); box-shadow: var(--shadow-sm); }
 .nav .wrap { display: flex; align-items: center; gap: 22px; }
-.brand { display: flex; align-items: center; gap: 11px; font-family: var(--font-display); font-weight: 700; font-size: 19px; letter-spacing: -.02em; }
-.brand .mark {
-  width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
-  background: linear-gradient(140deg, var(--teal-500), var(--teal-700)); color: #fff;
-  box-shadow: 0 6px 16px rgba(2, 132, 199, .4); flex: none;
-}
-.brand .mark svg { width: 18px; height: 18px; }
+.brand { display: flex; align-items: center; }
+.brand-logo { display: block; height: 32px; width: auto; }
 .nav-links { display: flex; align-items: center; gap: 2px; margin-left: 10px; }
 .nav-links a { padding: 9px 10px; border-radius: 9px; color: var(--ink-2); font-weight: 500; font-size: 14px; transition: background .15s, color .15s; }
 .nav-links a:hover { background: var(--surface-2); color: var(--ink); }
