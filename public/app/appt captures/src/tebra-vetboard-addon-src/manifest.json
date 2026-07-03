@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "VetBoard Tebra/Kareo Capture",
+  "name": "RoomBoard Tebra/Kareo Capture",
   "version": "0.2.0",
-  "description": "Capture visible Tebra/Kareo schedule appointments and send them into VetBoard with the Quick Add panel.",
+  "description": "Capture visible Tebra/Kareo schedule appointments and send them into RoomBoard with the Quick Add panel.",
   "permissions": [
     "storage"
   ],
@@ -19,7 +19,12 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "VetBoard Tebra/Kareo Capture"
+    "default_title": "RoomBoard Tebra/Kareo Capture",
+    "default_icon": {
+      "16": "icon-16.png",
+      "48": "icon-48.png",
+      "128": "icon-128.png"
+    }
   },
   "content_scripts": [
     {
@@ -34,5 +39,10 @@
       "match_about_blank": true,
       "run_at": "document_idle"
     }
-  ]
+  ],
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  }
 }

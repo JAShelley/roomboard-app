@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "VetBoard Dentrix Ascend Capture",
+  "name": "RoomBoard Dentrix Ascend Capture",
   "version": "0.2.0",
-  "description": "Capture visible Dentrix Ascend schedule appointments and send them into VetBoard with the Quick Add panel.",
+  "description": "Capture visible Dentrix Ascend schedule appointments and send them into RoomBoard with the Quick Add panel.",
   "permissions": [
     "storage"
   ],
@@ -20,7 +20,12 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "VetBoard Dentrix Ascend Capture"
+    "default_title": "RoomBoard Dentrix Ascend Capture",
+    "default_icon": {
+      "16": "icon-16.png",
+      "48": "icon-48.png",
+      "128": "icon-128.png"
+    }
   },
   "content_scripts": [
     {
@@ -36,5 +41,10 @@
       "match_about_blank": true,
       "run_at": "document_idle"
     }
-  ]
+  ],
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  }
 }

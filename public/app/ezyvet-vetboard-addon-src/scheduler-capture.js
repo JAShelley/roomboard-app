@@ -155,7 +155,7 @@
     schedule: true, slot: true, the: true, type: true, visit: true, with: true
   };
 
-  // ezyVet appointment type → VetBoard label mapping
+  // ezyVet appointment type → RoomBoard label mapping
   const EZYVET_TYPE_LABEL_MAP = [
     { ezyvet: ["ecc", "ecc- emergency", "ecc emergency", "emergency critical care", "emergency"], vetboard: ["emergency"] },
     { ezyvet: ["euthanasia", "euth", "quality of life", "qol", "pts", "put to sleep", "euthanasia consult"], vetboard: ["euthanasia consult", "euthanasia"] },
@@ -1798,7 +1798,7 @@
     if (document.getElementById(AUTH_PANEL_ID)) return;
     const panel = document.createElement("section");
     panel.id = AUTH_PANEL_ID;
-    panel.setAttribute("aria-label", "VetBoard login");
+    panel.setAttribute("aria-label", "RoomBoard login");
     document.documentElement.appendChild(panel);
     renderAuthPanel();
   }
@@ -1864,9 +1864,9 @@
     badge.classList.toggle("is-armed", captureArmed);
     badge.classList.toggle("is-busy", !!pendingAppointment);
 
-    let label = "VetBoard ezyVet capture idle. Click to arm. Right-click to log in.";
+    let label = "RoomBoard ezyVet capture idle. Click to arm. Right-click to log in.";
     if (authNeedsLogin) {
-      label = authErrorMessage || "VetBoard needs you to sign in again. Right-click for login.";
+      label = authErrorMessage || "RoomBoard needs you to sign in again. Right-click for login.";
     } else if (captureArmed) {
       label = isEzyvetHost()
         ? "Armed — hover an appointment until the ezyVet summary appears, then click."
@@ -1946,7 +1946,7 @@
             <div><div class="vbEyebrow">RoomBoard Login</div><h3>Connected</h3></div>
             <button class="vbBtn" data-auth-action="close" type="button">Close</button>
           </div>
-          <div class="vbAuthState">Signed in as ${escapeHtml(authState.email || "VetBoard user")}.</div>
+          <div class="vbAuthState">Signed in as ${escapeHtml(authState.email || "RoomBoard user")}.</div>
           <div class="vbActions">
             <button class="vbBtn" data-auth-action="logout" type="button">Logout</button>
           </div>
@@ -1956,7 +1956,7 @@
             <div><div class="vbEyebrow">RoomBoard Login</div><h3>Sign in</h3></div>
             <button class="vbBtn" data-auth-action="close" type="button">Close</button>
           </div>
-          ${authNeedsLogin ? `<div class="vbAuthWarning">${escapeHtml(authErrorMessage || "Your VetBoard session expired. Please sign in again.")}</div>` : ""}
+          ${authNeedsLogin ? `<div class="vbAuthWarning">${escapeHtml(authErrorMessage || "Your RoomBoard session expired. Please sign in again.")}</div>` : ""}
           <div class="vbGrid vbAuthGrid">
             <label class="vbField">
               <span>Email</span>
@@ -1998,7 +1998,7 @@
 
     const modal = document.createElement("section");
     modal.id = MODAL_ID;
-    modal.setAttribute("aria-label", "Send appointment to VetBoard");
+    modal.setAttribute("aria-label", "Send appointment to RoomBoard");
 
     document.documentElement.appendChild(backdrop);
     document.documentElement.appendChild(modal);
@@ -2062,7 +2062,7 @@
       <div class="vbModalCard">
         <div class="vbModalHeader">
           <div>
-            <div class="vbEyebrow">VetBoard Quick Send</div>
+            <div class="vbEyebrow">RoomBoard Quick Send</div>
             <h2>Send to board</h2>
           </div>
           <button class="vbBtn" data-action="close-modal" type="button">Close</button>
@@ -2076,10 +2076,10 @@
           ${renderFormSection()}
         </div>
         <div class="vbFooter">
-          <div class="vbFooterNote">${escapeHtml(modalMessage || "Click Send to VetBoard to push this appointment.")}</div>
+          <div class="vbFooterNote">${escapeHtml(modalMessage || "Click Send to RoomBoard to push this appointment.")}</div>
           <div class="vbActions">
             <button class="vbBtn" data-action="close-modal" type="button">Cancel</button>
-            <button class="vbBtn vbPrimary" data-action="send-board" type="button" ${authState && boardStateCache?.data ? "" : "disabled"}>Send to VetBoard</button>
+            <button class="vbBtn vbPrimary" data-action="send-board" type="button" ${authState && boardStateCache?.data ? "" : "disabled"}>Send to RoomBoard</button>
           </div>
         </div>
       </div>
@@ -2297,7 +2297,7 @@
 
   async function handleSendToBoard() {
     if (!pendingAppointment?.patientName) { modalMessage = "No appointment captured."; renderModal(); return; }
-    if (!authState) { modalMessage = "Login required before sending to VetBoard."; renderModal(); return; }
+    if (!authState) { modalMessage = "Login required before sending to RoomBoard."; renderModal(); return; }
 
     syncFormStateFromDom();
     validationState = {
@@ -2312,7 +2312,7 @@
     if (!formState?.roomId) { modalMessage = "Pick a room first."; renderModal(); return; }
 
     try {
-      modalMessage = "Sending to VetBoard…";
+      modalMessage = "Sending to RoomBoard…";
       renderModal();
 
       await ensureValidAuthSession();
@@ -2399,14 +2399,14 @@
 
   async function ensureValidAuthSession() {
     if (!authState?.accessToken) {
-      throw new Error(authNeedsLogin ? (authErrorMessage || "Your VetBoard session expired. Please sign in again.") : "Login required.");
+      throw new Error(authNeedsLogin ? (authErrorMessage || "Your RoomBoard session expired. Please sign in again.") : "Login required.");
     }
     const expiresAt = Number(authState.expiresAt || 0);
     if (expiresAt && expiresAt > Date.now() + 60 * 1000) return authState;
 
     if (!authState.refreshToken) {
-      await markAuthReloginRequired("Your VetBoard session expired. Please sign in again.");
-      throw new Error(authErrorMessage || "Your VetBoard session expired. Please sign in again.");
+      await markAuthReloginRequired("Your RoomBoard session expired. Please sign in again.");
+      throw new Error(authErrorMessage || "Your RoomBoard session expired. Please sign in again.");
     }
 
     try {
@@ -2423,7 +2423,7 @@
     } catch (error) {
       const message = getErrorMessage(error);
       if (isLikelyAuthErrorMessage(message)) {
-        await markAuthReloginRequired("Your VetBoard session expired. Please sign in again.");
+        await markAuthReloginRequired("Your RoomBoard session expired. Please sign in again.");
         throw new Error(authErrorMessage || message);
       }
       throw error;
@@ -2449,7 +2449,7 @@
 
   async function markAuthReloginRequired(message) {
     authNeedsLogin = true;
-    authErrorMessage = normalizeSpaces(message) || "Your VetBoard session expired. Please sign in again.";
+    authErrorMessage = normalizeSpaces(message) || "Your RoomBoard session expired. Please sign in again.";
     authFormState.email = String((authState && authState.email) || authFormState.email || "").trim();
     authFormState.password = "";
     authState = null;

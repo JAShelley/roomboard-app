@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "VetBoard ezyVet Capture",
-  "version": "1.0.12",
-  "description": "Capture an ezyVet calendar appointment on hover/click and send it into VetBoard with the Quick Add panel.",
+  "name": "RoomBoard ezyVet Capture",
+  "version": "1.0.13",
+  "description": "Capture an ezyVet calendar appointment on hover/click and send it into RoomBoard with the Quick Add panel.",
   "permissions": [
     "storage"
   ],
@@ -17,7 +17,12 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "VetBoard ezyVet Capture"
+    "default_title": "RoomBoard ezyVet Capture",
+    "default_icon": {
+      "16": "icon-16.png",
+      "48": "icon-48.png",
+      "128": "icon-128.png"
+    }
   },
   "content_scripts": [
     {
@@ -35,5 +40,10 @@
       "match_about_blank": true,
       "run_at": "document_idle"
     }
-  ]
+  ],
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  }
 }
