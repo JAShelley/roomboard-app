@@ -1,5 +1,10 @@
 import type Stripe from "stripe";
-import { getStripe, hasPaymentMethodForBilling, syncSubscriptionToPractice } from "../_stripe";
+import {
+  getStripe,
+  hasPaymentMethodForBilling,
+  syncSubscriptionToPractice,
+  updatePracticePaymentMethodFlag,
+} from "../_stripe";
 import { resolveSessionContext, computeAccess, getPracticeBilling, type PracticeBilling } from "../_lib";
 import { optionsResponse, pulseJson, pulseError } from "../../pulse/_lib";
 
@@ -12,9 +17,17 @@ async function accessForBilling(billing: PracticeBilling) {
     billing.subscriptionStatus === "trialing" &&
     !!billing.stripeCustomerId &&
     !!billing.stripeSubscriptionId;
+  const hasPaymentMethod = needsCardCheck ? await hasPaymentMethodForBilling(billing) : false;
+  if (needsCardCheck) {
+    await updatePracticePaymentMethodFlag(
+      billing.stripeCustomerId,
+      billing.practiceId,
+      hasPaymentMethod,
+    );
+  }
   return computeAccess({
     ...billing,
-    hasPaymentMethod: needsCardCheck ? await hasPaymentMethodForBilling(billing) : false,
+    hasPaymentMethod,
   });
 }
 

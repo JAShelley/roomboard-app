@@ -1,5 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
-import { computeAccess, getServiceClient, requireEnv, type PracticeBilling } from "../_lib";
+import { computeAccess, getServiceClient, type PracticeBilling } from "../_lib";
 import { optionsResponse, pulseJson, pulseError } from "../../pulse/_lib";
 
 export async function OPTIONS() {
@@ -17,7 +16,7 @@ function userIdFromJwt(token: string): string | null {
 
 // Fast-path billing check: decode JWT locally (no network call) then do a
 // single joined query for profiles + practices instead of 3 sequential round-trips.
-async function fastBillingCheck(accessToken: string) {
+async function fastBillingCheck(accessToken: string): Promise<PracticeBilling | null> {
   const userId = userIdFromJwt(accessToken);
   if (!userId) return null;
 
@@ -26,7 +25,8 @@ async function fastBillingCheck(accessToken: string) {
     .from("profiles")
     .select(`practice_id, practices!inner(
       id, stripe_customer_id, stripe_subscription_id,
-      subscription_status, plan, trial_ends_at, current_period_end
+      subscription_status, plan, trial_ends_at, current_period_end,
+      has_payment_method
     )`)
     .eq("user_id", userId)
     .maybeSingle();
@@ -46,6 +46,7 @@ async function fastBillingCheck(accessToken: string) {
     plan: (pr.plan as string) || null,
     trialEndsAt: pr.trial_ends_at ? new Date(String(pr.trial_ends_at)).toISOString() : null,
     currentPeriodEnd: pr.current_period_end ? new Date(String(pr.current_period_end)).toISOString() : null,
+    hasPaymentMethod: pr.has_payment_method === true,
   };
 }
 
@@ -58,10 +59,16 @@ async function billingWithPaymentMethodStatus(billing: PracticeBilling): Promise
     return { ...billing, hasPaymentMethod: false };
   }
 
-  const { hasPaymentMethodForBilling } = await import("../_stripe");
+  const { hasPaymentMethodForBilling, updatePracticePaymentMethodFlag } = await import("../_stripe");
+  const hasPaymentMethod = await hasPaymentMethodForBilling(billing);
+  await updatePracticePaymentMethodFlag(
+    billing.stripeCustomerId,
+    billing.practiceId,
+    hasPaymentMethod,
+  );
   return {
     ...billing,
-    hasPaymentMethod: await hasPaymentMethodForBilling(billing),
+    hasPaymentMethod,
   };
 }
 
@@ -74,7 +81,7 @@ export async function POST(request: Request) {
     const refreshToken = String(body?.refreshToken || "").trim();
 
     // Try the fast path first (1 network call instead of 3)
-    let billing = accessToken ? await fastBillingCheck(accessToken) : null;
+    let billing: PracticeBilling | null = accessToken ? await fastBillingCheck(accessToken) : null;
 
     // Fall back to the full session resolution if fast path fails (expired JWT, etc.)
     if (!billing) {

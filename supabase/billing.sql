@@ -93,6 +93,23 @@ grant select (
   location,
   specialty
 ) on public.practices to authenticated;
+grant select, update on public.practices to service_role;
+
+grant select, insert, update, delete on
+  public.practice_board_state,
+  public.room_sessions,
+  public.cleaning_sessions,
+  public.room_board_entries,
+  public.quick_notes
+to authenticated;
+
+grant select, insert, update, delete on
+  public.practice_board_state,
+  public.room_sessions,
+  public.cleaning_sessions,
+  public.room_board_entries,
+  public.quick_notes
+to service_role;
 
 -- Gate live board data behind trial/subscription access. Clinic setup, login,
 -- profiles, and billing status remain available so an expired clinic can renew.
@@ -215,6 +232,17 @@ create policy "Practice admins can delete quick notes in their practice"
   using (practice_id = public.get_my_practice_id() and public.my_practice_has_access());
 
 -- Gate practice_checklist (runtime, not setup data).
+create table if not exists public.practice_checklist (
+  practice_id uuid primary key references public.practices (id) on delete cascade,
+  items jsonb not null default '[]'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.practice_checklist enable row level security;
+
+grant select, insert, update, delete on public.practice_checklist to authenticated;
+grant select, insert, update, delete on public.practice_checklist to service_role;
+
 drop policy if exists "Practice members can read checklist" on public.practice_checklist;
 create policy "Practice members can read checklist"
   on public.practice_checklist for select to authenticated

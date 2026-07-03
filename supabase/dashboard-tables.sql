@@ -45,6 +45,15 @@ create table if not exists public.user_settings (
 create index if not exists user_settings_user_id_idx
   on public.user_settings (user_id);
 
+-- Explicit Data API grants for projects where new public tables are not
+-- automatically exposed. RLS policies below still enforce row-level access.
+grant select, insert, update, delete on public.practice_checklist to authenticated;
+grant select, insert, update, delete on public.practice_checklist to service_role;
+grant select, insert, update, delete on public.practice_default_settings to authenticated;
+grant select, insert, update, delete on public.practice_default_settings to service_role;
+grant select, insert, update, delete on public.user_settings to authenticated;
+grant select, insert, update, delete on public.user_settings to service_role;
+
 -- ---- Row level security -------------------------------------------------
 alter table public.practice_checklist enable row level security;
 alter table public.practice_default_settings enable row level security;

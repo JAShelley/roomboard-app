@@ -82,7 +82,7 @@ export async function getPracticeBilling(practiceId: string): Promise<PracticeBi
   const service = getServiceClient();
   const res = await service
     .from("practices")
-    .select("id,stripe_customer_id,stripe_subscription_id,subscription_status,plan,trial_ends_at,current_period_end")
+    .select("id,stripe_customer_id,stripe_subscription_id,subscription_status,plan,trial_ends_at,current_period_end,has_payment_method")
     .eq("id", practiceId)
     .maybeSingle();
   if (res.error) throw new Error(res.error.message);
@@ -95,20 +95,20 @@ export async function getPracticeBilling(practiceId: string): Promise<PracticeBi
     plan: (row.plan as string) || null,
     trialEndsAt: row.trial_ends_at ? new Date(String(row.trial_ends_at)).toISOString() : null,
     currentPeriodEnd: row.current_period_end ? new Date(String(row.current_period_end)).toISOString() : null,
+    hasPaymentMethod: row.has_payment_method === true,
   };
 }
 
 // Mirror the SQL practice_has_access() logic on the server.
 export function computeAccess(billing: PracticeBilling) {
-  const status = billing.subscriptionStatus;
+  const status = String(billing.subscriptionStatus || "").toLowerCase();
   const now = Date.now();
   const trialMs = billing.trialEndsAt ? Date.parse(billing.trialEndsAt) : 0;
   const trialing = status === "trialing" && Number.isFinite(trialMs) && trialMs > now;
   const subscribed = status === "active" || status === "past_due";
   const hasCustomer = !!billing.stripeCustomerId;
   const hasSubscription = !!billing.stripeSubscriptionId;
-  const hasPaymentMethod =
-    billing.hasPaymentMethod === undefined ? hasCustomer && hasSubscription : !!billing.hasPaymentMethod;
+  const hasPaymentMethod = billing.hasPaymentMethod === true;
   const hasAccess = subscribed || (trialing && hasCustomer && hasSubscription && hasPaymentMethod);
   const trialDaysLeft = trialing ? Math.max(0, Math.ceil((trialMs - now) / 86_400_000)) : 0;
   return { hasAccess, trialing, subscribed, trialDaysLeft, hasPaymentMethod };

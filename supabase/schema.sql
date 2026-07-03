@@ -387,6 +387,57 @@ grant execute on function public.rotate_my_practice_invite_code() to authenticat
 grant execute on function public.join_practice_with_invite_code(text, text) to authenticated;
 grant execute on function public.create_practice_with_admin(text, text) to authenticated;
 
+-- Explicit Data API grants. RLS policies below still decide which rows each
+-- authenticated user can see or change; these grants make that policy layer
+-- reachable on projects where public tables are not auto-exposed.
+grant select on
+  public.practices,
+  public.profiles,
+  public.rooms,
+  public.doctors,
+  public.appointment_types,
+  public.quick_notes,
+  public.practice_feedback_items,
+  public.room_sessions,
+  public.cleaning_sessions,
+  public.room_board_entries,
+  public.practice_board_state,
+  public.practice_settings
+to authenticated;
+
+grant update on public.practices to authenticated;
+
+grant insert, update, delete on
+  public.rooms,
+  public.doctors,
+  public.appointment_types,
+  public.quick_notes,
+  public.practice_feedback_items,
+  public.room_board_entries
+to authenticated;
+
+grant insert, update on
+  public.room_sessions,
+  public.cleaning_sessions,
+  public.practice_board_state,
+  public.practice_settings
+to authenticated;
+
+grant select, insert, update, delete on
+  public.practices,
+  public.profiles,
+  public.rooms,
+  public.doctors,
+  public.appointment_types,
+  public.quick_notes,
+  public.practice_feedback_items,
+  public.room_sessions,
+  public.cleaning_sessions,
+  public.room_board_entries,
+  public.practice_board_state,
+  public.practice_settings
+to service_role;
+
 alter table public.practices enable row level security;
 alter table public.profiles enable row level security;
 alter table public.rooms enable row level security;

@@ -802,9 +802,9 @@
       // Clean the billing params out of the URL so a refresh doesn't re-confirm.
       try{ history.replaceState(null, "", window.location.pathname + "?mode=startup"); }catch(e){}
       var controller2 = typeof AbortController !== "undefined" ? new AbortController() : null;
-      // Just paid — if confirm is slow, let them in (the webhook will sync the
-      // subscription) rather than paywalling someone who just entered a card.
-      var timer2 = setTimeout(function(){ if(controller2) controller2.abort(); onAccess(); }, 12000);
+      // Just paid, but still require a verified access decision unless this
+      // account already had recent confirmed access cached locally.
+      var timer2 = setTimeout(function(){ if(controller2) controller2.abort(); onUnverifiedAccess(onAccess); }, 12000);
       var done2 = false;
       function finish2(fn){ if(done2) return; done2 = true; clearTimeout(timer2); fn(); }
       fetch("/api/billing/confirm", {
@@ -831,7 +831,7 @@
           });
         }
       })
-      .catch(function(){ finish2(onAccess); });
+      .catch(function(){ finish2(function(){ onUnverifiedAccess(onAccess); }); });
       return;
     }
 

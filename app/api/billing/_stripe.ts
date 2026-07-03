@@ -50,7 +50,6 @@ function isMissingPaymentMethodColumn(message: string) {
 export async function hasPaymentMethodForBilling(
   billing: Pick<PracticeBilling, "stripeCustomerId" | "stripeSubscriptionId" | "hasPaymentMethod">,
 ): Promise<boolean> {
-  if (billing.hasPaymentMethod === true) return true;
   if (!billing.stripeCustomerId) return false;
 
   const stripe = getStripe();
@@ -83,7 +82,7 @@ export async function hasPaymentMethodForBilling(
   }
 }
 
-async function updatePracticePaymentMethodFlag(
+export async function updatePracticePaymentMethodFlag(
   customerId: string | null | undefined,
   practiceId: string | null | undefined,
   hasPaymentMethod: boolean,
