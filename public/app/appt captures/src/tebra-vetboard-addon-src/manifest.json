@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "VetBoard Tebra/Kareo Capture",
+  "version": "0.2.0",
+  "description": "Capture visible Tebra/Kareo schedule appointments and send them into VetBoard with the Quick Add panel.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://*.tebra.com/*",
+    "https://*.kareo.com/*",
+    "https://bqqjtgbfvtscwhbhscps.supabase.co/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*",
+    "https://*/*",
+    "http://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "VetBoard Tebra/Kareo Capture"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.tebra.com/*",
+        "https://*.kareo.com/*"
+      ],
+      "js": [
+        "scheduler-capture.js"
+      ],
+      "all_frames": true,
+      "match_about_blank": true,
+      "run_at": "document_idle"
+    }
+  ]
+}

@@ -14,6 +14,31 @@
   const OVERLAY_ID = "vetboard-scheduler-overlay";
   const TOAST_ID = "vetboard-scheduler-toast";
   const BADGE_ID = "vetboard-scheduler-badge";
+  // RoomBoard app-icon artwork rendered inside the on-page badge button
+  // (matches icon.svg / the extension toolbar icon).
+  const BADGE_ICON_SVG = [
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true" focusable="false">',
+    '<defs><linearGradient id="vbPulseBadgeBg" x1="0" y1="0" x2="0" y2="1">',
+    '<stop offset="0" stop-color="#41635a"/><stop offset="1" stop-color="#233f39"/></linearGradient></defs>',
+    '<rect x="2" y="2" width="124" height="124" rx="30" fill="url(#vbPulseBadgeBg)"/>',
+    '<rect x="33" y="13" width="62" height="17" rx="8.5" fill="#1c312c"/>',
+    '<rect x="45" y="19" width="15" height="5" rx="2.5" fill="#cfe0da"/>',
+    '<rect x="68" y="19" width="15" height="5" rx="2.5" fill="#cfe0da"/>',
+    '<rect x="17" y="39" width="94" height="72" rx="15" fill="#1c312c"/>',
+    '<rect x="24" y="47" width="24" height="24" rx="6" fill="#6fb3e8"/>',
+    '<rect x="52" y="47" width="24" height="24" rx="6" fill="#ee7b84"/>',
+    '<rect x="80" y="47" width="24" height="24" rx="6" fill="#6fb3e8"/>',
+    '<rect x="24" y="79" width="24" height="24" rx="6" fill="#6fb3e8"/>',
+    '<rect x="52" y="79" width="24" height="24" rx="6" fill="#6fb3e8"/>',
+    '<rect x="80" y="79" width="24" height="24" rx="6" fill="#f2c65b"/>',
+    '<rect x="30" y="54" width="12" height="5" rx="2.5" fill="#1c312c"/>',
+    '<rect x="58" y="54" width="12" height="5" rx="2.5" fill="#1c312c"/>',
+    '<rect x="86" y="54" width="12" height="5" rx="2.5" fill="#1c312c"/>',
+    '<rect x="30" y="86" width="12" height="5" rx="2.5" fill="#1c312c"/>',
+    '<rect x="58" y="86" width="12" height="5" rx="2.5" fill="#1c312c"/>',
+    '<rect x="86" y="86" width="12" height="5" rx="2.5" fill="#1c312c"/>',
+    "</svg>"
+  ].join("");
   const AUTH_PANEL_ID = "vetboard-auth-panel";
   const MODAL_ID = "vetboard-send-modal";
   const BACKDROP_ID = "vetboard-send-backdrop";
@@ -794,7 +819,7 @@
     const badge = document.createElement("button");
     badge.id = BADGE_ID;
     badge.type = "button";
-    badge.textContent = "VB";
+    badge.innerHTML = BADGE_ICON_SVG;
     badge.addEventListener("click", async function (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -862,7 +887,11 @@
     const badge = document.getElementById(BADGE_ID);
     if (!badge) return;
 
-    badge.textContent = authNeedsLogin ? "!" : "VB";
+    if (authNeedsLogin) {
+      badge.textContent = "!";
+    } else if (!badge.querySelector("svg")) {
+      badge.innerHTML = BADGE_ICON_SVG;
+    }
     badge.classList.toggle("is-auth-error", authNeedsLogin);
     badge.classList.toggle("is-armed", captureArmed);
     badge.classList.toggle("is-busy", !!pendingAppointment);
@@ -1463,6 +1492,7 @@
       if (!room) throw new Error("That room could not be found in the shared board.");
 
       const wasEmpty = !normalizeSpaces(room.patientName || "");
+      const previousPatientName = room.patientName || "";
       room.patientName = normalizeSpaces(formState.patientName || pendingAppointment.patientName || "");
       room.colorLabelId = formState.colorLabelId || room.colorLabelId || "";
       room.colorHex = "";
@@ -1495,6 +1525,7 @@
         room.activeRoomSessionId = await createRoomSession(room);
       }
 
+      await syncRoomChecklistForPatientChange(boardData, room, previousPatientName);
       await upsertBoardState(boardData);
       boardStateCache = { data: boardData };
       modalMessage = `${room.patientName} sent to ${room.name || "room"}.`;
@@ -2339,6 +2370,13 @@
     const boardStateRow = Array.isArray(payload.boardStateRows) ? payload.boardStateRows[0] : (payload.boardStateRows || null);
     const boardState = boardStateRow?.board_state && typeof boardStateRow.board_state === "object" ? boardStateRow.board_state : {};
     const boardRooms = Array.isArray(boardState.rooms) ? boardState.rooms : [];
+    // Keep the non-room parts of board_state (sharedUi etc.) so sends can
+    // round-trip them — the RoomBoard web app syncs practice-wide settings
+    // (including the default patient checklist) through board_state.sharedUi.
+    const boardStateExtras = {};
+    Object.keys(boardState).forEach((key) => {
+      if (key !== "rooms") boardStateExtras[key] = boardState[key];
+    });
 
     const activeDoctors = doctorRows.filter((row) => row && row.active !== false && normalizeSpaces(row.name));
     const activeColorRows = colorRows.filter((row) => row && row.active !== false && normalizeSpaces(row.title));
@@ -2380,6 +2418,7 @@
       doctors,
       quickNotes,
       colorLabels,
+      boardStateExtras,
       settings: {
         displayCols: Math.max(1, Number(settingsRow?.board_columns || 4)),
         displayOnlyActive: !!settingsRow?.show_only_active,
@@ -2446,10 +2485,81 @@
     const rooms = Array.isArray(boardData?.rooms) ? boardData.rooms : [];
     return {
       practice_id: practiceId,
+      // Writing only { rooms } would wipe sharedUi (practice-wide settings the
+      // web app syncs through this row), so round-trip the extras.
       board_state: {
+        ...(boardData?.boardStateExtras || {}),
         rooms: deepClone(rooms)
       }
     };
+  }
+
+  function makeChecklistItem(text) {
+    return {
+      id: `pcl-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      text: String(text || ""),
+      done: false
+    };
+  }
+
+  async function resolveDefaultChecklistTemplate(boardData) {
+    const sharedUi = boardData?.boardStateExtras?.sharedUi && typeof boardData.boardStateExtras.sharedUi === "object"
+      ? boardData.boardStateExtras.sharedUi
+      : null;
+    let enabled = null;
+    let template = null;
+    if (sharedUi) {
+      if (sharedUi.patientChecklistEnabled != null) enabled = sharedUi.patientChecklistEnabled !== false;
+      if (Array.isArray(sharedUi.defaultPatientChecklist)) template = sharedUi.defaultPatientChecklist;
+    }
+    // Older board_state rows may predate sharedUi carrying the checklist; the
+    // settings snapshot table is the durable copy.
+    if (enabled == null || template == null) {
+      try {
+        await ensureValidAuthSession();
+        const practiceId = await fetchPracticeId(false);
+        const rows = await fetchJson(`${SUPABASE_URL}/rest/v1/practice_default_settings?select=settings&practice_id=eq.${encodeURIComponent(practiceId)}&limit=1`, {
+          method: "GET",
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${authState.accessToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json"
+          }
+        });
+        const settings = Array.isArray(rows) && rows[0]?.settings && typeof rows[0].settings === "object" ? rows[0].settings : null;
+        if (settings) {
+          if (enabled == null && settings.patientChecklistEnabled != null) enabled = settings.patientChecklistEnabled !== false;
+          if (template == null && Array.isArray(settings.defaultPatientChecklist)) template = settings.defaultPatientChecklist;
+        }
+      } catch (_error) {}
+    }
+    const texts = (Array.isArray(template) ? template : [])
+      .map((item) => (typeof item === "string" ? item : String(item?.text || "")))
+      .map((text) => text.trim())
+      .filter(Boolean);
+    return { enabled: enabled !== false, texts };
+  }
+
+  // Mirrors syncRoomChecklistWithPatientChange in the RoomBoard web app
+  // (board-state.js): clear the checklist when the patient is removed, clear +
+  // reseed from the practice default when one patient replaces another, seed
+  // when a patient arrives in a room with no items, and no-op on cosmetic
+  // renames. The addon has no billing info, but base plans can't configure a
+  // default template (the settings editor is gated), so their template is
+  // empty and seeding is a no-op.
+  async function syncRoomChecklistForPatientChange(boardData, room, previousPatientName) {
+    const prev = String(previousPatientName || "").replace(/\s/g, "").toLowerCase();
+    const next = String(room.patientName || "").replace(/\s/g, "").toLowerCase();
+    if (prev === next) return;
+    if (!next) {
+      room.checklist = [];
+      return;
+    }
+    if (prev) room.checklist = []; // different patient: drop the old items
+    if (Array.isArray(room.checklist) && room.checklist.length) return; // never clobber existing items
+    const { enabled, texts } = await resolveDefaultChecklistTemplate(boardData);
+    room.checklist = enabled ? texts.map(makeChecklistItem) : [];
   }
 
   async function createRoomSession(room) {
@@ -2741,23 +2851,31 @@
         z-index: 2147483647;
         width: 44px;
         height: 44px;
+        padding: 0;
         border: none;
-        border-radius: 999px;
-        background: linear-gradient(180deg, #0f766e, #065f46);
+        border-radius: 11px;
+        background: transparent;
         color: #ecfdf5;
         font: 800 14px/1 Arial, sans-serif;
         letter-spacing: 0.04em;
         box-shadow: 0 18px 40px rgba(15, 23, 42, 0.24);
         cursor: pointer;
       }
+      #${BADGE_ID} svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
       #${BADGE_ID}.is-armed {
-        background: linear-gradient(180deg, #34d399, #059669);
-        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.20), 0 18px 40px rgba(15, 23, 42, 0.28);
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.45), 0 18px 40px rgba(15, 23, 42, 0.28);
+        filter: brightness(1.12);
       }
       #${BADGE_ID}.is-busy {
-        background: linear-gradient(180deg, #10b981, #047857);
+        filter: saturate(1.25) brightness(1.06);
       }
       #${BADGE_ID}.is-auth-error {
+        border-radius: 999px;
         background: linear-gradient(180deg, #ef4444, #b91c1c);
         color: #fff7f7;
         box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.18), 0 18px 40px rgba(15, 23, 42, 0.30);

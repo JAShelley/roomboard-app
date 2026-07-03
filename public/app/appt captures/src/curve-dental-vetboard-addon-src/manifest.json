@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "VetBoard Curve Dental Capture",
+  "version": "0.2.0",
+  "description": "Capture visible Curve Dental schedule appointments and send them into VetBoard with the Quick Add panel.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://*.curveapps.com/*",
+    "https://*.curvehero.com/*",
+    "https://*.curvedental.com/*",
+    "https://bqqjtgbfvtscwhbhscps.supabase.co/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*",
+    "https://*/*",
+    "http://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "VetBoard Curve Dental Capture"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.curvedental.com/*",
+        "https://*.curvehero.com/*",
+        "https://*.curveapps.com/*"
+      ],
+      "js": [
+        "scheduler-capture.js"
+      ],
+      "all_frames": true,
+      "match_about_blank": true,
+      "run_at": "document_idle"
+    }
+  ]
+}

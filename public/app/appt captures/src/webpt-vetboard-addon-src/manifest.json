@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "VetBoard WebPT Capture",
+  "version": "0.2.0",
+  "description": "Capture visible WebPT schedule appointments and send them into VetBoard with the Quick Add panel.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://*.webpt.com/*",
+    "https://auth.webpt.com/*",
+    "https://bqqjtgbfvtscwhbhscps.supabase.co/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*",
+    "https://*/*",
+    "http://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "VetBoard WebPT Capture"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.webpt.com/*",
+        "https://auth.webpt.com/*"
+      ],
+      "js": [
+        "scheduler-capture.js"
+      ],
+      "all_frames": true,
+      "match_about_blank": true,
+      "run_at": "document_idle"
+    }
+  ]
+}

@@ -34,6 +34,13 @@ type BoardRoom = {
   cleaningTimer: BoardTimer;
   activeRoomSessionId: string | null;
   dischargeReady: boolean | null;
+  checklist?: ChecklistItem[];
+};
+
+type ChecklistItem = {
+  id: string;
+  text: string;
+  done: boolean;
 };
 
 type BoardTimer = {
@@ -49,6 +56,10 @@ type BoardData = {
   doctors: string[];
   quickNotes: string[];
   colorLabels: BoardColorLabel[];
+  // Everything in the stored board_state besides rooms (sharedUi etc.). Kept
+  // so writes can round-trip it — the web app syncs practice-wide UI settings
+  // (including the default patient checklist) through board_state.sharedUi.
+  boardStateExtras: Record<string, unknown>;
   settings: {
     displayCols: number;
     displayOnlyActive: boolean;
@@ -255,6 +266,7 @@ export async function assertPracticeHasAccess(practiceId: string) {
   if (!computeAccess(billing).hasAccess) {
     throw new Error(`${BILLING_REQUIRED}: Your RoomBoard subscription is inactive. Update billing to continue.`);
   }
+  return billing;
 }
 
 export async function getPracticeIdForUser(userId: string) {
@@ -411,6 +423,10 @@ export async function fetchPracticeBoardData(practiceId: string): Promise<BoardD
   const boardRooms = Array.isArray(boardState.rooms)
     ? (boardState.rooms as Array<Record<string, unknown>>)
     : [];
+  const boardStateExtras: Record<string, unknown> = {};
+  for (const key of Object.keys(boardState)) {
+    if (key !== "rooms") boardStateExtras[key] = boardState[key];
+  }
 
   const activeDoctors = doctorRows.filter((row) => row && row.active !== false && String(row.name || "").trim());
   const activeColorRows = colorRows.filter((row) => row && row.active !== false && String(row.title || "").trim());
@@ -460,6 +476,7 @@ export async function fetchPracticeBoardData(practiceId: string): Promise<BoardD
     doctors,
     quickNotes,
     colorLabels,
+    boardStateExtras,
     settings: {
       displayCols: Math.max(1, Number(settingsRow?.board_columns || 4)),
       displayOnlyActive: !!settingsRow?.show_only_active,
@@ -533,7 +550,11 @@ async function upsertBoardState(practiceId: string, boardData: BoardData) {
   const service = createServiceClient();
   const payload = {
     practice_id: practiceId,
+    // Round-trip the non-room parts of board_state (sharedUi etc.); writing
+    // only { rooms } would wipe the practice-wide UI settings the web app
+    // syncs through this row.
     board_state: {
+      ...(boardData.boardStateExtras || {}),
       rooms: JSON.parse(JSON.stringify(Array.isArray(boardData.rooms) ? boardData.rooms : [])),
     },
   };
@@ -553,18 +574,99 @@ export async function loadPulseBoard(input: { accessToken?: string; refreshToken
   return { session, practiceId, boardData };
 }
 
+function makeChecklistItem(text: string): ChecklistItem {
+  return {
+    id: `pcl-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    text: String(text || ""),
+    done: false,
+  };
+}
+
+async function resolveDefaultChecklistTemplate(
+  practiceId: string,
+  boardStateExtras: Record<string, unknown>,
+): Promise<{ enabled: boolean; texts: string[] }> {
+  const sharedUi =
+    boardStateExtras?.sharedUi && typeof boardStateExtras.sharedUi === "object"
+      ? (boardStateExtras.sharedUi as Record<string, unknown>)
+      : null;
+  let enabled: boolean | null = null;
+  let template: unknown = null;
+  if (sharedUi) {
+    if (sharedUi.patientChecklistEnabled != null) enabled = sharedUi.patientChecklistEnabled !== false;
+    if (Array.isArray(sharedUi.defaultPatientChecklist)) template = sharedUi.defaultPatientChecklist;
+  }
+  // Older board_state rows may predate sharedUi carrying the checklist; the
+  // settings snapshot table is the durable copy.
+  if (enabled == null || template == null) {
+    const service = createServiceClient();
+    const res = await service
+      .from("practice_default_settings")
+      .select("settings")
+      .eq("practice_id", practiceId)
+      .maybeSingle();
+    const settings =
+      !res.error && res.data?.settings && typeof res.data.settings === "object"
+        ? (res.data.settings as Record<string, unknown>)
+        : null;
+    if (settings) {
+      if (enabled == null && settings.patientChecklistEnabled != null) {
+        enabled = settings.patientChecklistEnabled !== false;
+      }
+      if (template == null && Array.isArray(settings.defaultPatientChecklist)) {
+        template = settings.defaultPatientChecklist;
+      }
+    }
+  }
+  const texts = (Array.isArray(template) ? template : [])
+    .map((item) => (typeof item === "string" ? item : String((item as Record<string, unknown>)?.text || "")))
+    .map((text) => text.trim())
+    .filter(Boolean);
+  return { enabled: enabled !== false, texts };
+}
+
+// Mirrors syncRoomChecklistWithPatientChange in the web app (board-state.js):
+// clear the checklist when the patient is removed, clear + reseed from the
+// practice default when one patient replaces another, seed when a patient
+// arrives in a room with no items, and no-op on cosmetic renames. Advanced-plan
+// feature, so base plans never seed.
+async function syncRoomChecklistForPatientChange(
+  practiceId: string,
+  boardData: BoardData,
+  room: BoardRoom,
+  previousPatientName: string,
+  plan: string | null,
+) {
+  const prev = String(previousPatientName || "").replace(/\s/g, "").toLowerCase();
+  const next = String(room.patientName || "").replace(/\s/g, "").toLowerCase();
+  if (prev === next) return;
+  if (!next) {
+    room.checklist = [];
+    return;
+  }
+  if (prev) room.checklist = []; // different patient: drop the old items
+  if (Array.isArray(room.checklist) && room.checklist.length) return; // never clobber existing items
+  if (plan && plan.indexOf("base") !== -1) {
+    room.checklist = [];
+    return;
+  }
+  const { enabled, texts } = await resolveDefaultChecklistTemplate(practiceId, boardData.boardStateExtras);
+  room.checklist = enabled ? texts.map(makeChecklistItem) : [];
+}
+
 export async function sendPulseAppointment(
   sessionInput: { accessToken?: string; refreshToken?: string },
   payload: SendPayload,
 ) {
   const { session, user } = await resolvePulseSession(sessionInput);
   const practiceId = await getPracticeIdForUser(String(user.id || session.userId || "").trim());
-  await assertPracticeHasAccess(practiceId);
+  const billing = await assertPracticeHasAccess(practiceId);
   const boardData = await fetchPracticeBoardData(practiceId);
   const room = boardData.rooms.find((entry) => entry.id === String(payload.roomId || "").trim());
   if (!room) throw new Error("That room could not be found in the shared board.");
 
   const wasEmpty = !String(room.patientName || "").trim();
+  const previousPatientName = String(room.patientName || "");
   room.patientName = String(payload.patientName || "").trim();
   room.colorLabelId = String(payload.colorLabelId || "").trim() || room.colorLabelId;
   room.colorHex = "";
@@ -597,6 +699,7 @@ export async function sendPulseAppointment(
     room.activeRoomSessionId = await createRoomSession(practiceId, room);
   }
 
+  await syncRoomChecklistForPatientChange(practiceId, boardData, room, previousPatientName, billing.plan);
   await upsertBoardState(practiceId, boardData);
   return {
     session,

@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "VetBoard ezyVet Capture",
+  "version": "1.0.12",
+  "description": "Capture an ezyVet calendar appointment on hover/click and send it into VetBoard with the Quick Add panel.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "http://*.ezyvet.com/*",
+    "https://*.ezyvet.com/*",
+    "http://*/*",
+    "https://*/*",
+    "file:///*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "VetBoard ezyVet Capture"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*.ezyvet.com/*",
+        "https://*.ezyvet.com/*",
+        "http://*/*",
+        "https://*/*",
+        "file:///*"
+      ],
+      "js": [
+        "scheduler-capture.js"
+      ],
+      "all_frames": true,
+      "match_about_blank": true,
+      "run_at": "document_idle"
+    }
+  ]
+}

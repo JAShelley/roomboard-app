@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#41635a"/>
+      <stop offset="1" stop-color="#233f39"/>
+    </linearGradient>
+  </defs>
+  <!-- squircle background -->
+  <rect x="2" y="2" width="124" height="124" rx="30" fill="url(#bg)"/>
+  <!-- header pill with two dashes -->
+  <rect x="33" y="13" width="62" height="17" rx="8.5" fill="#1c312c"/>
+  <rect x="45" y="19" width="15" height="5" rx="2.5" fill="#cfe0da"/>
+  <rect x="68" y="19" width="15" height="5" rx="2.5" fill="#cfe0da"/>
+  <!-- board tray -->
+  <rect x="17" y="39" width="94" height="72" rx="15" fill="#1c312c"/>
+  <!-- top row tiles -->
+  <rect x="24" y="47" width="24" height="24" rx="6" fill="#6fb3e8"/>
+  <rect x="52" y="47" width="24" height="24" rx="6" fill="#ee7b84"/>
+  <rect x="80" y="47" width="24" height="24" rx="6" fill="#6fb3e8"/>
+  <!-- bottom row tiles -->
+  <rect x="24" y="79" width="24" height="24" rx="6" fill="#6fb3e8"/>
+  <rect x="52" y="79" width="24" height="24" rx="6" fill="#6fb3e8"/>
+  <rect x="80" y="79" width="24" height="24" rx="6" fill="#f2c65b"/>
+  <!-- card dashes inside tiles -->
+  <rect x="30" y="54" width="12" height="5" rx="2.5" fill="#1c312c"/>
+  <rect x="58" y="54" width="12" height="5" rx="2.5" fill="#1c312c"/>
+  <rect x="86" y="54" width="12" height="5" rx="2.5" fill="#1c312c"/>
+  <rect x="30" y="86" width="12" height="5" rx="2.5" fill="#1c312c"/>
+  <rect x="58" y="86" width="12" height="5" rx="2.5" fill="#1c312c"/>
+  <rect x="86" y="86" width="12" height="5" rx="2.5" fill="#1c312c"/>
+</svg>
