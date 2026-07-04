@@ -6508,6 +6508,15 @@ details.sxSection[open] > summary { border-bottom: 1px solid rgba(255,255,255,.0
   position: relative;
   z-index: 1;
 }
+/* Siblings of the gate box get inert + this class so gated controls are
+   visibly locked; pointer-events is the fallback where inert isn't
+   supported. */
+.planGatedContent {
+  opacity: .45;
+  filter: saturate(.55);
+  pointer-events: none;
+  user-select: none;
+}
 .planGateBox {
   display: flex;
   flex-direction: column;

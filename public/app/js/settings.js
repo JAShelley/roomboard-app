@@ -119,9 +119,32 @@
       }
     });
 
-    function refreshAdvancedPlanGating(){
+    function isBasePlanGated(){
       var plan = typeof window.roomboardGetCurrentPlan === "function" ? window.roomboardGetCurrentPlan() : null;
-      var isBase = !!(plan && plan.indexOf("base") !== -1);
+      return !!(plan && String(plan).indexOf("base") !== -1);
+    }
+
+    // Locks every child of `container` except the gate box itself so gated
+    // controls can't be clicked, tabbed into, or edited (inert also blocks
+    // assistive tech). The class provides the dimmed look plus a
+    // pointer-events fallback for browsers without inert support.
+    function setPlanGateLock(container, gateEl, locked){
+      if(!container) return;
+      for(var i=0;i<container.children.length;i++){
+        var child = container.children[i];
+        if(child === gateEl) continue;
+        if(locked){
+          child.setAttribute("inert", "");
+          child.classList.add("planGatedContent");
+        } else {
+          child.removeAttribute("inert");
+          child.classList.remove("planGatedContent");
+        }
+      }
+    }
+
+    function refreshAdvancedPlanGating(){
+      var isBase = isBasePlanGated();
 
       // ── Stats tab ──
       var statsTab = document.getElementById("tabStats");
@@ -136,28 +159,28 @@
             statsTab.insertBefore(statsGate, statsTab.firstChild);
           }
         } else {
-          if(statsGate) statsGate.remove();
+          if(statsGate){ statsGate.remove(); statsGate = null; }
         }
+        setPlanGateLock(statsTab, statsGate, isBase);
       }
 
       // ── Branding section ──
       var brandingPanel = document.getElementById("headerBrandingPanel");
       var brandingGate = document.getElementById("brandingAdvancedGate");
-      if(brandingPanel){
+      var brandingBody = brandingPanel ? brandingPanel.querySelector(".settingsCollapsibleBody") : null;
+      if(brandingBody){
         if(isBase){
           if(!brandingGate){
-            var body = brandingPanel.querySelector(".settingsCollapsibleBody");
-            if(body){
-              brandingGate = document.createElement("div");
-              brandingGate.id = "brandingAdvancedGate";
-              brandingGate.className = "planGateOverlay";
-              brandingGate.innerHTML = '<div class="planGateBox"><div class="planGateBadge">Advanced</div><strong>Custom Branding</strong><p>Upgrade to Advanced to upload your clinic logo and customize header colors.</p><button class="btn primary" data-upgrade-btn="1" type="button">Upgrade to Advanced</button></div>';
-              body.insertBefore(brandingGate, body.firstChild);
-            }
+            brandingGate = document.createElement("div");
+            brandingGate.id = "brandingAdvancedGate";
+            brandingGate.className = "planGateOverlay";
+            brandingGate.innerHTML = '<div class="planGateBox"><div class="planGateBadge">Advanced</div><strong>Custom Branding</strong><p>Upgrade to Advanced to upload your clinic logo and customize header colors.</p><button class="btn primary" data-upgrade-btn="1" type="button">Upgrade to Advanced</button></div>';
+            brandingBody.insertBefore(brandingGate, brandingBody.firstChild);
           }
         } else {
-          if(brandingGate) brandingGate.remove();
+          if(brandingGate){ brandingGate.remove(); brandingGate = null; }
         }
+        setPlanGateLock(brandingBody, brandingGate, isBase);
       }
 
       // ── Checklist (header button) ──
@@ -170,9 +193,9 @@
       var pclDefaultPanel = document.getElementById("defaultChecklistPanel");
       var pclDefaultGate = document.getElementById("defaultChecklistAdvancedGate");
       if(pclDefaultPanel){
+        var pclBody = pclDefaultPanel.querySelector(".settingsCollapsibleBody") || pclDefaultPanel;
         if(isBase){
           if(!pclDefaultGate){
-            var pclBody = pclDefaultPanel.querySelector(".settingsCollapsibleBody") || pclDefaultPanel;
             pclDefaultGate = document.createElement("div");
             pclDefaultGate.id = "defaultChecklistAdvancedGate";
             pclDefaultGate.className = "planGateOverlay";
@@ -181,7 +204,9 @@
           }
         } else if(pclDefaultGate){
           pclDefaultGate.remove();
+          pclDefaultGate = null;
         }
+        setPlanGateLock(pclBody, pclDefaultGate, isBase);
       }
 
       // ── Stats tab button badge ──
@@ -1193,12 +1218,20 @@
       renderDefaultChecklistList();
     }
     function addDefaultChecklistItem(text){
+      if(isBasePlanGated()){
+        setStatus("Patient checklists are an Advanced plan feature. Upgrade in Settings → Clinic.");
+        return;
+      }
       text = String(text || "").trim();
       if(!text) return;
       getDefaultPatientChecklist().push(text);
       persistDefaultChecklist();
     }
     function removeDefaultChecklistItem(idx){
+      if(isBasePlanGated()){
+        setStatus("Patient checklists are an Advanced plan feature. Upgrade in Settings → Clinic.");
+        return;
+      }
       var items = getDefaultPatientChecklist();
       if(idx < 0 || idx >= items.length) return;
       items.splice(idx, 1);
@@ -1206,6 +1239,11 @@
     }
     if($("patientChecklistEnabledToggle")){
       $("patientChecklistEnabledToggle").addEventListener("change", function(){
+        if(isBasePlanGated()){
+          this.checked = (state.settings.patientChecklistEnabled !== false);
+          setStatus("Patient checklists are an Advanced plan feature. Upgrade in Settings → Clinic.");
+          return;
+        }
         state.settings.patientChecklistEnabled = !!this.checked;
         persistDefaultChecklist();
         // Show/hide the dock on every card immediately.
@@ -1438,6 +1476,10 @@
 
 	    function commitPracticeBrandingSettings(options){
 	      options = options || {};
+      if(isBasePlanGated()){
+        setStatus("Custom branding is an Advanced plan feature. Upgrade in Settings → Clinic.");
+        return false;
+      }
       if($("practiceNameColor")) state.settings.practiceNameColor = $("practiceNameColor").value || "#fecdd3";
       if($("showPracticeNameBadge")) state.settings.showPracticeNameBadge = !!$("showPracticeNameBadge").checked;
       if($("practiceLogoInvert")) state.settings.practiceLogoInvert = !!$("practiceLogoInvert").checked;
@@ -1495,6 +1537,7 @@
     async function uploadPracticeLogoSelection(){
       var input = $("practiceLogoFile");
       var file = input && input.files ? input.files[0] : null;
+      if(isBasePlanGated()) throw new Error("Custom branding is an Advanced plan feature. Upgrade in Settings → Clinic.");
       if(!supabase || !currentPracticeId) throw new Error("Log into a clinic before uploading a logo.");
       if(!file) throw new Error("Choose a logo image first.");
       if(String(file.type || "").toLowerCase().indexOf("image/") !== 0) throw new Error("Choose an image file for the clinic logo.");
@@ -1534,6 +1577,7 @@
     }
 
     async function removePracticeLogoSelection(){
+      if(isBasePlanGated()) throw new Error("Custom branding is an Advanced plan feature. Upgrade in Settings → Clinic.");
       var input = $("practiceLogoFile");
       var previousPath = String(state && state.settings ? (state.settings.practiceLogoPath || "") : "").trim();
       state.settings.practiceLogoPath = "";
