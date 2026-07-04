@@ -501,6 +501,11 @@
     }
     #displayWrap.activeDisplayFitWrap{
       overflow:hidden;
+      /* The fit engine widens the grid's layout box (width: 100/scale %)
+         and shrinks it back with transform-origin: top left. The wrap's
+         default justify-content:center would center that oversized layout
+         box, shifting the visual content off the left window edge. */
+      justify-content:flex-start;
     }
     #displayGrid.boxView.activeDisplayFit{
       grid-template-columns: repeat(var(--activeFitCols, var(--cols)), minmax(260px, 1fr));
@@ -508,6 +513,10 @@
       align-items:stretch;
       transform-origin:top left;
       will-change:transform;
+      /* The fit engine sets width to 100/scale % so the scaled grid spans the
+         wrap exactly; as a flex item it must not shrink back to the wrap
+         width or the scaled board only fills part of the window. */
+      flex-shrink:0;
     }
     #displayGrid.activeDoctorGrouped{
       row-gap:var(--activeFitGap, 14px);
@@ -516,6 +525,12 @@
       width:min(var(--activeFitSingleWidth, 520px), 100%) !important;
       max-width:min(var(--activeFitSingleWidth, 520px), 100%) !important;
       grid-template-columns:minmax(0, 1fr) !important;
+      /* Wrap is flex-start (see activeDisplayFitWrap); center the lone
+         card explicitly, and scale it around its center so the visual
+         box stays centered too. */
+      margin-left:auto;
+      margin-right:auto;
+      transform-origin:top center;
     }
     #displayGrid.boxView.activeDisplayFit .room{
       transform:none !important;

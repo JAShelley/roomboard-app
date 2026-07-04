@@ -1466,7 +1466,14 @@
     function computeAutoDisplayCols(){
       var wrap = $("displayWrap");
       var width = wrap && wrap.clientWidth ? wrap.clientWidth : 0;
-      if(!width) width = Math.max(320, (window.innerWidth || 1280) - 32);
+      if(width && window.getComputedStyle){
+        // clientWidth includes the wrap's horizontal padding; the grid only
+        // gets the content box, so subtract it or the math overshoots by a
+        // column near the breakpoints.
+        var ws = window.getComputedStyle(wrap);
+        width -= (parseFloat(ws.paddingLeft) || 0) + (parseFloat(ws.paddingRight) || 0);
+      }
+      if(!width || width < 0) width = Math.max(320, (window.innerWidth || 1280) - 52);
       // Divisor must match .grid's minmax(260px, 1fr) card floor plus the 14px
       // gap — a column count the CSS can't shrink to overflows the window.
       var gap = 14;

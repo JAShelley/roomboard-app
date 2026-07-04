@@ -718,12 +718,11 @@
     }
 
     function chooseActiveDisplayFitColumns(groups, roomCount, width, height, dividerCount){
-      var autoCols = !!(state && state.settings && state.settings.displayAutoCols);
-      // In auto mode the divisor must match the CSS floor (260px cards + 14px
-      // gap), otherwise this estimate packs columns the grid can't shrink to
-      // and the last column clips off the window edge. The configured Columns
-      // count stays the ceiling either way — auto-fit only shrinks below it.
-      var minReadableColumnWidth = autoCols ? 274 : (width < 760 ? 188 : (width < 1080 ? 220 : 250));
+      // The divisor must match the CSS floor (260px minmax track + 14px gap)
+      // in every mode, otherwise this estimate packs columns the grid can't
+      // shrink to and a column clips off the window edge. The configured
+      // Columns count stays the ceiling — this only shrinks below it.
+      var minReadableColumnWidth = 274;
       var maxByWidth = Math.max(1, Math.floor((Math.max(0, width) + 14) / minReadableColumnWidth));
       var maxCols = Math.max(1, Math.min(8, maxByWidth));
       var configuredCols = Math.max(1, Math.min(8, Number(state && state.settings ? (state.settings.displayCols || 3) : 3)));
@@ -804,8 +803,14 @@
       grid.style.removeProperty("transform");
       grid.style.removeProperty("width");
 
-      var availableWidth = Math.max(1, wrap.clientWidth || grid.clientWidth || 1);
-      var availableHeight = Math.max(1, wrap.clientHeight || grid.clientHeight || 1);
+      // clientWidth/Height include the wrap's padding, but the grid (a flex
+      // item) only gets the content box — measure what the grid actually has
+      // or the column math overshoots and the last column clips.
+      var wrapStyles = window.getComputedStyle ? window.getComputedStyle(wrap) : null;
+      var wrapPadX = wrapStyles ? ((parseFloat(wrapStyles.paddingLeft) || 0) + (parseFloat(wrapStyles.paddingRight) || 0)) : 0;
+      var wrapPadY = wrapStyles ? ((parseFloat(wrapStyles.paddingTop) || 0) + (parseFloat(wrapStyles.paddingBottom) || 0)) : 0;
+      var availableWidth = Math.max(1, (wrap.clientWidth || grid.clientWidth || 1) - wrapPadX);
+      var availableHeight = Math.max(1, (wrap.clientHeight || grid.clientHeight || 1) - wrapPadY);
       var cols = chooseActiveDisplayFitColumns(groups, rooms.length, availableWidth, availableHeight, dividerCount);
       var activeGap = availableHeight < 520 ? 9 : (availableHeight > 920 ? 16 : 14);
       var configuredCols = Math.max(1, Math.min(8, Number(state && state.settings ? (state.settings.displayCols || cols || 3) : (cols || 3))));
