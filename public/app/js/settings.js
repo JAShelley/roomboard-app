@@ -1299,6 +1299,8 @@
 	    function commitLayoutSettings(options){
 	      options = options || {};
 	      if(!options.force && !layoutInputsReady()) return false;
+      state.settings.displayAutoCols = !!($("displayAutoCols") && $("displayAutoCols").checked);
+      if($("displayCols")) $("displayCols").disabled = state.settings.displayAutoCols;
       state.settings.displayCols = Math.max(1, Number($("displayCols").value || 4));
       state.settings.displayRows = Math.max(0, Number($("displayRows").value || 0));
       state.settings.displayCardScale = Math.max(0.8, Math.min(1.6, Number($("displayCardScale").value || 1)));
@@ -1613,6 +1615,11 @@
         scheduleLayoutAutosave(true, 0);
       });
     });
+	    if($("displayAutoCols")){
+      $("displayAutoCols").addEventListener("change", function(){
+        scheduleLayoutAutosave(true, 0);
+      });
+    }
 	    if($("displayCardScaleValue")){
       $("displayCardScaleValue").addEventListener("input", function(){
         if(!isFinite(Number(this.value))) return;

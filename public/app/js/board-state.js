@@ -163,6 +163,7 @@
       defaultPatientChecklist: [],
       patientChecklistEnabled: true,
       displayCols: 4,
+      displayAutoCols: false,
       displayRows: 0,
       intakeCols: 2,
       fontBase: 14,
@@ -354,6 +355,7 @@
     const WINDOW_SETTINGS_STORAGE_PREFIX = "roomboard.website.windowSettings.v1";
     var ACCOUNT_LOCAL_SETTING_KEYS = [
       "displayCols",
+      "displayAutoCols",
       "displayRows",
       "intakeCols",
       "dischargeIconStyle",
@@ -381,6 +383,7 @@
 	    ];
     var WINDOW_APPEARANCE_SETTING_KEYS = [
       "displayCols",
+      "displayAutoCols",
       "displayRows",
       "intakeCols",
       "fontBase",
@@ -407,6 +410,7 @@
 	    ];
     var ACCOUNT_LOCAL_SETTING_DEFAULTS = {
       displayCols: 4,
+      displayAutoCols: false,
       displayRows: 0,
       intakeCols: 2,
       dischargeIconStyle: "paw",
@@ -1026,6 +1030,7 @@
       }
 
       targetState.settings.displayCols = Math.max(1, Number(targetState.settings.displayCols || 4));
+      targetState.settings.displayAutoCols = targetState.settings.displayAutoCols === true;
       targetState.settings.displayRows = Math.max(0, Number(targetState.settings.displayRows || 0));
       targetState.settings.displayCardScale = Math.max(0.8, Math.min(1.6, Number(targetState.settings.displayCardScale || 1)));
       targetState.settings.roomCardLineHeight = Math.max(1, Math.min(1.8, Number(targetState.settings.roomCardLineHeight || 1.35)));
@@ -1458,8 +1463,19 @@
       }
     }
 
+    function computeAutoDisplayCols(){
+      var wrap = $("displayWrap");
+      var width = wrap && wrap.clientWidth ? wrap.clientWidth : 0;
+      if(!width) width = Math.max(320, (window.innerWidth || 1280) - 32);
+      // Divisor must match .grid's minmax(260px, 1fr) card floor plus the 14px
+      // gap — a column count the CSS can't shrink to overflows the window.
+      var gap = 14;
+      var minCardWidth = 260;
+      return Math.max(1, Math.min(8, Math.floor((width + gap) / (minCardWidth + gap))));
+    }
+
     function applyLayout(){
-      var cols = Number(state.settings.displayCols || 4);
+      var cols = state.settings.displayAutoCols ? computeAutoDisplayCols() : Number(state.settings.displayCols || 4);
       var rows = Number(state.settings.displayRows || 0);
       var intakeCols = Number(state.settings.intakeCols || 2);
       var displayCardScale = Number(state.settings.displayCardScale || 1);

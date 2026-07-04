@@ -18,6 +18,7 @@
 - Theme selection: my defaults
 
 ## Current Window-Only Save Paths
+- Auto-fit columns toggle (displayAutoCols): this window only
 - Display-only active toggle: this window only
 - Display sort mode: this window only
 - Doctor highlight selection: this window only

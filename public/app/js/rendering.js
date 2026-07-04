@@ -718,10 +718,14 @@
     }
 
     function chooseActiveDisplayFitColumns(groups, roomCount, width, height, dividerCount){
-      var configuredCols = Math.max(1, Math.min(8, Number(state && state.settings ? (state.settings.displayCols || 3) : 3)));
-      var minReadableColumnWidth = width < 760 ? 188 : (width < 1080 ? 220 : 250);
+      var autoCols = !!(state && state.settings && state.settings.displayAutoCols);
+      // In auto mode the divisor must match the CSS floor (260px cards + 14px
+      // gap), otherwise this estimate packs columns the grid can't shrink to
+      // and the last column clips off the window edge.
+      var minReadableColumnWidth = autoCols ? 274 : (width < 760 ? 188 : (width < 1080 ? 220 : 250));
       var maxByWidth = Math.max(1, Math.floor((Math.max(0, width) + 14) / minReadableColumnWidth));
       var maxCols = Math.max(1, Math.min(8, maxByWidth));
+      var configuredCols = autoCols ? maxCols : Math.max(1, Math.min(8, Number(state && state.settings ? (state.settings.displayCols || 3) : 3)));
       var targetCols = Math.max(1, Math.min(configuredCols, maxCols));
       var bestCols = targetCols;
       var bestScale = 0;
@@ -803,7 +807,9 @@
       var availableHeight = Math.max(1, wrap.clientHeight || grid.clientHeight || 1);
       var cols = chooseActiveDisplayFitColumns(groups, rooms.length, availableWidth, availableHeight, dividerCount);
       var activeGap = availableHeight < 520 ? 9 : (availableHeight > 920 ? 16 : 14);
-      var configuredCols = Math.max(1, Math.min(8, Number(state && state.settings ? (state.settings.displayCols || cols || 3) : (cols || 3))));
+      var configuredCols = (state && state.settings && state.settings.displayAutoCols)
+        ? Math.max(1, cols)
+        : Math.max(1, Math.min(8, Number(state && state.settings ? (state.settings.displayCols || cols || 3) : (cols || 3))));
       var singleBasisCols = Math.max(1, Math.min(configuredCols, Math.max(1, Math.floor((availableWidth + activeGap) / 280))));
       var normalColumnWidth = (availableWidth - (singleBasisCols - 1) * activeGap) / singleBasisCols;
       var singleCardWidth = Math.max(280, Math.min(560, normalColumnWidth));
@@ -1073,9 +1079,24 @@
       if(!skipTimerBindingRefresh) rebuildTimerBindings();
     }
 
-    window.addEventListener("resize", scheduleActiveDisplayFit);
+    var autoDisplayColsResizeFrame = 0;
+    function refreshAutoDisplayColsOnResize(){
+      if(!(state && state.settings && state.settings.displayAutoCols)) return;
+      if(autoDisplayColsResizeFrame) return;
+      autoDisplayColsResizeFrame = requestAnimationFrame(function(){
+        autoDisplayColsResizeFrame = 0;
+        if(typeof applyLayout === "function") applyLayout();
+      });
+    }
+    window.addEventListener("resize", function(){
+      refreshAutoDisplayColsOnResize();
+      scheduleActiveDisplayFit();
+    });
     if(window.visualViewport && window.visualViewport.addEventListener){
-      window.visualViewport.addEventListener("resize", scheduleActiveDisplayFit);
+      window.visualViewport.addEventListener("resize", function(){
+        refreshAutoDisplayColsOnResize();
+        scheduleActiveDisplayFit();
+      });
     }
     window.addEventListener("focus", scheduleActiveDisplayFitAfterReturn);
     window.addEventListener("pageshow", scheduleActiveDisplayFitAfterReturn);
@@ -2564,7 +2585,9 @@
       }
 
       // Layout inputs
+	      if($("displayAutoCols")) $("displayAutoCols").checked = !!state.settings.displayAutoCols;
 	      $("displayCols").value = state.settings.displayCols;
+	      $("displayCols").disabled = !!state.settings.displayAutoCols;
 	      $("displayRows").value = state.settings.displayRows;
 		      if($("displayCardScale")) $("displayCardScale").value = String(state.settings.displayCardScale || 1);
 		      if($("displayCardScaleValue")) $("displayCardScaleValue").value = String(state.settings.displayCardScale || 1);
