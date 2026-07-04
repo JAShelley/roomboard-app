@@ -17,13 +17,18 @@ download URLs there so the website buttons keep working. `JAShelley/roomboard-ap
    `capture-latest` auto-update feed on this repo.
 4. Confirm the release assets per step 4 below.
 5. In `public/app/config.js`: set `__ROOMBOARD_CAPTURE_RELEASE_TAG__` to
-   `capture-v0.1.6` and change `__ROOMBOARD_CAPTURE_RELEASE_BASE_URL__` from
-   `JAShelley/Roomboard` to `JAShelley/roomboard-app` (remove the legacy-repo
-   comment above it). Bump the `config.js?v=` cache-bust query in
-   `public/app/index.html`, then deploy the website.
+   `capture-v0.1.6`, change `__ROOMBOARD_CAPTURE_RELEASE_BASE_URL__` from
+   `JAShelley/Roomboard` to `JAShelley/roomboard-app`, and restore the computed
+   Mac download URL (see the comment on `__ROOMBOARD_CAPTURE_MAC_DOWNLOAD_URL__`
+   — it is deliberately `""` until then). Remove the legacy-repo comments, bump
+   the `config.js?v=` cache-bust query in `public/app/index.html`, then deploy
+   the website.
 
-Until step 5 ships, the website serves the legacy `capture-v0.1.5` installers,
-which do not include the auto-updater — so there is no live feed to break.
+Until step 5 ships, the website serves the legacy `capture-v0.1.5` **Windows**
+installer only. The Mac download card is hidden: the legacy Mac DMG turned out
+to be ad-hoc signed and Gatekeeper rejects it (`spctl --assess: rejected`,
+verified 2026-07-03), so it must not be offered to customers. Neither legacy
+installer includes the auto-updater, so there is no live update feed to break.
 
 ## 1. Pick the release tag
 

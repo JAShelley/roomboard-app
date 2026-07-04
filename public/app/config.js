@@ -44,6 +44,9 @@ window.__ROOMBOARD_CAPTURE_WINDOWS_DOWNLOAD_FILENAME__ =
   window.__ROOMBOARD_CAPTURE_WINDOWS_DOWNLOAD_FILENAME__ || "RoomBoard-Capture-Setup-Windows-x64.exe";
 window.__ROOMBOARD_CAPTURE_MAC_DOWNLOAD_FILENAME__ =
   window.__ROOMBOARD_CAPTURE_MAC_DOWNLOAD_FILENAME__ || "RoomBoard-Capture-macOS.dmg";
+// Empty URL keeps the Mac download card hidden: the legacy capture-v0.1.5 DMG is
+// ad-hoc signed and rejected by Gatekeeper (verified via spctl 2026-07-03). Restore
+// the computed URL once a signed+notarized capture release exists on roomboard-app:
+//   window.__ROOMBOARD_CAPTURE_RELEASE_BASE_URL__ + "/" + window.__ROOMBOARD_CAPTURE_MAC_DOWNLOAD_FILENAME__
 window.__ROOMBOARD_CAPTURE_MAC_DOWNLOAD_URL__ =
-  window.__ROOMBOARD_CAPTURE_MAC_DOWNLOAD_URL__ ||
-  window.__ROOMBOARD_CAPTURE_RELEASE_BASE_URL__ + "/" + window.__ROOMBOARD_CAPTURE_MAC_DOWNLOAD_FILENAME__;
+  window.__ROOMBOARD_CAPTURE_MAC_DOWNLOAD_URL__ || "";
