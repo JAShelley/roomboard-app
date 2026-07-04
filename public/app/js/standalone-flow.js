@@ -680,7 +680,7 @@
       '        <li>Custom clinic branding &amp; logo</li>',
       '        <li>Stats dashboard</li>',
       '        <li>Practice &amp; per-patient checklists</li>',
-      '        <li>iPhone &amp; iPad app <span style="opacity:.65">(coming soon)</span></li>',
+      '        <li>iPhone &amp; iPad app <span style="opacity:.65">(in App Store review)</span></li>',
       '      </ul>',
       '      <button class="rbPaywallBtn rbPaywallBtnPrimary" data-plan="advanced-monthly">Get Advanced</button>',
       '    </div>',

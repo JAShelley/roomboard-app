@@ -99,7 +99,8 @@
     <h2>What the board actually stores</h2>
     <p>A RoomBoard entry holds only what's needed to answer "who's where": a first name, a room, an appointment type, a provider, and timing. It does not hold diagnoses, chart notes, insurance details, or any other clinical record.</p>
     <ul>
-      <li><strong>On the board:</strong> patient first name, room assignment, appointment type, assigned doctor/tech, and status timers.</li>
+      <li><strong>On the board:</strong> patient first name, room assignment, appointment type, assigned doctor/tech, and status timers — held only while the patient is on the board, and erased at discharge.</li>
+      <li><strong>Kept as history:</strong> the Stats dashboard's permanent records store the room name, provider name, and start/end times only — never a patient name or visit type.</li>
       <li><strong>Appointment capture:</strong> when you use the browser extension or desktop capture app to pull appointments from your scheduler, that data is read and matched on your device — only the fields above are ever sent to RoomBoard's servers.</li>
       <li><strong>Account data:</strong> staff names, emails, and clinic profile details you provide directly (practice name, specialty, phone, city/state).</li>
       <li><strong>Payment data:</strong> handled entirely by <a href="https://stripe.com/privacy" target="_blank" rel="noopener">Stripe</a>. RoomBoard's servers never see or store full card numbers.</li>
