@@ -17,13 +17,10 @@ window.__ROOMBOARD_RELEASES_URL__ =
   window.__ROOMBOARD_RELEASES_URL__ ||
   "https://github.com/JAShelley/Roomboard/releases";
 window.__ROOMBOARD_CAPTURE_RELEASE_TAG__ =
-  window.__ROOMBOARD_CAPTURE_RELEASE_TAG__ || "capture-v0.1.5";
-// Capture releases still live on the legacy JAShelley/Roomboard repo; roomboard-app
-// has no releases yet. Repoint to roomboard-app only after a capture-v* release
-// is published there (see desktop/capture-release-steps.md).
+  window.__ROOMBOARD_CAPTURE_RELEASE_TAG__ || "capture-v0.1.6";
 window.__ROOMBOARD_CAPTURE_RELEASE_BASE_URL__ =
   window.__ROOMBOARD_CAPTURE_RELEASE_BASE_URL__ ||
-  "https://github.com/JAShelley/Roomboard/releases/download/" +
+  "https://github.com/JAShelley/roomboard-app/releases/download/" +
     window.__ROOMBOARD_CAPTURE_RELEASE_TAG__;
 window.__ROOMBOARD_WINDOWS_DOWNLOAD_URL__ =
   window.__ROOMBOARD_WINDOWS_DOWNLOAD_URL__ ||
@@ -44,9 +41,6 @@ window.__ROOMBOARD_CAPTURE_WINDOWS_DOWNLOAD_FILENAME__ =
   window.__ROOMBOARD_CAPTURE_WINDOWS_DOWNLOAD_FILENAME__ || "RoomBoard-Capture-Setup-Windows-x64.exe";
 window.__ROOMBOARD_CAPTURE_MAC_DOWNLOAD_FILENAME__ =
   window.__ROOMBOARD_CAPTURE_MAC_DOWNLOAD_FILENAME__ || "RoomBoard-Capture-macOS.dmg";
-// Empty URL keeps the Mac download card hidden: the legacy capture-v0.1.5 DMG is
-// ad-hoc signed and rejected by Gatekeeper (verified via spctl 2026-07-03). Restore
-// the computed URL once a signed+notarized capture release exists on roomboard-app:
-//   window.__ROOMBOARD_CAPTURE_RELEASE_BASE_URL__ + "/" + window.__ROOMBOARD_CAPTURE_MAC_DOWNLOAD_FILENAME__
 window.__ROOMBOARD_CAPTURE_MAC_DOWNLOAD_URL__ =
-  window.__ROOMBOARD_CAPTURE_MAC_DOWNLOAD_URL__ || "";
+  window.__ROOMBOARD_CAPTURE_MAC_DOWNLOAD_URL__ ||
+  window.__ROOMBOARD_CAPTURE_RELEASE_BASE_URL__ + "/" + window.__ROOMBOARD_CAPTURE_MAC_DOWNLOAD_FILENAME__;

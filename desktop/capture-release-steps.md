@@ -2,33 +2,16 @@
 
 Use this flow so the website upload stays small and the large Electron installers live in GitHub Releases.
 
-## 0. One-time cutover from the legacy repo (do this for the next release)
+## 0. Legacy-repo cutover (completed 2026-07-04)
 
-All published capture releases (through `capture-v0.1.5`) live on the legacy
-`JAShelley/Roomboard` repo, and `public/app/config.js` currently points its
-download URLs there so the website buttons keep working. `JAShelley/roomboard-app`
-(this repo) is canonical going forward but has no releases yet. To cut over:
-
-1. Add the Mac signing secrets to **this** repo (list in step 3 below).
-2. Push `main` including `.github/workflows/` and `desktop/auto-update.cjs`.
-3. Tag and push `capture-v0.1.6` (root `package.json` version is already `0.1.6`;
-   keep tag and package version in sync — the auto-update feed reads the package
-   version). Both workflows run and publish the release plus the rolling
-   `capture-latest` auto-update feed on this repo.
-4. Confirm the release assets per step 4 below.
-5. In `public/app/config.js`: set `__ROOMBOARD_CAPTURE_RELEASE_TAG__` to
-   `capture-v0.1.6`, change `__ROOMBOARD_CAPTURE_RELEASE_BASE_URL__` from
-   `JAShelley/Roomboard` to `JAShelley/roomboard-app`, and restore the computed
-   Mac download URL (see the comment on `__ROOMBOARD_CAPTURE_MAC_DOWNLOAD_URL__`
-   — it is deliberately `""` until then). Remove the legacy-repo comments, bump
-   the `config.js?v=` cache-bust query in `public/app/index.html`, then deploy
-   the website.
-
-Until step 5 ships, the website serves the legacy `capture-v0.1.5` **Windows**
-installer only. The Mac download card is hidden: the legacy Mac DMG turned out
-to be ad-hoc signed and Gatekeeper rejects it (`spctl --assess: rejected`,
-verified 2026-07-03), so it must not be offered to customers. Neither legacy
-installer includes the auto-updater, so there is no live update feed to break.
+Releases through `capture-v0.1.5` live on the legacy `JAShelley/Roomboard` repo;
+`capture-v0.1.6` onward publish from **this** repo (`JAShelley/roomboard-app`),
+and `public/app/config.js` points the website download buttons here. Do not
+link the legacy Mac DMG anywhere: it is ad-hoc signed and Gatekeeper rejects it
+(`spctl --assess: rejected`, verified 2026-07-03). Legacy installers also have
+no auto-updater, so only `capture-v0.1.6`+ installs receive updates via the
+rolling `capture-latest` release. Keep the release tag and the root
+`package.json` version in sync — the auto-update feed reads the package version.
 
 ## 1. Pick the release tag
 
