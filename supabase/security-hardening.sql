@@ -56,5 +56,6 @@ grant execute on function public.is_practice_admin(uuid)                    to a
 -- app's RPC API and are all keyed on auth.uid().
 
 -- ── 4. Leaked-password protection (1 warning) ──────────────────────────────
--- Not SQL: Dashboard > Authentication > Sign In / Providers > Passwords —
--- enable "Leaked password protection" (checks against HaveIBeenPwned).
+-- Deliberately NOT enabled (user decision 2026-07-04) — this advisor warning
+-- is expected to persist. If ever wanted: Dashboard > Authentication >
+-- Sign In / Providers > Passwords > "Leaked password protection".
