@@ -53,10 +53,16 @@ export type PracticeBilling = {
   trialEndsAt: string | null;
   currentPeriodEnd: string | null;
   hasPaymentMethod?: boolean;
+  appStoreProductId?: string | null;
+  appStoreStatus?: string | null;
+  appStoreExpiresAt?: string | null;
+  appStoreGracePeriodExpiresAt?: string | null;
+  hasAppStoreAccess?: boolean;
 };
 
 export type SessionContext = {
   practiceId: string;
+  userId: string;
   email: string;
   accessToken: string;
   refreshToken: string;
@@ -69,9 +75,11 @@ export async function resolveSessionContext(input: {
   refreshToken?: string;
 }): Promise<SessionContext> {
   const { session, user } = await resolvePulseSession(input);
-  const practiceId = await getPracticeIdForUser(String(user.id || session.userId || "").trim());
+  const userId = String(user.id || session.userId || "").trim();
+  const practiceId = await getPracticeIdForUser(userId);
   return {
     practiceId,
+    userId,
     email: String(user.email || session.email || "").trim(),
     accessToken: session.accessToken,
     refreshToken: session.refreshToken,
@@ -87,7 +95,7 @@ export async function getPracticeBilling(practiceId: string): Promise<PracticeBi
     .maybeSingle();
   if (res.error) throw new Error(res.error.message);
   const row = (res.data || {}) as Record<string, unknown>;
-  return {
+  const practiceBilling: PracticeBilling = {
     practiceId,
     stripeCustomerId: (row.stripe_customer_id as string) || null,
     stripeSubscriptionId: (row.stripe_subscription_id as string) || null,
@@ -97,6 +105,7 @@ export async function getPracticeBilling(practiceId: string): Promise<PracticeBi
     currentPeriodEnd: row.current_period_end ? new Date(String(row.current_period_end)).toISOString() : null,
     hasPaymentMethod: row.has_payment_method === true,
   };
+  return withAppStoreBilling(practiceBilling);
 }
 
 // Mirror the SQL practice_has_access() logic on the server.
@@ -109,9 +118,78 @@ export function computeAccess(billing: PracticeBilling) {
   const hasCustomer = !!billing.stripeCustomerId;
   const hasSubscription = !!billing.stripeSubscriptionId;
   const hasPaymentMethod = billing.hasPaymentMethod === true;
-  const hasAccess = subscribed || (trialing && hasCustomer && hasSubscription && hasPaymentMethod);
+  const hasAppStoreAccess = billing.hasAppStoreAccess === true;
+  const hasAccess = subscribed || (trialing && hasCustomer && hasSubscription && hasPaymentMethod) || hasAppStoreAccess;
   const trialDaysLeft = trialing ? Math.max(0, Math.ceil((trialMs - now) / 86_400_000)) : 0;
-  return { hasAccess, trialing, subscribed, trialDaysLeft, hasPaymentMethod };
+  return { hasAccess, trialing, subscribed, trialDaysLeft, hasPaymentMethod, hasAppStoreAccess };
+}
+
+function isMissingAppStoreTable(error: unknown) {
+  const message = String(error instanceof Error ? error.message : error || "").toLowerCase();
+  return (
+    message.includes("app_store_subscriptions") &&
+    (message.includes("does not exist") ||
+      message.includes("schema cache") ||
+      message.includes("could not find"))
+  );
+}
+
+function dateStringOrNull(value: unknown): string | null {
+  if (!value) return null;
+  const date = new Date(String(value));
+  return Number.isFinite(date.getTime()) ? date.toISOString() : null;
+}
+
+function appStoreRowHasAccess(row: Record<string, unknown> | null) {
+  if (!row) return false;
+  const status = String(row.status || "").toLowerCase();
+  if (["expired", "revoked", "refunded"].includes(status)) return false;
+  if (row.revocation_date) return false;
+  const expiresAtMs = row.expires_at ? Date.parse(String(row.expires_at)) : 0;
+  const graceAtMs = row.grace_period_expires_at ? Date.parse(String(row.grace_period_expires_at)) : 0;
+  const now = Date.now();
+  return (
+    (Number.isFinite(expiresAtMs) && expiresAtMs > now) ||
+    (Number.isFinite(graceAtMs) && graceAtMs > now)
+  );
+}
+
+function planForAppStoreProduct(productId: string | null) {
+  const normalized = String(productId || "").toLowerCase();
+  const tier = normalized.includes("advanced") ? "advanced" : normalized.includes("base") ? "base" : "";
+  const period = normalized.includes("annual") || normalized.includes("yearly") ? "annual" : normalized.includes("monthly") ? "monthly" : "";
+  if (!tier) return null;
+  return period ? `${tier}-${period}` : tier;
+}
+
+export async function withAppStoreBilling(billing: PracticeBilling): Promise<PracticeBilling> {
+  if (billing.hasAppStoreAccess !== undefined) return billing;
+
+  const service = getServiceClient();
+  const res = await service
+    .from("app_store_subscriptions")
+    .select("product_id,status,expires_at,grace_period_expires_at,revocation_date,updated_at")
+    .eq("practice_id", billing.practiceId)
+    .order("expires_at", { ascending: false, nullsFirst: false })
+    .order("updated_at", { ascending: false })
+    .limit(1);
+
+  if (res.error) {
+    if (isMissingAppStoreTable(res.error)) return billing;
+    throw new Error(res.error.message);
+  }
+
+  const rows = Array.isArray(res.data) ? res.data : [];
+  const row = (rows[0] || null) as Record<string, unknown> | null;
+  return {
+    ...billing,
+    plan: billing.plan || planForAppStoreProduct(row ? String(row.product_id || "") : null),
+    appStoreProductId: row ? String(row.product_id || "") || null : null,
+    appStoreStatus: row ? String(row.status || "") || null : null,
+    appStoreExpiresAt: dateStringOrNull(row?.expires_at),
+    appStoreGracePeriodExpiresAt: dateStringOrNull(row?.grace_period_expires_at),
+    hasAppStoreAccess: appStoreRowHasAccess(row),
+  };
 }
 
 export async function findPracticeIdByCustomer(customerId: string): Promise<string | null> {

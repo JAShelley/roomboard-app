@@ -1,4 +1,4 @@
-import { computeAccess, getServiceClient, type PracticeBilling } from "../_lib";
+import { computeAccess, getServiceClient, withAppStoreBilling, type PracticeBilling } from "../_lib";
 import { optionsResponse, pulseJson, pulseError } from "../../pulse/_lib";
 
 export async function OPTIONS() {
@@ -91,6 +91,7 @@ export async function POST(request: Request) {
     }
 
     billing = await billingWithPaymentMethodStatus(billing);
+    billing = await withAppStoreBilling(billing);
     const access = computeAccess(billing);
 
     return pulseJson({
@@ -102,10 +103,14 @@ export async function POST(request: Request) {
       subscribed: access.subscribed,
       trialDaysLeft: access.trialDaysLeft,
       trialEndsAt: billing.trialEndsAt,
-      currentPeriodEnd: billing.currentPeriodEnd,
+      currentPeriodEnd: billing.currentPeriodEnd || billing.appStoreExpiresAt,
       hasCustomer: !!billing.stripeCustomerId,
       hasSubscription: !!billing.stripeSubscriptionId,
       hasPaymentMethod: access.hasPaymentMethod,
+      hasAppStoreAccess: access.hasAppStoreAccess,
+      appStoreProductId: billing.appStoreProductId,
+      appStoreStatus: billing.appStoreStatus,
+      appStoreExpiresAt: billing.appStoreExpiresAt,
     });
   } catch (error) {
     const message = String(error instanceof Error ? error.message : error || "Could not load billing status.");

@@ -2,7 +2,7 @@
 
 1. Create a Supabase project.
 2. Open the SQL editor and run `schema.sql`.
-3. Run `billing.sql` after `schema.sql` to add the 14-day trial, Stripe subscription fields, billing access helpers, and live-board RLS gates.
+3. Run `billing.sql` after `schema.sql` to add the 14-day trial, Stripe subscription fields, Apple StoreKit subscription tables, billing access helpers, and live-board RLS gates.
 4. For this MVP, disable email confirmation in Auth so the signup flow returns an active session immediately.
 5. Copy `.env.local.example` to `.env.local` and add:
    - `NEXT_PUBLIC_SUPABASE_URL`
@@ -12,6 +12,7 @@
    - `STRIPE_WEBHOOK_SECRET`
    - `STRIPE_PRICE_MONTHLY`
    - `STRIPE_PRICE_ANNUAL`
+   - Apple StoreKit/App Store Server API credentials once iOS purchases are wired
 6. Start the app and test:
    - create a practice
    - log in
@@ -27,6 +28,14 @@ https://your-domain.com/api/billing/webhook
 ```
 
 Subscribe it to checkout session completion and customer subscription lifecycle events so RoomBoard can mirror subscription status back to Supabase.
+
+For Apple in-app purchases, `billing.sql` creates:
+- `app_store_products`
+- `app_store_subscriptions`
+- `app_store_transactions`
+- `app_store_notification_events`
+
+Run `billing.sql` again if the database already existed before StoreKit support. It is idempotent and recreates `practice_has_access()` so either Stripe or an active Apple subscription can unlock the board.
 
 The base schema is intentionally small:
 - `practices`
