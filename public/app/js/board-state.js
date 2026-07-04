@@ -1471,7 +1471,12 @@
       // gap — a column count the CSS can't shrink to overflows the window.
       var gap = 14;
       var minCardWidth = 260;
-      return Math.max(1, Math.min(8, Math.floor((width + gap) / (minCardWidth + gap))));
+      var widthFit = Math.max(1, Math.floor((width + gap) / (minCardWidth + gap)));
+      // Shrink-only: never exceed the configured Columns count. A maximized
+      // window gets exactly the configured layout; auto-fit only reduces
+      // columns when the window is too narrow for it.
+      var configured = Math.max(1, Number(state.settings.displayCols || 4));
+      return Math.min(configured, widthFit);
     }
 
     function applyLayout(){

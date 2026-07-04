@@ -721,11 +721,12 @@
       var autoCols = !!(state && state.settings && state.settings.displayAutoCols);
       // In auto mode the divisor must match the CSS floor (260px cards + 14px
       // gap), otherwise this estimate packs columns the grid can't shrink to
-      // and the last column clips off the window edge.
+      // and the last column clips off the window edge. The configured Columns
+      // count stays the ceiling either way — auto-fit only shrinks below it.
       var minReadableColumnWidth = autoCols ? 274 : (width < 760 ? 188 : (width < 1080 ? 220 : 250));
       var maxByWidth = Math.max(1, Math.floor((Math.max(0, width) + 14) / minReadableColumnWidth));
       var maxCols = Math.max(1, Math.min(8, maxByWidth));
-      var configuredCols = autoCols ? maxCols : Math.max(1, Math.min(8, Number(state && state.settings ? (state.settings.displayCols || 3) : 3)));
+      var configuredCols = Math.max(1, Math.min(8, Number(state && state.settings ? (state.settings.displayCols || 3) : 3)));
       var targetCols = Math.max(1, Math.min(configuredCols, maxCols));
       var bestCols = targetCols;
       var bestScale = 0;
@@ -807,9 +808,7 @@
       var availableHeight = Math.max(1, wrap.clientHeight || grid.clientHeight || 1);
       var cols = chooseActiveDisplayFitColumns(groups, rooms.length, availableWidth, availableHeight, dividerCount);
       var activeGap = availableHeight < 520 ? 9 : (availableHeight > 920 ? 16 : 14);
-      var configuredCols = (state && state.settings && state.settings.displayAutoCols)
-        ? Math.max(1, cols)
-        : Math.max(1, Math.min(8, Number(state && state.settings ? (state.settings.displayCols || cols || 3) : (cols || 3))));
+      var configuredCols = Math.max(1, Math.min(8, Number(state && state.settings ? (state.settings.displayCols || cols || 3) : (cols || 3))));
       var singleBasisCols = Math.max(1, Math.min(configuredCols, Math.max(1, Math.floor((availableWidth + activeGap) / 280))));
       var normalColumnWidth = (availableWidth - (singleBasisCols - 1) * activeGap) / singleBasisCols;
       var singleCardWidth = Math.max(280, Math.min(560, normalColumnWidth));
