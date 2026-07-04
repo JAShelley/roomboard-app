@@ -9,8 +9,7 @@
     <AssemblyName>RoomBoard.Capture.Helper</AssemblyName>
     <RootNamespace>RoomBoard.Capture.Helper</RootNamespace>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="UIAutomationClient" />
-    <Reference Include="UIAutomationTypes" />
-  </ItemGroup>
+  <!-- UIAutomationClient/UIAutomationTypes come from the WindowsDesktop framework
+       via UseWPF; explicit versionless References resolve ambiguously across SDKs
+       (MSB3243) and must not be re-added. -->
 </Project>

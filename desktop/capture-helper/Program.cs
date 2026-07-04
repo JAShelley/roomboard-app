@@ -1066,69 +1066,47 @@ try {
         return "";
     }
 
-    private static LegacyIAccessiblePattern? SafeLegacyPattern(AutomationElement element)
+    // LegacyIAccessible UIA property ids from UIAutomationClient.h. Read via
+    // AutomationProperty.LookupById because the managed LegacyIAccessiblePattern
+    // wrapper exists only in .NET Framework's UIAutomationClient, not the
+    // net8.0-windows one, so the typed pattern API does not compile here.
+    private const int UiaLegacyNamePropertyId = 30092;
+    private const int UiaLegacyValuePropertyId = 30093;
+    private const int UiaLegacyDescriptionPropertyId = 30094;
+    private const int UiaLegacyHelpPropertyId = 30097;
+
+    private static string SafeLegacyProperty(AutomationElement element, int propertyId)
     {
         try
         {
-            if (element.TryGetCurrentPattern(LegacyIAccessiblePattern.Pattern, out var pattern) && pattern is LegacyIAccessiblePattern legacyPattern)
-            {
-                return legacyPattern;
-            }
+            var property = AutomationProperty.LookupById(propertyId);
+            if (property == null) return "";
+            return NormalizeSpaces(element.GetCurrentPropertyValue(property) as string);
         }
         catch
         {
-            return null;
+            return "";
         }
-
-        return null;
     }
 
     private static string SafeLegacyName(AutomationElement element)
     {
-        try
-        {
-            return NormalizeSpaces(SafeLegacyPattern(element)?.Current.Name);
-        }
-        catch
-        {
-            return "";
-        }
+        return SafeLegacyProperty(element, UiaLegacyNamePropertyId);
     }
 
     private static string SafeLegacyValue(AutomationElement element)
     {
-        try
-        {
-            return NormalizeSpaces(SafeLegacyPattern(element)?.Current.Value);
-        }
-        catch
-        {
-            return "";
-        }
+        return SafeLegacyProperty(element, UiaLegacyValuePropertyId);
     }
 
     private static string SafeLegacyDescription(AutomationElement element)
     {
-        try
-        {
-            return NormalizeSpaces(SafeLegacyPattern(element)?.Current.Description);
-        }
-        catch
-        {
-            return "";
-        }
+        return SafeLegacyProperty(element, UiaLegacyDescriptionPropertyId);
     }
 
     private static string SafeLegacyHelp(AutomationElement element)
     {
-        try
-        {
-            return NormalizeSpaces(SafeLegacyPattern(element)?.Current.Help);
-        }
-        catch
-        {
-            return "";
-        }
+        return SafeLegacyProperty(element, UiaLegacyHelpPropertyId);
     }
 
     private static string BuildSignature(CaptureEvent payload)
