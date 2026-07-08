@@ -975,6 +975,26 @@
       return true;
     }
 
+    function updateClearAllRoomsButtonVisibility(){
+      var wrap = document.querySelector(".clearAllWrap");
+      if(!wrap) return;
+      var rooms = (state && state.rooms) ? state.rooms : [];
+      var anyOccupied = false;
+      for(var i=0;i<rooms.length;i++){
+        var room = rooms[i];
+        if(room && (room.needsCleaning || (room.patientName && room.patientName.replace(/\s/g,"").length))){
+          anyOccupied = true;
+          break;
+        }
+      }
+      wrap.hidden = !anyOccupied;
+      if(!anyOccupied){
+        // a remote update can empty the board while the confirm is open
+        var pop = $("clearAllConfirm");
+        if(pop) pop.hidden = true;
+      }
+    }
+
     function patchDisplayRooms(roomIds){
       var grid = $("displayGrid");
       var displayRooms = getDisplayRooms();
@@ -1001,12 +1021,14 @@
       else scheduleActiveDisplayFit();
       rememberDisplayStructure(grid, displayRooms, renderMode);
       syncRoomNotesLayers();
+      updateClearAllRoomsButtonVisibility();
       return true;
     }
 
     function renderDisplay(skipTimerBindingRefresh){
       var grid = $("displayGrid");
       if(!grid) return;
+      updateClearAllRoomsButtonVisibility();
       bumpRenderPerf("displayRenders");
       var renderMode = getDisplayRenderMode();
       // Capture the previously-rendered structure before we wipe the grid, so we
@@ -1924,7 +1946,27 @@
       return true;
     }
 
-    function dischargeRoom(room, serverNowIso){
+    function resetRoomFieldsToEmpty(room, serverNowIso){
+      room.patientName = "";
+      var defaultColorId = getConfiguredDefaultColorLabelId(state.colorLabels, state.settings.defaultColorLabelId);
+      var defaultColor = getColorById(defaultColorId);
+      room.reason = defaultColor ? defaultColor.title : DEFAULT_REASONS[0];
+      room.colorLabelId = defaultColorId;
+      room.colorHex = "";
+      room.doctor = "";
+      room.tech = "";
+      room.notes = "";
+      setRoomQuickNotes(room, []);
+      room.roomReady = false;
+      room.doctorReady = false;
+      room.timer = { elapsedMs: 0, running: false, startedAt: null, startedAtIso: null, updatedAtIso: serverNowIso };
+      // clearing the checklist here keeps the seeding guard's contract:
+      // an empty room must never carry a stale checklist
+      room.checklist = [];
+    }
+
+    function dischargeRoom(room, serverNowIso, opts){
+      var skipCleaning = !!(opts && opts.skipCleaning);
       serverNowIso = normalizeServerNowIso(serverNowIso) || getEstimatedServerNowIso();
       if(room.needsCleaning){
         clearRoomCleaning(room, true, serverNowIso);
@@ -1936,28 +1978,61 @@
       room.lastDischargeSnapshot = canCaptureDischargeSnapshot(room) ? buildDischargeSnapshot(room) : null;
       // End room session (if any) before clearing
       logRoomSessionEnd(room, roomEndSnapshot);
-      // Clear everything and flag cleaning
-      room.patientName = "";
-      var defaultColorId = getConfiguredDefaultColorLabelId(state.colorLabels, state.settings.defaultColorLabelId);
-      var defaultColor = getColorById(defaultColorId);
-      room.reason = defaultColor ? defaultColor.title : DEFAULT_REASONS[0];
-      room.colorLabelId = defaultColorId;
-      room.colorHex = "";
-      room.doctor = "";
-	      room.tech = "";
-	      room.notes = "";
-	      setRoomQuickNotes(room, []);
-	      room.roomReady = false;
-      room.doctorReady = false;
-      room.timer = { elapsedMs: 0, running: false, startedAt: null, startedAtIso: null, updatedAtIso: serverNowIso };
-      room.needsCleaning = true;
-      room.cleaningTimer = { elapsedMs: 0, running: true, startedAt: null, startedAtIso: serverNowIso, updatedAtIso: serverNowIso };
+      // Clear everything and flag cleaning (unless the caller wants the room
+      // to land directly on empty, e.g. board-wide clear-all)
+      resetRoomFieldsToEmpty(room, serverNowIso);
+      room.needsCleaning = !skipCleaning;
+      room.cleaningTimer = { elapsedMs: 0, running: !skipCleaning, startedAt: null, startedAtIso: skipCleaning ? null : serverNowIso, updatedAtIso: serverNowIso };
       room.activeCleaningSessionId = null;
-      room.checklist = [];
       normalizeRoomTimerModes(room);
 
-      logCleaningSessionStart(room);
+      if(!skipCleaning) logCleaningSessionStart(room);
 }
+
+    function clearAllRoomsToEmpty(){
+      holdRemoteUpdates(Math.max(1200, CHANGE_INTERACTION_HOLD_MS || 0));
+      return runLockedAction("display-room-action.clearAllRooms", function(){
+        return enqueueRoomBoardMutation(function(){
+          var actionNowIso = getEstimatedServerNowIso();
+          var changedIds = [];
+          for(var i=0;i<state.rooms.length;i++){
+            var room = state.rooms[i];
+            if(!room) continue;
+            var occupied = !!(room.patientName && room.patientName.replace(/\s/g,"").length);
+            if(occupied){
+              // full discharge (session logging + redo snapshot), landing on
+              // empty instead of needs-cleaning
+              dischargeRoom(room, actionNowIso, { skipCleaning: true });
+              changedIds.push(room.id);
+              continue;
+            }
+            if(room.needsCleaning){
+              clearRoomCleaning(room, false, actionNowIso);
+              resetRoomFieldsToEmpty(room, actionNowIso);
+              normalizeRoomTimerModes(room);
+              changedIds.push(room.id);
+              continue;
+            }
+            // "empty" rooms can still carry residue that renders (notes dock,
+            // ready flags, a running timer) — wipe those too
+            var quickNotes = typeof getRoomQuickNotes === "function" ? getRoomQuickNotes(room) : [];
+            var hasResidue = !!(room.doctor || room.tech || room.notes || (quickNotes && quickNotes.length)
+              || room.roomReady || room.doctorReady
+              || (room.checklist && room.checklist.length)
+              || (room.timer && (room.timer.running || room.timer.elapsedMs)));
+            if(hasResidue){
+              resetRoomFieldsToEmpty(room, actionNowIso);
+              normalizeRoomTimerModes(room);
+              changedIds.push(room.id);
+            }
+          }
+          if(!changedIds.length) return false;
+          requestBoardRoomRefresh(changedIds, { includeIntake: false });
+          commitBoardInBackground({ immediate: true });
+          return true;
+        });
+      }, { el: $("clearAllRoomsBtn"), cooldownMs: 400 });
+    }
 
     function renderIntakeNav(){
           var sel = $("intakeJumpSelect");

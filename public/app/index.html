@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" href="/favicon.png?v=mark2">
 <link rel="apple-touch-icon" href="/favicon.png?v=mark2">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="./styles.css?v=20260708b">
+<link rel="stylesheet" href="./styles.css?v=20260708d">
 <meta property="og:title" content="RoomBoard" data-id="th-modified" ><meta name="description" content="RoomBoard display board website" data-id="th-modified" ><meta property="og:description" content="RoomBoard display board website" data-id="th-modified" ><meta property="og:type" content="website" data-id="th-modified" ></head>
 <body class="displayTabActive"><button aria-label="Back to top" id="toTopBtn" title="Back to top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
 <div class="chip" data-state="idle" id="syncPill" title="Sync status">
@@ -46,6 +46,14 @@
 	<button aria-label="Enter full screen" class="iconBtn headerIconBtn" id="fullscreenBtn" title="Enter full screen" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M16 21h3a2 2 0 0 0 2-2v-3M8 21H5a2 2 0 0 1-2-2v-3"/></svg></button>
 	<button aria-label="Open checklist" class="iconBtn headerIconBtn" id="checklistBtn" title="Open checklist" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 7 2 2 4-4M3 17l2 2 4-4M13 6h8M13 18h8"/></svg><span class="checklistBtnBadge" id="checklistBtnBadge" hidden></span></button>
 	<button aria-label="Toggle grid/list" class="iconBtn headerIconBtn" id="viewToggleBtn" title="Toggle grid/list" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>
+	<span class="clearAllWrap" hidden>
+	<button aria-label="Clear all rooms" class="iconBtn headerIconBtn" id="clearAllRoomsBtn" title="Clear all rooms" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 21-4.6-4.6a1.7 1.7 0 0 1 0-2.4l9.6-9.6a1.7 1.7 0 0 1 2.4 0l5.6 5.6a1.7 1.7 0 0 1 0 2.4L13 19.4"/><path d="M22 21H7"/><path d="m5 11 8 8"/></svg></button>
+	<div class="clearAllConfirm" id="clearAllConfirm" role="dialog" aria-labelledby="clearAllConfirmTitle" hidden>
+	<div class="clearAllConfirmTitle" id="clearAllConfirmTitle">Clear all rooms?</div>
+	<div class="clearAllConfirmText">Every room goes back to empty. Occupied rooms are discharged first, so their visits still count in stats.</div>
+	<div class="clearAllConfirmActions"><button class="btn sm" id="clearAllCancelBtn" type="button">Cancel</button><button class="btn sm danger" id="clearAllConfirmBtn" type="button">Clear all</button></div>
+	</div>
+	</span>
 	<button aria-label="Open settings" class="iconBtn headerIconBtn" id="openSettingsBtn" title="Open settings" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
 	</div>
 </div>
@@ -902,8 +910,8 @@ Manage subscription
 <script src="./config.js?v=20260704a"></script>
 <script src="./js/compat.js?v=20260517b"></script>
 <script src="./js/board-state.js?v=20260708b"></script>
-<script src="./js/rendering.js?v=20260708b"></script>
-<script src="./js/settings.js?v=20260704a"></script>
+<script src="./js/rendering.js?v=20260708d"></script>
+<script src="./js/settings.js?v=20260708c"></script>
 <script src="./js/checklist.js?v=20260626d"></script>
 <script src="./js/patient-checklist.js?v=20260626a"></script>
 <script src="./js/auth-sync.js?v=20260702b"></script>

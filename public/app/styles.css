@@ -898,6 +898,33 @@
 	      border-bottom:1px solid var(--border);
 	      gap:6px;
 	    }
+    .clearAllWrap{ position:relative; display:inline-flex; }
+    /* the inline-flex above outranks the UA [hidden] rule, so restate it:
+       the wrap is hidden while no room is occupied (render paths toggle it) */
+    .clearAllWrap[hidden]{ display:none; }
+    .clearAllConfirm{
+      position:absolute;
+      top:calc(100% + 8px);
+      right:0;
+      z-index:120;
+      min-width:250px;
+      max-width:min(320px, calc(100vw - 24px));
+      padding:12px 14px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:var(--panel);
+      box-shadow:0 18px 40px rgba(0,0,0,.45);
+      text-align:left;
+    }
+    .clearAllConfirm[hidden]{ display:none; }
+    .clearAllConfirmTitle{ font-weight:800; font-size:14px; margin-bottom:4px; }
+    .clearAllConfirmText{ font-size:12px; color:var(--muted); line-height:1.45; margin-bottom:10px; }
+    .clearAllConfirmActions{ display:flex; gap:8px; justify-content:flex-end; }
+    .clearAllConfirmActions .btn.danger{
+      border-color:rgba(251,113,133,.55);
+      background:rgba(251,113,133,.14);
+    }
+
     .roomName{display:flex; align-items:center; gap:6px; font-weight:700; font-size:var(--fontCard); letter-spacing:.02em; opacity:.85;}
     #displayView .roomName,
     #displayView .wbRoomName,

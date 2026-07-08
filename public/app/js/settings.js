@@ -657,6 +657,38 @@
       setStatus(state.settings.displayOnlyActive ? "Showing only active rooms" : "Showing all rooms");
     }
     $("openQuickAddBtn").addEventListener("click", function(){ openQuickAdd(); });
+    (function(){
+      var btn = $("clearAllRoomsBtn");
+      var pop = $("clearAllConfirm");
+      var confirmBtn = $("clearAllConfirmBtn");
+      var cancelBtn = $("clearAllCancelBtn");
+      if(!btn || !pop || !confirmBtn || !cancelBtn) return;
+      function closeConfirm(){ pop.hidden = true; }
+      btn.addEventListener("click", function(e){
+        if(e) e.stopPropagation();
+        pop.hidden = !pop.hidden;
+        if(!pop.hidden) confirmBtn.focus();
+      });
+      cancelBtn.addEventListener("click", function(e){
+        if(e) e.stopPropagation();
+        closeConfirm();
+        btn.focus();
+      });
+      confirmBtn.addEventListener("click", function(e){
+        if(e) e.stopPropagation();
+        closeConfirm();
+        if(typeof clearAllRoomsToEmpty !== "function") return;
+        Promise.resolve(clearAllRoomsToEmpty()).then(function(changed){
+          if(typeof toast === "function") toast(changed ? "All rooms cleared." : "All rooms were already empty.");
+          setStatus(changed ? "All rooms cleared" : "All rooms already empty");
+        });
+      });
+      pop.addEventListener("click", function(e){ if(e) e.stopPropagation(); });
+      document.addEventListener("click", function(){ if(!pop.hidden) closeConfirm(); });
+      document.addEventListener("keydown", function(e){
+        if(e.key === "Escape" && !pop.hidden){ closeConfirm(); btn.focus(); }
+      });
+    })();
     $("displayOnlyActiveSwitch").addEventListener("click", function(e){
       if(e) e.stopPropagation();
       toggleDisplayOnlyActive();
