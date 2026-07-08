@@ -832,20 +832,19 @@
       var emptyCardMinHeight = clampActiveDisplayFitNumber(cardMinHeight * 0.66, 126, 152);
       // Cap the display font to what the column can actually hold. The
       // user's fontDisplay setting is a fixed px value that knows nothing
-      // about column width; at narrow columns it wraps every summary segment
-      // and breaks names mid-word (word-break:break-word). Budget the text
-      // width the card really has — column minus roomBody padding and, when
-      // doctor badges are on, the reserved corner-badge gutter (the CSS
-      // max(76px, 14px + 68px*scale) rule) — and size for roughly 10-11
-      // characters per line (~0.55em avg glyph at weight 700). Must be set
-      // before the contentHeight measurement below so the scale math sees
-      // the capped text height.
+      // about column width; at narrow columns it breaks names mid-word
+      // (word-break:break-word). Only guard against that failure — don't
+      // shrink further: budget the worst-case line (column minus 32px body
+      // padding minus the 58px notes-dock pad) and size so a ~10-character
+      // word fits (~0.58em avg glyph at weight 700 → 1/5.8 ≈ 0.17). Normal
+      // font sizes pass through uncapped, and wider windows (fullscreen)
+      // raise the cap back to the user's setting. Must be set before the
+      // contentHeight measurement below so the scale math sees the capped
+      // text height.
       var columnWidth = Math.max(1, (availableWidth - (cols - 1) * activeGap) / cols);
       var summaryFontBasis = singleActiveRoom ? singleCardWidth : columnWidth;
-      var badgeScale = clampActiveDisplayFitNumber(state && state.settings ? (state.settings.doctorInitialBadgeScale || 1) : 1, 0.7, 2);
-      var summaryGutter = isRoomCardFieldVisible("DoctorBadge") ? (32 + Math.max(76, 14 + (68 * badgeScale))) : 32;
       var fontDisplaySetting = Math.max(10, Number(state && state.settings ? (state.settings.fontDisplay || 14) : 14));
-      var summaryFontCap = Math.min(fontDisplaySetting, Math.max(15, (summaryFontBasis - summaryGutter) * 0.16));
+      var summaryFontCap = Math.min(fontDisplaySetting, Math.max(15, (summaryFontBasis - 90) * 0.17));
       grid.style.setProperty("--activeFitCols", String(cols));
       grid.style.setProperty("--activeFitGap", activeGap + "px");
       grid.style.setProperty("--activeFitSingleWidth", singleCardWidth.toFixed(4) + "px");

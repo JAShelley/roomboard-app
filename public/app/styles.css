@@ -577,17 +577,15 @@
       line-height: 1;
     }
     #displayGrid.boxView.activeDisplayFit .room.hasDoctorBadge{
-      padding-bottom:56px;
+      /* The corner badge is bottom-anchored (docInitCorner bottom:10px), so
+         clear it vertically: grow the bottom strip it shares with the timer.
+         A full-height right gutter here walled off 76-150px of EVERY text
+         line — the "wasted right side" — and cards are stretched tall by the
+         fit min-heights, so strip height is the cheap dimension. */
+      padding-bottom:max(56px, calc(20px + (68px * var(--doctorInitBadgeScale, 1))));
     }
     #displayGrid.boxView.activeDisplayFit .room.isEmptyDisplayCard.hasDoctorBadge{
       padding-bottom:48px;
-    }
-    #displayGrid.boxView.activeDisplayFit .room.hasDoctorBadge .roomBody{
-      padding-right:max(76px, calc(14px + (68px * var(--doctorInitBadgeScale, 1))));
-    }
-    #displayGrid.boxView.activeDisplayFit .room.hasDoctorBadge.hasRedo .roomBody,
-    #displayGrid.boxView.activeDisplayFit .room.hasDoctorBadge.hasNotesDock .roomBody{
-      padding-right:max(116px, calc(58px + (68px * var(--doctorInitBadgeScale, 1))));
     }
     #displayGrid.boxView.activeDisplayFitSingle .room{
       width:100%;
