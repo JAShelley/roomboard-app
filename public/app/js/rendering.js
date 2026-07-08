@@ -583,7 +583,10 @@
 	        for(var qn=0;qn<roomQuickNotes.length;qn++) summaryParts.push(escapeHtml(roomQuickNotes[qn]));
 	        if(showReady && room.roomReady) summaryParts.push("ROOM READY");
         if(showReady && room.doctorReady) summaryParts.push("DOCTOR READY");
-        summary = summaryParts.length ? '<div class="summary roomInfoLine">' + summaryParts.join('<span class="roomInfoSep" aria-hidden="true">&#12539;</span>') + '</div>' : '';
+        // Join with real spaces: roomInfoLine lays out as inline text (not
+        // flex items), so the spaces are the wrap points that let short
+        // segments share a line instead of each taking a row of its own.
+        summary = summaryParts.length ? '<div class="summary roomInfoLine">' + summaryParts.join(' <span class="roomInfoSep" aria-hidden="true">&#12539;</span> ') + '</div>' : '';
       } else {
         summary = '<div class="muted">Empty</div>';
       }
@@ -669,6 +672,7 @@
       grid.style.removeProperty("--activeFitSingleWidth");
       grid.style.removeProperty("--activeFitCardMinHeight");
       grid.style.removeProperty("--activeFitEmptyCardMinHeight");
+      grid.style.removeProperty("--activeFitFontDisplay");
       grid.style.removeProperty("transform");
       grid.style.removeProperty("width");
     }
@@ -826,11 +830,28 @@
       var minCardHeight = rooms.length <= 4 ? 190 : (rooms.length <= 8 ? 174 : 162);
       var cardMinHeight = clampActiveDisplayFitNumber(usableCardHeight, minCardHeight, maxCardHeight);
       var emptyCardMinHeight = clampActiveDisplayFitNumber(cardMinHeight * 0.66, 126, 152);
+      // Cap the display font to what the column can actually hold. The
+      // user's fontDisplay setting is a fixed px value that knows nothing
+      // about column width; at narrow columns it wraps every summary segment
+      // and breaks names mid-word (word-break:break-word). Budget the text
+      // width the card really has — column minus roomBody padding and, when
+      // doctor badges are on, the reserved corner-badge gutter (the CSS
+      // max(76px, 14px + 68px*scale) rule) — and size for roughly 10-11
+      // characters per line (~0.55em avg glyph at weight 700). Must be set
+      // before the contentHeight measurement below so the scale math sees
+      // the capped text height.
+      var columnWidth = Math.max(1, (availableWidth - (cols - 1) * activeGap) / cols);
+      var summaryFontBasis = singleActiveRoom ? singleCardWidth : columnWidth;
+      var badgeScale = clampActiveDisplayFitNumber(state && state.settings ? (state.settings.doctorInitialBadgeScale || 1) : 1, 0.7, 2);
+      var summaryGutter = isRoomCardFieldVisible("DoctorBadge") ? (32 + Math.max(76, 14 + (68 * badgeScale))) : 32;
+      var fontDisplaySetting = Math.max(10, Number(state && state.settings ? (state.settings.fontDisplay || 14) : 14));
+      var summaryFontCap = Math.min(fontDisplaySetting, Math.max(15, (summaryFontBasis - summaryGutter) * 0.16));
       grid.style.setProperty("--activeFitCols", String(cols));
       grid.style.setProperty("--activeFitGap", activeGap + "px");
       grid.style.setProperty("--activeFitSingleWidth", singleCardWidth.toFixed(4) + "px");
       grid.style.setProperty("--activeFitCardMinHeight", cardMinHeight.toFixed(4) + "px");
       grid.style.setProperty("--activeFitEmptyCardMinHeight", emptyCardMinHeight.toFixed(4) + "px");
+      grid.style.setProperty("--activeFitFontDisplay", summaryFontCap.toFixed(2) + "px");
 
       var contentHeight = Math.max(1, grid.scrollHeight || grid.getBoundingClientRect().height || 1);
       var rawScale = (availableHeight - 2) / contentHeight;

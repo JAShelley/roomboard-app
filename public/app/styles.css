@@ -508,6 +508,11 @@
       justify-content:flex-start;
     }
     #displayGrid.boxView.activeDisplayFit{
+      /* The user's display font is a fixed px setting; the fit engine caps it
+         per column width (--activeFitFontDisplay = min(setting, k*colWidth))
+         so narrow columns don't force mid-word breaks. Card-style variants
+         that calc() off --fontDisplay inherit the cap. */
+      --fontDisplay: var(--activeFitFontDisplay, 14px);
       grid-template-columns: repeat(var(--activeFitCols, var(--cols)), minmax(260px, 1fr));
       gap:var(--activeFitGap, 14px);
       align-items:stretch;
@@ -1087,7 +1092,11 @@
 
     .summary{display:flex; gap:0px; flex-wrap:wrap; align-items:center;}
     .summary.roomInfoLine{
-      gap:6px;
+      /* Inline flow, not flex: flex-wrap gives every segment (name, dot,
+         reason, doctor) its own row once the line is tight, leaving the rest
+         of each row empty. Inline text packs segments onto shared lines,
+         wrapping at the spaces around the dot separators. */
+      display:block;
       color:var(--cardText, var(--text));
       font-weight:700;
       font-size:var(--fontDisplay);
