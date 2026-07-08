@@ -604,14 +604,22 @@
       if(batch.globalChrome) applyGlobalChrome();
       if(batch.displayChrome) syncDisplayChrome();
 
+      var displayDomTouched = false;
       if(batch.displayFull){
         renderDisplay(true);
-      } else if(hasPendingRoomIds(batch.displayRoomIds) && !patchDisplayRooms(getPendingRoomIds(batch.displayRoomIds))){
-        renderDisplay(true);
+        displayDomTouched = true;
+      } else if(hasPendingRoomIds(batch.displayRoomIds)){
+        displayDomTouched = true;
+        if(!patchDisplayRooms(getPendingRoomIds(batch.displayRoomIds))) renderDisplay(true);
       }
 
       if(batch.settingsLists) renderSettingsLists();
-      if(batch.timerBindings) rebuildTimerBindings();
+      // Timer text and alert colors only exist through the cached timer
+      // bindings — freshly rendered cards carry neither. Any render/patch
+      // above replaced card DOM, so the bindings must be rebuilt regardless
+      // of what the batch requested, or the ticker keeps updating detached
+      // nodes while the visible timers sit frozen and colorless.
+      if(batch.timerBindings || displayDomTouched) rebuildTimerBindings();
     }
 
 	    function cloneAccountSettingValue(key, value){

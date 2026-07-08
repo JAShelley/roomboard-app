@@ -998,12 +998,27 @@
     enterAuth();
   }
 
+  var wasLoggedInThisTab = false;
+
   window.roomboardStandaloneFlow = {
     enterAuth: enterAuth,
     enterSetup: enterSetup,
     openBoard: openBoard,
     onAuthState: function(state){
+      var loggedIn = !!(state && state.loggedIn);
       var route = getRoute();
+      if(loggedIn){
+        wasLoggedInThisTab = true;
+      } else if(!route.standalone && (wasLoggedInThisTab || (route.mode === "board" && !hasStoredAuthSession()))){
+        // The session is gone from a tab that had been signed in — idle
+        // expiry, sign-out in another tab, or a restored mode=board tab with
+        // no stored session left to recover. openBoard() rewrote the URL to
+        // mode=board, which is not a standalone route, so without this the
+        // board would stay up saying NOT LOGGED IN. Send the tab back to the
+        // sign-in screen instead.
+        replaceMode("login");
+        route = getRoute();
+      }
       if(!route.standalone) return;
       if(state && state.loggedIn && state.hasPractice){
         if(state.newAccount){
