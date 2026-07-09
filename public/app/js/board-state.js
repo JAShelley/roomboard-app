@@ -341,7 +341,7 @@
       // Every tick is a cheap updated_at version probe (see startAutoPull in
       // auth-sync.js); the full board is only downloaded when the version
       // moved, so the tick can stay fast without heavy egress.
-      var AUTO_PULL_INTERVAL_MS = 6000;
+      var AUTO_PULL_INTERVAL_MS = 5000;
       var SHORT_INTERACTION_HOLD_MS = 450;
       var CHANGE_INTERACTION_HOLD_MS = 700;
       var TEXT_INPUT_HOLD_MS = 1200;
