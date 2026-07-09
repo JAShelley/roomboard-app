@@ -338,13 +338,10 @@
     window.getLastKnownPracticeId = getLastKnownPracticeId;
     window.getBootPersistenceScope = getBootPersistenceScope;
       var REMOTE_CONFIG_REFRESH_THROTTLE_MS = 1200;
+      // Every tick is a cheap updated_at version probe (see startAutoPull in
+      // auth-sync.js); the full board is only downloaded when the version
+      // moved, so the tick can stay fast without heavy egress.
       var AUTO_PULL_INTERVAL_MS = 6000;
-      // When the realtime channel is healthy it pushes every change, so the 6s
-      // auto-pull doesn't need to fetch the whole board on every tick. Instead we
-      // do a lower-frequency reconciliation pull to catch any event the channel
-      // might have dropped. Keeps idle-board egress down versus the old ~12s
-      // refetch while still reconciling reasonably often.
-      var REALTIME_RECONCILE_INTERVAL_MS = 25 * 1000;
       var SHORT_INTERACTION_HOLD_MS = 450;
       var CHANGE_INTERACTION_HOLD_MS = 700;
       var TEXT_INPUT_HOLD_MS = 1200;

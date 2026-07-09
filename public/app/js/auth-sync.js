@@ -172,6 +172,7 @@
 	    var statsLoggingAvailable = true;
 	    var lastKnownBoardUpdatedAtIso = null;
 	    var lastKnownBoardUpdatedAtMs = 0;
+	    var boardVersionProbeInFlight = null;
 
 	    function getBoardUpdatedAtMs(updatedAt){
 	      var normalized = normalizeServerNowIso(updatedAt);
@@ -2989,6 +2990,20 @@
       return true;
     }
 
+    async function probeBoardVersion(){
+      // Cheapest possible freshness check: one row, one timestamp column.
+      // The response body is ~a hundred bytes versus the full board JSON,
+      // which is what makes a 6s poll affordable egress-wise.
+      if(!supabase || !currentPracticeId) return null;
+      var res = await supabase
+        .from("practice_board_state")
+        .select("updated_at")
+        .eq("practice_id", currentPracticeId)
+        .maybeSingle();
+      if(res.error) throw res.error;
+      return res.data && res.data.updated_at ? res.data.updated_at : null;
+    }
+
     async function loadPracticeConfigSnapshot(practiceId){
       if(!supabase || !practiceId) return null;
       var roomsReq = supabase.from("rooms").select("id, name, sort_order, active").eq("practice_id", practiceId).order("sort_order", { ascending: true });
@@ -4525,18 +4540,29 @@
 	      autoPullTimer = setInterval(function(){
 	        if(!supabase || !currentPracticeId) return;
 	        if(remoteRateLimitUntil > Date.now()) return;
-        // Realtime is live: it pushes every change, so don't fast-poll the whole
-        // board. Only do an occasional reconciliation pull (safety net for a
-        // dropped event). When realtime is unhealthy, fall through to the 6s
-        // fallback poll so screens still recover quickly.
-        if(realtimeChannelHealthy){
-          if(Date.now() - Math.max(lastRemoteRefreshAt || 0, lastBoardActivityAt || 0) < REALTIME_RECONCILE_INTERVAL_MS) return;
-        }
-	        if(saving || isUiInteractionLocked()){
-	          queuePendingRemoteRefresh("Refresh queued", "board");
-	          return;
-	        }
-	        refreshPracticeDataNow("Refreshing");
+	        if(saving || boardVersionProbeInFlight) return;
+        // Near-live without the egress: every tick costs only an updated_at
+        // probe (~a hundred bytes), so a change that realtime dropped still
+        // lands within one tick. The full board download happens only when
+        // the remote version is actually newer than what this client last
+        // applied or saved. (The old scheme pulled the whole board on a
+        // timer: every 6s when realtime was down, every 25s even when the
+        // board was idle — heavy egress AND up to ~30s perceived lag when
+        // the realtime channel silently dropped events.)
+        boardVersionProbeInFlight = probeBoardVersion().then(function(updatedAt){
+          var remoteMs = getBoardUpdatedAtMs(updatedAt);
+          if(!remoteMs || remoteMs <= lastKnownBoardUpdatedAtMs) return false;
+          if(isUiInteractionLocked()){
+            queuePendingRemoteRefresh("Remote board update", "board");
+            return false;
+          }
+          return refreshPracticeDataNow("Refreshing");
+        }).catch(function(e){
+          if(isRateLimitError(e)) noteRateLimit();
+          else console.warn("Board version probe failed:", e);
+        }).finally(function(){
+          boardVersionProbeInFlight = null;
+        });
       }, AUTO_PULL_INTERVAL_MS);
 	    }
 
