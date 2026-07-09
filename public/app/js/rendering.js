@@ -765,6 +765,47 @@
       return Math.max(min, Math.min(max, value));
     }
 
+    function applyBadgeClearanceClasses(grid){
+      // The corner badge sits bottom-right; summary text only needs the tall
+      // bottom reserve when one of its wrapped lines would actually run into
+      // the badge box. Everyone else keeps the slim 56px timer strip — a
+      // blanket reserve put a dead band above the timer on every short card.
+      // Adding the class only grows the card downward (text is top-anchored),
+      // so a second measurement pass can never flip the result back. Returns
+      // whether any card changed, so callers re-running the pass after the
+      // scale transform (which re-wraps text at the (100/scale)% layout
+      // width) know to settle the scale against the new content height.
+      var changed = false;
+      var cards = grid.querySelectorAll(".room.hasDoctorBadge:not(.isEmptyDisplayCard)");
+      for(var i=0;i<cards.length;i++){
+        var card = cards[i];
+        var badge = card.querySelector(".docInitCorner");
+        var summary = card.querySelector(".summary");
+        if(!badge || !summary) continue;
+        var badgeRect = badge.getBoundingClientRect();
+        if(!badgeRect || !badgeRect.height) continue;
+        var collides = false;
+        try{
+          var range = document.createRange();
+          range.selectNodeContents(summary);
+          var lineRects = range.getClientRects();
+          for(var r=0;r<lineRects.length;r++){
+            var line = lineRects[r];
+            if(!line || !line.width) continue;
+            if(line.bottom > badgeRect.top - 6 && line.right > badgeRect.left - 8){
+              collides = true;
+              break;
+            }
+          }
+        }catch(err){
+          collides = true; // fail safe: keep the clearance
+        }
+        if(card.classList.contains("summaryClearsBadge") !== collides) changed = true;
+        card.classList.toggle("summaryClearsBadge", collides);
+      }
+      return changed;
+    }
+
     function applyActiveDisplayFit(){
       activeDisplayFitFrame = 0;
       var grid = $("displayGrid");
@@ -827,9 +868,7 @@
       var usableCardHeight = (availableHeight - (dividerCount * dividerHeight) - (Math.max(0, gridRows - 1) * activeGap)) / roomRows;
       var onlyActive = !!(state && state.settings && state.settings.displayOnlyActive);
       var maxCardHeight = singleActiveRoom ? 520 : (onlyActive ? 220 : (rooms.length <= 4 ? 380 : (rooms.length <= 8 ? 300 : 235)));
-      var minCardHeight = rooms.length <= 4 ? 190 : (rooms.length <= 8 ? 174 : 162);
-      var cardMinHeight = clampActiveDisplayFitNumber(usableCardHeight, minCardHeight, maxCardHeight);
-      var emptyCardMinHeight = clampActiveDisplayFitNumber(cardMinHeight * 0.66, 126, 152);
+      var minCardHeight = rooms.length <= 4 ? 160 : (rooms.length <= 8 ? 152 : 146);
       // Cap the display font to what the column can actually hold. The
       // user's fontDisplay setting is a fixed px value that knows nothing
       // about column width; at narrow columns it breaks names mid-word
@@ -848,14 +887,44 @@
       grid.style.setProperty("--activeFitCols", String(cols));
       grid.style.setProperty("--activeFitGap", activeGap + "px");
       grid.style.setProperty("--activeFitSingleWidth", singleCardWidth.toFixed(4) + "px");
+      grid.style.setProperty("--activeFitFontDisplay", summaryFontCap.toFixed(2) + "px");
+
+      // Cards used to be stretched to fill the window no matter how little
+      // they held, leaving a dead band between a one-line summary and the
+      // timer. Measure the tallest card's natural content (min-heights off,
+      // badge-clearance classes stripped so the pass is deterministic) and
+      // stop stretching ~26px past it. When the shorter grid leaves window
+      // space, the scale-up below zooms the whole board instead — bigger
+      // text rather than in-card voids.
+      grid.style.setProperty("--activeFitCardMinHeight", "0px");
+      grid.style.setProperty("--activeFitEmptyCardMinHeight", "0px");
+      var fitCardNodes = grid.querySelectorAll(".room");
+      var naturalTallest = 0;
+      for(var ci=0; ci<fitCardNodes.length; ci++){
+        fitCardNodes[ci].classList.remove("summaryClearsBadge");
+      }
+      for(var ni=0; ni<fitCardNodes.length; ni++){
+        if(fitCardNodes[ni].classList.contains("isEmptyDisplayCard")) continue;
+        naturalTallest = Math.max(naturalTallest, fitCardNodes[ni].offsetHeight || 0);
+      }
+      var contentCapHeight = naturalTallest > 0 ? (naturalTallest + 26) : Infinity;
+      var cardMinHeight = clampActiveDisplayFitNumber(Math.min(usableCardHeight, contentCapHeight), minCardHeight, maxCardHeight);
+      var emptyCardMinHeight = clampActiveDisplayFitNumber(cardMinHeight * 0.66, 126, 152);
       grid.style.setProperty("--activeFitCardMinHeight", cardMinHeight.toFixed(4) + "px");
       grid.style.setProperty("--activeFitEmptyCardMinHeight", emptyCardMinHeight.toFixed(4) + "px");
-      grid.style.setProperty("--activeFitFontDisplay", summaryFontCap.toFixed(2) + "px");
+      applyBadgeClearanceClasses(grid);
 
       var contentHeight = Math.max(1, grid.scrollHeight || grid.getBoundingClientRect().height || 1);
       var rawScale = (availableHeight - 2) / contentHeight;
       var maxScale = singleActiveRoom ? 1.65 : (rooms.length <= 4 ? 1.36 : (rooms.length <= 8 ? 1.18 : 1.08));
       if(emptyRoomCount) maxScale = Math.min(maxScale, 1);
+      if(!singleActiveRoom){
+        // Zooming shrinks the grid's layout box to (100/scale)%; it must
+        // still hold `cols` tracks at the minmax(260px,1fr) floor or the
+        // last column clips off the window edge (leg 2 of the fit contract).
+        var maxScaleByWidth = availableWidth / Math.max(1, (cols * 260) + ((cols - 1) * activeGap));
+        maxScale = Math.min(maxScale, Math.max(1, maxScaleByWidth));
+      }
       var minimumReadableScale = rooms.length <= 4 ? 0.9 : (rooms.length <= 8 ? 0.78 : 0.68);
       var scale = Math.min(maxScale, rawScale);
       var needsScroll = false;
@@ -871,6 +940,30 @@
         grid.style.width = Math.min(singleVisualWidth / scale, availableWidth / scale).toFixed(4) + "px";
       } else {
         grid.style.width = (100 / scale).toFixed(4) + "%";
+      }
+      // The transform changed the grid's layout width, which re-wraps the
+      // summaries — lines can now reach the badge in cards the pre-scale
+      // clearance pass measured as safe. Re-check at the final geometry; if
+      // any card gained (or lost) the tall reserve the grid height moved, so
+      // settle the scale once against the new content height to keep the
+      // bottom row on screen.
+      if(applyBadgeClearanceClasses(grid)){
+        var settledHeight = Math.max(1, grid.scrollHeight || 1);
+        var settledScale = (availableHeight - 2) / settledHeight;
+        if(settledScale < scale){
+          if(settledScale < minimumReadableScale){
+            needsScroll = true;
+            wrap.style.overflow = "auto";
+          }
+          scale = Math.max(minimumReadableScale, settledScale);
+          grid.style.transform = "scale(" + scale.toFixed(4) + ")";
+          if(singleActiveRoom){
+            var settledSingleWidth = Math.min(availableWidth, Math.max(singleCardWidth, availableWidth * 0.72));
+            grid.style.width = Math.min(settledSingleWidth / scale, availableWidth / scale).toFixed(4) + "px";
+          } else {
+            grid.style.width = (100 / scale).toFixed(4) + "%";
+          }
+        }
       }
       clearActiveDisplayFitPendingReturn();
     }

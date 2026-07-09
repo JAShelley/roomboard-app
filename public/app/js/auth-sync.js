@@ -173,6 +173,11 @@
 	    var lastKnownBoardUpdatedAtIso = null;
 	    var lastKnownBoardUpdatedAtMs = 0;
 	    var boardVersionProbeInFlight = null;
+	    // Consecutive failed version probes. Network blips are routine on wall
+	    // displays (wifi drops, device sleep/wake), so nothing is surfaced until
+	    // the streak shows a real outage; the probe loop retries regardless.
+	    var boardProbeFailureStreak = 0;
+	    var BOARD_PROBE_OFFLINE_STREAK = 3;
 
 	    function getBoardUpdatedAtMs(updatedAt){
 	      var normalized = normalizeServerNowIso(updatedAt);
@@ -2362,6 +2367,14 @@
           });
           window.addEventListener("online", function(){
             refreshSupabaseSessionIfNeeded("online");
+            // don't wait for the next 5s tick: probe as soon as the network
+            // is back (small delay — routing isn't always instantly usable)
+            setTimeout(function(){
+              if(typeof runBoardVersionProbeTick === "function") runBoardVersionProbeTick();
+            }, 800);
+          });
+          window.addEventListener("offline", function(){
+            setSyncUI("err", "Offline");
           });
         }
 	    }
@@ -3570,6 +3583,22 @@
       setStatus("Supabase rate limit reached. Slowing sync briefly.");
     }
 
+    function isNetworkFetchError(err){
+      // fetch() rejects with a bare TypeError when the request never reached
+      // the server (wifi blip, sleep/wake, DNS): Chrome "Failed to fetch",
+      // Safari "Load failed", Firefox "NetworkError when attempting...".
+      // These are transient and self-heal via the probe loop.
+      if(typeof navigator !== "undefined" && navigator && navigator.onLine === false) return true;
+      var message = String(err && (err.message || err.details || err.error_description) || err || "").toLowerCase();
+      return message.indexOf("failed to fetch") >= 0
+        || message.indexOf("fetch failed") >= 0
+        || message.indexOf("networkerror") >= 0
+        || message.indexOf("network error") >= 0
+        || message.indexOf("network request failed") >= 0
+        || message.indexOf("load failed") >= 0
+        || message.indexOf("timed out") >= 0;
+    }
+
     async function saveClinicConfigData(){
       normalizeSettingsForSave(state);
       var nextSignature = getPracticeConfigSignature();
@@ -3756,7 +3785,8 @@
             board: !!(shouldSaveBoard || localBoardDirty),
             userSettings: !!(shouldSaveUserSettings && !shouldSaveConfig)
           }, "Retrying save");
-          setStatus((shouldSaveAppointmentTypes ? "Appointment type save failed. " : shouldSaveConfig ? "Clinic save failed. " : shouldSaveBoard ? "Board save failed. " : "Settings save failed. ") + "Retrying automatically. " + getErrorMessage(e));
+          var retryDetail = isNetworkFetchError(e) ? "Connection lost — will retry when back online." : getErrorMessage(e);
+          setStatus((shouldSaveAppointmentTypes ? "Appointment type save failed. " : shouldSaveConfig ? "Clinic save failed. " : shouldSaveBoard ? "Board save failed. " : "Settings save failed. ") + "Retrying automatically. " + retryDetail);
 	          if(shouldSaveConfig || shouldSaveAppointmentTypes || shouldSaveUserSettings || settingsRemoteSaveQueued) noteSettingsRemoteQueued("Retrying save…");
         }
         if(isRateLimitError(e)){
@@ -3887,9 +3917,17 @@
         return true;
       }).catch(function(e){
         console.warn("Board refresh failed:", e);
-        if(isRateLimitError(e)) noteRateLimit();
-        else setSyncUI("err", "Refresh failed");
-        setStatus("Board refresh failed. Retrying automatically. " + getErrorMessage(e));
+        if(isRateLimitError(e)){
+          noteRateLimit();
+        } else if(isNetworkFetchError(e)){
+          // transient network drop: the next probe tick retries; keep the
+          // wall display free of exception text
+          setSyncUI("err", "Offline — retrying");
+          setStatus("Connection lost. The board will resync automatically.");
+        } else {
+          setSyncUI("err", "Refresh failed");
+          setStatus("Board refresh failed. Retrying automatically. " + getErrorMessage(e));
+        }
         return false;
       }).finally(function(){
         remoteRefreshInFlight = null;
@@ -3932,9 +3970,15 @@
         return true;
       }).catch(function(e){
         console.warn("Settings refresh failed:", e);
-        if(isRateLimitError(e)) noteRateLimit();
-        else setSyncUI("err", "Settings refresh failed");
-        setStatus("Settings refresh failed. Retrying automatically. " + getErrorMessage(e));
+        if(isRateLimitError(e)){
+          noteRateLimit();
+        } else if(isNetworkFetchError(e)){
+          setSyncUI("err", "Offline — retrying");
+          setStatus("Connection lost. Settings will resync automatically.");
+        } else {
+          setSyncUI("err", "Settings refresh failed");
+          setStatus("Settings refresh failed. Retrying automatically. " + getErrorMessage(e));
+        }
         return false;
       }).finally(function(){
         remoteConfigRefreshInFlight = null;
@@ -4535,12 +4579,10 @@
 	      }
 	    }, true);
 
-	    function startAutoPull(){
-	      if(autoPullTimer) clearInterval(autoPullTimer);
-	      autoPullTimer = setInterval(function(){
-	        if(!supabase || !currentPracticeId) return;
-	        if(remoteRateLimitUntil > Date.now()) return;
-	        if(saving || boardVersionProbeInFlight) return;
+	    function runBoardVersionProbeTick(){
+	      if(!supabase || !currentPracticeId) return null;
+	      if(remoteRateLimitUntil > Date.now()) return null;
+	      if(saving || boardVersionProbeInFlight) return null;
         // Near-live without the egress: every tick costs only an updated_at
         // probe (~a hundred bytes), so a change that realtime dropped still
         // lands within one tick. The full board download happens only when
@@ -4550,6 +4592,11 @@
         // board was idle — heavy egress AND up to ~30s perceived lag when
         // the realtime channel silently dropped events.)
         boardVersionProbeInFlight = probeBoardVersion().then(function(updatedAt){
+          if(boardProbeFailureStreak >= BOARD_PROBE_OFFLINE_STREAK){
+            setSyncUI("ok", "Reconnected");
+            setStatus("Connection restored.");
+          }
+          boardProbeFailureStreak = 0;
           var remoteMs = getBoardUpdatedAtMs(updatedAt);
           if(!remoteMs || remoteMs <= lastKnownBoardUpdatedAtMs) return false;
           if(isUiInteractionLocked()){
@@ -4558,12 +4605,32 @@
           }
           return refreshPracticeDataNow("Refreshing");
         }).catch(function(e){
-          if(isRateLimitError(e)) noteRateLimit();
-          else console.warn("Board version probe failed:", e);
+          if(isRateLimitError(e)){
+            noteRateLimit();
+            return false;
+          }
+          boardProbeFailureStreak++;
+          if(isNetworkFetchError(e)){
+            // routine on wall displays (wifi blip, sleep/wake): retry quietly,
+            // only surface a persistent outage
+            if(boardProbeFailureStreak === 1) console.warn("Board version probe failed (network):", e);
+            if(boardProbeFailureStreak === BOARD_PROBE_OFFLINE_STREAK){
+              setSyncUI("err", "Offline — retrying");
+              setStatus("Connection lost. The board will resync automatically.");
+            }
+          } else {
+            console.warn("Board version probe failed:", e);
+          }
+          return false;
         }).finally(function(){
           boardVersionProbeInFlight = null;
         });
-      }, AUTO_PULL_INTERVAL_MS);
+        return boardVersionProbeInFlight;
+	    }
+
+	    function startAutoPull(){
+	      if(autoPullTimer) clearInterval(autoPullTimer);
+	      autoPullTimer = setInterval(runBoardVersionProbeTick, AUTO_PULL_INTERVAL_MS);
 	    }
 
     function msToHMS(ms){

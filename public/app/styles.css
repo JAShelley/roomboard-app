@@ -577,11 +577,13 @@
       line-height: 1;
     }
     #displayGrid.boxView.activeDisplayFit .room.hasDoctorBadge{
-      /* The corner badge is bottom-anchored (docInitCorner bottom:10px), so
-         clear it vertically: grow the bottom strip it shares with the timer.
-         A full-height right gutter here walled off 76-150px of EVERY text
-         line — the "wasted right side" — and cards are stretched tall by the
-         fit min-heights, so strip height is the cheap dimension. */
+      padding-bottom:56px;
+    }
+    /* Tall badge clearance is measured, not blanket: the fit engine flags
+       only cards whose summary lines would actually reach the bottom-right
+       badge (applyBadgeClearanceClasses). A blanket reserve left a dead band
+       above the timer on every short card. */
+    #displayGrid.boxView.activeDisplayFit .room.hasDoctorBadge.summaryClearsBadge{
       padding-bottom:max(56px, calc(20px + (68px * var(--doctorInitBadgeScale, 1))));
     }
     #displayGrid.boxView.activeDisplayFit .room.isEmptyDisplayCard.hasDoctorBadge{
