@@ -928,6 +928,22 @@
     }
 
     .roomName{display:flex; align-items:center; gap:6px; font-weight:700; font-size:var(--fontCard); letter-spacing:.02em; opacity:.85;}
+    /* On-card checklist progress (Room card fields → Checklist progress) */
+    .pclProgressChip{
+      display:inline-flex; align-items:center;
+      margin-left:8px; padding:2px 8px;
+      border-radius:999px;
+      font-size:12px; font-weight:800; line-height:1.4;
+      letter-spacing:.02em;
+      white-space:nowrap; flex:none;
+      border:1px solid rgba(125,211,252,.45);
+      background:rgba(125,211,252,.14);
+      color:var(--cardText, var(--text));
+    }
+    .pclProgressChip.isComplete{
+      border-color:rgba(34,197,94,.6);
+      background:rgba(34,197,94,.18);
+    }
     #displayView .roomName,
     #displayView .wbRoomName,
     #displayView .wbPatientName,
@@ -1243,6 +1259,35 @@
         inset 0 0 0 1px color-mix(in srgb, var(--timerAlert2Color, #fb7185) 44%, transparent),
         0 0 0 1px color-mix(in srgb, var(--timerAlert2Color, #fb7185) 20%, transparent);
     }
+    /* Heat mode (Timer alerts → Blend alert colors): between alert 1 and
+       alert 2 the timer text blends toward the alert-2 color (--timerHeat is
+       set by the ticker in 5% steps); the chip border stays neutral until
+       alert 2, so a border strictly means "alert 2". */
+    html[data-timer-heat="on"] .time.timerAlert1{
+      color: color-mix(in srgb, var(--timerAlert2Color, #fb7185) var(--timerHeat, 0%), var(--timerAlert1Color, #fbbf24)) !important;
+    }
+    html[data-timer-heat="on"] .timerBox.timerAlert1{
+      border-color: var(--timerBoxBorder, var(--border));
+      box-shadow: none;
+    }
+    /* Ring stopwatch (Actions → Stopwatch style: Ring): conic ring fills
+       over the configured interval (--ringP set by the ticker). */
+    .timerRing{ display:none; }
+    html[data-stopwatch-style="ring"] #displayGrid.boxView .timerBox .timerRing{
+      display:inline-block;
+      flex:none;
+      width: calc(var(--fontTimer, 18px) * 1.15);
+      height: calc(var(--fontTimer, 18px) * 1.15);
+      border-radius:50%;
+      background: conic-gradient(currentColor var(--ringP, 0%), rgba(148,163,184,.28) var(--ringP, 0%));
+      -webkit-mask: radial-gradient(closest-side, transparent 55%, #000 57%);
+      mask: radial-gradient(closest-side, transparent 55%, #000 57%);
+      color: var(--cardMuted, var(--muted));
+    }
+    html[data-stopwatch-style="ring"] .timerBox.timerRunning .timerRing{ color:#22c55e; }
+    html[data-stopwatch-style="ring"] .timerBox.timerAlert1 .timerRing{ color: var(--timerAlert1Color, #fbbf24); }
+    html[data-stopwatch-style="ring"] .timerBox.timerAlert2 .timerRing{ color: var(--timerAlert2Color, #fb7185); }
+    html[data-stopwatch-style="ring"] .timerBox.timerCleaning .timerRing{ color:#f59e0b; }
 
     /* ══ Card layout variants ════════════════════════════════════════
        Selected via Settings → Card layout (state.settings.cardStyle),
@@ -1364,6 +1409,36 @@
       font-weight: 800;
       text-shadow: 0 1px 2px rgba(0,0,0,.5);
     }
+
+    /* Lobby: guest-facing light cards. The JS render path redacts patient
+       details (status word + type + doctor only), drops the notes/checklist
+       docks and skips the pastel fill, providing --roomAccent /
+       --roomAccentText for the solid header. Colours are hard-set so the
+       light look is theme-proof. */
+    #displayGrid.boxView[data-card-style="lobby"] .room{
+      border:1px solid rgba(15,23,42,.14);
+      background: linear-gradient(180deg, #ffffff, #eef2fb);
+    }
+    #displayGrid.boxView[data-card-style="lobby"] .room:not(.cleaning) .roomTop{
+      background: var(--roomAccent, rgba(15,23,42,.08));
+      border-bottom: 0;
+    }
+    #displayGrid.boxView[data-card-style="lobby"] .room:not(.cleaning) .roomName{
+      color: var(--roomAccentText, #0b1220);
+      opacity: 1;
+      font-weight: 800;
+    }
+    #displayGrid.boxView[data-card-style="lobby"] .room .summary.roomInfoLine{
+      color:#17233b;
+    }
+    #displayGrid.boxView[data-card-style="lobby"] .room .roomInfoSep{ color:#7385a8; }
+    #displayGrid.boxView[data-card-style="lobby"] .room .muted{ color:#5a6a8c; }
+    #displayGrid.boxView[data-card-style="lobby"] .room .timerBox{
+      border:1px solid rgba(15,23,42,.16);
+      background:#f4f7ff;
+    }
+    #displayGrid.boxView[data-card-style="lobby"] .room .time{ color:#17233b; }
+    #displayGrid.boxView[data-card-style="lobby"] .room.isEmptyDisplayCard{ opacity:.78; }
 
     /* ── Minimal: no chrome, pure airy typography ─────────────────── */
     html[data-stopwatch-style="minimal"] .timerBox,

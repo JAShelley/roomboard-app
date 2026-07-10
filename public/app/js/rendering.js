@@ -567,28 +567,39 @@
         return el;
       }
 
+      var cardStyleSetting = state.settings.cardStyle || "original";
+      var isLobbyStyle = cardStyleSetting === "lobby";
+      // Lobby cards are guest-facing: no notes, no checklist, no patient
+      // details — only room status, type colour, doctor and the timer.
+      if(isLobbyStyle) notesDock = "";
       var isEmpty = !room.patientName && !room.needsCleaning;
       var hasNotesDock = !!notesDock;
       var displayDoctorInitials = showDoctorBadge ? getDoctorInitials(room.doctor) : "";
       var cls = "room" + (isEmpty ? " isEmptyDisplayCard" : "") + (room.needsCleaning ? " cleaning" : "") + (hasRedoDischarge(room) ? " hasRedo" : "") + (hasNotesDock ? " hasNotesDock" : "") + (displayDoctorInitials ? " hasDoctorBadge" : "") + (hasTimerAlert2(room) ? " timerAlertBorder" : "") + (roomMatchesSelectedDoctor(room) ? " doctorSelected" : "");
       var summary = "";
       if(room.needsCleaning){
-        summary = '<div class="summary"><span class="pill" style="border-color: rgba(251,191,36,.55); background: rgba(251,191,36,.12);"><strong>NEEDS TO BE CLEANED</strong></span></div>';
+        summary = '<div class="summary"><span class="pill" style="border-color: rgba(251,191,36,.55); background: rgba(251,191,36,.12);"><strong>' + (isLobbyStyle ? 'Being cleaned' : 'NEEDS TO BE CLEANED') + '</strong></span></div>';
       } else if(!isEmpty){
         var summaryParts = [];
-        if(showPatient && room.patientName) summaryParts.push(escapeHtml(room.patientName));
-        if(showType) summaryParts.push(escapeHtml(color.title));
-	        if(showDoctorName && room.doctor) summaryParts.push(escapeHtml(room.doctor));
-	        if(showTech && room.tech) summaryParts.push(escapeHtml(room.tech));
-	        for(var qn=0;qn<roomQuickNotes.length;qn++) summaryParts.push(escapeHtml(roomQuickNotes[qn]));
-	        if(showReady && room.roomReady) summaryParts.push("ROOM READY");
-        if(showReady && room.doctorReady) summaryParts.push("DOCTOR READY");
+        if(isLobbyStyle){
+          summaryParts.push("In visit");
+          if(showType) summaryParts.push(escapeHtml(color.title));
+          if(showDoctorName && room.doctor) summaryParts.push(escapeHtml(room.doctor));
+        } else {
+          if(showPatient && room.patientName) summaryParts.push(escapeHtml(room.patientName));
+          if(showType) summaryParts.push(escapeHtml(color.title));
+          if(showDoctorName && room.doctor) summaryParts.push(escapeHtml(room.doctor));
+          if(showTech && room.tech) summaryParts.push(escapeHtml(room.tech));
+          for(var qn=0;qn<roomQuickNotes.length;qn++) summaryParts.push(escapeHtml(roomQuickNotes[qn]));
+          if(showReady && room.roomReady) summaryParts.push("ROOM READY");
+          if(showReady && room.doctorReady) summaryParts.push("DOCTOR READY");
+        }
         // Join with real spaces: roomInfoLine lays out as inline text (not
         // flex items), so the spaces are the wrap points that let short
         // segments share a line instead of each taking a row of its own.
         summary = summaryParts.length ? '<div class="summary roomInfoLine">' + summaryParts.join(' <span class="roomInfoSep" aria-hidden="true">&#12539;</span> ') + '</div>' : '';
       } else {
-        summary = '<div class="muted">Empty</div>';
+        summary = '<div class="muted">' + (isLobbyStyle ? 'Available' : 'Empty') + '</div>';
       }
 
       el.className = cls;
@@ -601,10 +612,11 @@
         // bar (handled in CSS via --roomAccent). Leave background/text to the
         // theme defaults — no full-colour fill, no contrast override.
         el.style.setProperty("--roomAccent", effectiveColor);
-      } else if((state.settings.cardStyle || "original") === "highContrast"){
-        // High contrast: scoreboard look. CSS paints a dark body, thick
-        // accent frame and a solid accent header — skip the pastel fill and
-        // hand CSS the accent pair (header bg + readable text on it).
+      } else if(cardStyleSetting === "highContrast" || isLobbyStyle){
+        // High contrast (scoreboard) and Lobby (light guest view) both paint
+        // their own card surface in CSS with a solid accent header — skip the
+        // pastel fill and hand CSS the accent pair (header bg + readable
+        // text on it).
         el.style.setProperty("--roomAccent", effectiveColor);
         el.style.setProperty("--roomAccentText", pickReadableTextColor(effectiveColor));
       } else {
@@ -613,21 +625,31 @@
         el.style.background = "linear-gradient(180deg, " + effectiveColor + "E6, " + effectiveColor + "CC)";
         applyRoomCardContrastVars(el, (state.settings.cardTextMode === "light") ? "#ffffff" : (state.settings.cardTextMode === "dark") ? "#0b1220" : pickReadableTextColor(effectiveColor));
       }
+      // On-card checklist progress chip (toggleable via Room card fields);
+      // hidden on lobby cards and follows the checklist feature's gating.
+      var checklistChip = "";
+      if(!isLobbyStyle && !isEmpty && !room.needsCleaning && isRoomCardFieldVisible("Checklist") && typeof window.getPatientChecklistProgress === "function"){
+        var pclProgress = window.getPatientChecklistProgress(room);
+        if(pclProgress && pclProgress.total > 0){
+          checklistChip = '<span class="pclProgressChip' + (pclProgress.done >= pclProgress.total ? ' isComplete' : '') + '" data-pcl-progress="' + escapeHtml(room.id) + '" role="img" aria-label="Checklist ' + pclProgress.done + ' of ' + pclProgress.total + ' complete">✓ ' + pclProgress.done + '/' + pclProgress.total + '</span>';
+        }
+      }
       el.innerHTML =
         '<div class="roomTop">'
-          + '<div class="roomName"><span class="wbRoomNameWrap"><span class="wbRoomName">'+escapeHtml(room.name)+'</span></span></div>'
+          + '<div class="roomName"><span class="wbRoomNameWrap"><span class="wbRoomName">'+escapeHtml(room.name)+'</span></span>' + checklistChip + '</div>'
           + '<button class="iconBtn" data-action="displayDischarge" data-room-id="'+room.id+'" title="'+(room.needsCleaning ? 'Mark clean' : 'Discharge')+'" aria-label="'+(room.needsCleaning ? 'Mark clean' : 'Discharge')+'">'+getDischargeButtonIcon(room.needsCleaning)+'</button>'
         + '</div>'
         + '<div class="roomBody">'
           + summary
           + '<div class="timerRow">'
             + '<div class="timerBox'+(room.needsCleaning ? ' timerCleaning' : (isTimerRunning ? ' timerRunning' : ''))+'">'
+              + '<span class="timerRing" aria-hidden="true"></span>'
               + '<div class="time'+(room.needsCleaning ? ' timerCleaning' : (isTimerRunning ? ' timerRunning' : ''))+'" data-timerText data-room-id="'+room.id+'">'+formatTime(computeElapsed(timer))+'</div>'
             + '</div>'
           + '</div>'
         + '</div>'
         + notesDock
-        + (typeof window.buildPatientChecklistDockHtml === "function" ? window.buildPatientChecklistDockHtml(room) : "")
+        + (!isLobbyStyle && typeof window.buildPatientChecklistDockHtml === "function" ? window.buildPatientChecklistDockHtml(room) : "")
         + (hasRedoDischarge(room) ? '<button class="roomRedoBtn" data-action="displayRedo" data-room-id="'+room.id+'" title="Redo discharge" aria-label="Redo discharge">↺</button>' : '')
 	        + (displayDoctorInitials ? '<div class="docInitCorner">' + buildDoctorBadgeMarkup(room.doctor, displayDoctorInitials) + '</div>' : '');
 	      return el;
@@ -2196,7 +2218,8 @@
         "showRoomCardTech",
         "showRoomCardReady",
         "showRoomCardQuickNote",
-        "showRoomCardStatusNotes"
+        "showRoomCardStatusNotes",
+        "showRoomCardChecklist"
       ].forEach(function(id){
         if($(id)) $(id).checked = state.settings[id] !== false;
       });
@@ -2817,6 +2840,9 @@
 	        mobileQuickViewBtn.title = quickViewOn ? "Mobile quick view on" : "Mobile quick view off";
 	      }
 		      if($("stopwatchStyle")) $("stopwatchStyle").value = state.settings.stopwatchStyle || "classic";
+	      if($("stopwatchRingMinutes")) $("stopwatchRingMinutes").value = state.settings.stopwatchRingMinutes || 30;
+	      if($("stopwatchRingRow")) $("stopwatchRingRow").hidden = (state.settings.stopwatchStyle || "classic") !== "ring";
+	      if($("timerAlertHeat")) $("timerAlertHeat").checked = state.settings.timerAlertHeat !== false;
 	      if($("dischargeIconStyle")) $("dischargeIconStyle").value = state.settings.dischargeIconStyle || "paw";
 		      syncOptionalUi();
 

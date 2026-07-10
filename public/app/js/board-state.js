@@ -198,6 +198,8 @@
       displayOnlyActive: false,
       displaySortMode: "room",
       stopwatchStyle: "classic",
+      stopwatchRingMinutes: 30,
+      timerAlertHeat: true,
       highlightDoctor: "",
       cardTextMode: "auto",
       cardStyle: "original",
@@ -374,6 +376,7 @@
 	      "displayOnlyActive",
 	      "displaySortMode",
 			      "stopwatchStyle",
+			      "stopwatchRingMinutes",
 			      "highlightDoctor",
 			      "cardTextMode",
 			      "cardStyle"
@@ -401,6 +404,7 @@
 	      "displayOnlyActive",
 	      "displaySortMode",
 	      "stopwatchStyle",
+	      "stopwatchRingMinutes",
 	      "highlightDoctor",
 	      "cardTextMode",
 	      "cardStyle"
@@ -429,6 +433,7 @@
 			      displayOnlyActive: false,
 			      displaySortMode: "room",
 			      stopwatchStyle: "classic",
+			      stopwatchRingMinutes: 30,
 			      highlightDoctor: "",
 			      cardTextMode: "auto",
 			      cardStyle: "original"
@@ -835,6 +840,9 @@
       if(!state || !state.settings) return;
       document.documentElement.style.setProperty("--timerAlert1Color", state.settings.timerAlert1Color || "#fbbf24");
       document.documentElement.style.setProperty("--timerAlert2Color", state.settings.timerAlert2Color || "#fb7185");
+      // heat mode: the ticker blends the timer color from alert1 -> alert2
+      // (via --timerHeat) and the chip border stays neutral until alert 2
+      document.documentElement.setAttribute("data-timer-heat", state.settings.timerAlertHeat === false ? "off" : "on");
     }
     function ensureAccountSettingsLoaded(scope){
       var nextScope = scope || activeAccountSettingsScope || "guest";
@@ -1046,6 +1054,8 @@
       targetState.settings.fontDisplay = Math.max(10, Number(targetState.settings.fontDisplay || 14));
       targetState.settings.timerAlert1AtSec = Math.max(0, Number(targetState.settings.timerAlert1AtSec || 0));
 	      targetState.settings.timerAlert2AtSec = Math.max(targetState.settings.timerAlert1AtSec, Number(targetState.settings.timerAlert2AtSec || 0));
+	      targetState.settings.stopwatchRingMinutes = Math.max(1, Math.min(600, Number(targetState.settings.stopwatchRingMinutes || 30)));
+	      targetState.settings.timerAlertHeat = targetState.settings.timerAlertHeat !== false;
 	      targetState.settings.practiceNameColor = String(targetState.settings.practiceNameColor || "#fecdd3");
 	      targetState.settings.showPracticeNameBadge = targetState.settings.showPracticeNameBadge !== false;
 	      targetState.settings.practiceLogoScale = Math.max(0.6, Math.min(5, Number(targetState.settings.practiceLogoScale || 1)));

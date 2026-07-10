@@ -299,6 +299,9 @@ function uuid(){
 	      }
 	      var t1 = cachedTimerAlertThresholds.t1;
 	      var t2 = cachedTimerAlertThresholds.t2;
+	      var heatOn = !(state.settings.timerAlertHeat === false);
+	      var ringOn = String(state.settings.stopwatchStyle || "classic") === "ring";
+	      var ringMs = Math.max(1, Number(state.settings.stopwatchRingMinutes || 30)) * 60000;
 	      for(var i=0;i<timerBindings.length;i++){
 	        var binding = timerBindings[i];
 	        if(!binding || !binding.node || !binding.roomEl) continue;
@@ -324,6 +327,34 @@ function uuid(){
 	            binding.boxEl.classList.toggle("timerAlert2", alertLevel === 2);
 	          }
 	          binding.lastAlertLevel = alertLevel;
+	        }
+
+	        // Heat gradient: between alert 1 and alert 2 the timer color blends
+	        // toward the alert-2 color (--timerHeat drives a CSS color-mix).
+	        // Bucketed to 5% steps so the style write happens ~20x per alert
+	        // window instead of every second.
+	        if(heatOn && alertLevel === 1 && t2 > t1){
+	          var heatBucket = Math.max(0, Math.min(20, Math.floor(((elapsedMs - t1) / (t2 - t1)) * 20)));
+	          if(force || binding.lastHeatBucket !== heatBucket){
+	            binding.node.style.setProperty("--timerHeat", (heatBucket * 5) + "%");
+	            binding.lastHeatBucket = heatBucket;
+	          }
+	        } else if(binding.lastHeatBucket != null){
+	          binding.node.style.removeProperty("--timerHeat");
+	          binding.lastHeatBucket = null;
+	        }
+
+	        // Ring stopwatch: --ringP fills the conic ring over the configured
+	        // interval (2% buckets for the same churn reason).
+	        if(ringOn && binding.boxEl){
+	          var ringBucket = Math.max(0, Math.min(50, Math.floor((elapsedMs / ringMs) * 50)));
+	          if(force || binding.lastRingBucket !== ringBucket){
+	            binding.boxEl.style.setProperty("--ringP", (ringBucket * 2) + "%");
+	            binding.lastRingBucket = ringBucket;
+	          }
+	        } else if(binding.lastRingBucket != null){
+	          if(binding.boxEl) binding.boxEl.style.removeProperty("--ringP");
+	          binding.lastRingBucket = null;
 	        }
 
 	        var isCleaning = !!room.needsCleaning;
@@ -376,7 +407,9 @@ function uuid(){
 	          lastAlertLevel: null,
 	          lastCleaning: null,
 	          lastRunning: null,
-	          lastBorder: null
+	          lastBorder: null,
+	          lastHeatBucket: null,
+	          lastRingBucket: null
 	        });
 	      }
 	      updateTimerBindings(true);

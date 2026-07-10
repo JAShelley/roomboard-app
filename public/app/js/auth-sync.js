@@ -2656,7 +2656,8 @@
 		      "showRoomCardTech",
 		      "showRoomCardReady",
 		      "showRoomCardQuickNote",
-		      "showRoomCardStatusNotes"
+		      "showRoomCardStatusNotes",
+		      "showRoomCardChecklist"
 		    ];
 
 		    function buildSharedRoomCardFieldsPayload(sourceSettings){
@@ -2698,6 +2699,7 @@
 		        timerAlert2AtSec: timerAlert2AtSec,
 		        timerAlert1Color: String(sourceSettings.timerAlert1Color || "#fbbf24"),
 		        timerAlert2Color: String(sourceSettings.timerAlert2Color || "#fb7185"),
+		        timerAlertHeat: sourceSettings.timerAlertHeat !== false,
 		        doctorInitialBadgeScale: Math.max(0.7, Math.min(2, Number(sourceSettings.doctorInitialBadgeScale || 1))),
 		        doctorInitialBadgeFontSize: Math.max(10, Math.min(28, Number(sourceSettings.doctorInitialBadgeFontSize || 16))),
 		        doctorInitialBadgeColor: String(sourceSettings.doctorInitialBadgeColor || "#0b1220"),
@@ -2746,6 +2748,7 @@
 	      if(sharedUi.timerAlert2AtSec != null) targetState.settings.timerAlert2AtSec = Math.max(Number(targetState.settings.timerAlert1AtSec || 0), Number(sharedUi.timerAlert2AtSec || 0));
 	      if(sharedUi.timerAlert1Color != null) targetState.settings.timerAlert1Color = String(sharedUi.timerAlert1Color || "#fbbf24");
 	      if(sharedUi.timerAlert2Color != null) targetState.settings.timerAlert2Color = String(sharedUi.timerAlert2Color || "#fb7185");
+	      if(sharedUi.timerAlertHeat != null) targetState.settings.timerAlertHeat = sharedUi.timerAlertHeat !== false;
 	      if(sharedUi.doctorInitialBadgeScale != null) targetState.settings.doctorInitialBadgeScale = Math.max(0.7, Math.min(2, Number(sharedUi.doctorInitialBadgeScale || 1)));
 	      if(sharedUi.doctorInitialBadgeFontSize != null) targetState.settings.doctorInitialBadgeFontSize = Math.max(10, Math.min(28, Number(sharedUi.doctorInitialBadgeFontSize || 16)));
 	      if(sharedUi.doctorInitialBadgeColor != null) targetState.settings.doctorInitialBadgeColor = String(sharedUi.doctorInitialBadgeColor || "#0b1220");

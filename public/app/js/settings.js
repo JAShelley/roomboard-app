@@ -78,6 +78,18 @@
           + '<rect x="24" y="60" width="92" height="18" rx="6" fill="rgba(5,10,20,.9)" stroke="rgba(125,211,252,.8)" stroke-width="2"/>'
           + '<rect x="46" y="65" width="48" height="8" rx="3" fill="rgba(255,255,255,.95)"/>'
           + '</svg>'
+      },
+      {
+        id: "lobby",
+        label: "Lobby",
+        desc: "Guest-safe: light cards, no patient details.",
+        svg: '<svg viewBox="0 0 140 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+          + '<rect x="12" y="9" width="116" height="78" rx="12" fill="rgba(243,247,255,.92)" stroke="rgba(15,23,42,.20)"/>'
+          + '<rect x="15" y="12" width="110" height="14" rx="8" fill="rgba(125,211,252,.9)"/>'
+          + '<rect x="22" y="16" width="30" height="6" rx="3" fill="rgba(11,18,32,.85)"/>'
+          + '<rect x="24" y="37" width="46" height="8" rx="4" fill="rgba(23,35,59,.82)"/>'
+          + '<rect x="24" y="60" width="62" height="16" rx="6" fill="rgba(255,255,255,.95)" stroke="rgba(15,23,42,.25)"/>'
+          + '</svg>'
       }
     ];
 
@@ -1363,7 +1375,8 @@
       "showRoomCardTech",
       "showRoomCardReady",
       "showRoomCardQuickNote",
-      "showRoomCardStatusNotes"
+      "showRoomCardStatusNotes",
+      "showRoomCardChecklist"
     ];
 
 	    function commitLayoutSettings(options){
@@ -1417,6 +1430,7 @@
 	      state.settings.timerAlert2AtSec = Math.max(0, Number($("timerAlert2AtSec").value || 0));
 	      state.settings.timerAlert1Color = String($("timerAlert1Color").value || "#fbbf24");
 	      state.settings.timerAlert2Color = String($("timerAlert2Color").value || "#fb7185");
+		      if($("timerAlertHeat")) state.settings.timerAlertHeat = !!$("timerAlertHeat").checked;
 	      normalizeSettingsForSave(state);
 	      queueSettingsConfigSave({ immediate: !!options.flush });
 	      if(supabase && currentPracticeId) scheduleRemoteSave("board", { immediate: !!options.flush });
@@ -1439,6 +1453,8 @@
 	      state.settings.fontInput = Math.max(10, Number($("fontInput").value || 14));
 	      state.settings.fontDisplay = Math.max(10, Number($("fontDisplay").value || 14));
 	      if($("stopwatchStyle")) state.settings.stopwatchStyle = $("stopwatchStyle").value || "classic";
+	      if($("stopwatchRingMinutes")) state.settings.stopwatchRingMinutes = Math.max(1, Math.min(600, Number($("stopwatchRingMinutes").value || 30)));
+	      if($("stopwatchRingRow")) $("stopwatchRingRow").hidden = (state.settings.stopwatchStyle || "classic") !== "ring";
       if($("dischargeIconStyle")) state.settings.dischargeIconStyle = $("dischargeIconStyle").value || "paw";
 	      persistWindowUiSettings();
       persistAccountUiSettings();
@@ -1739,13 +1755,18 @@
         scheduleFontAutosave(true, 0);
       });
     });
-    ["stopwatchStyle", "dischargeIconStyle"].forEach(function(id){
+    ["stopwatchStyle", "dischargeIconStyle", "stopwatchRingMinutes"].forEach(function(id){
       var el = $(id);
       if(!el) return;
       el.addEventListener("change", function(){
         scheduleFontAutosave(true, 0);
       });
     });
+    if($("timerAlertHeat")){
+      $("timerAlertHeat").addEventListener("change", function(){
+        commitTimerAlertSettings({ force: true });
+      });
+    }
 
     ["displayFontColor", "displayMutedColor"].forEach(function(id){
       var el = $(id);

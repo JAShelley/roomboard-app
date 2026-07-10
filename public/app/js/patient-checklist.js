@@ -38,6 +38,17 @@
       return !(typeof state !== "undefined" && state && state.settings && state.settings.patientChecklistEnabled === false);
     }
 
+    // Progress for the on-card chip (rendering.js). Returns null when the
+    // feature is gated/disabled/ineligible so the chip follows the same
+    // rules as the dock.
+    window.getPatientChecklistProgress = function(room){
+      if(pclIsGated() || !pclFeatureEnabled() || !pclEligibleRoom(room)) return null;
+      var items = Array.isArray(room.checklist) ? room.checklist : [];
+      var doneCount = 0;
+      for(var i = 0; i < items.length; i++){ if(items[i] && items[i].done) doneCount++; }
+      return { done: doneCount, total: items.length };
+    };
+
     // Called from the room card renderer (rendering.js).
     window.buildPatientChecklistDockHtml = function(room){
       if(pclIsGated() || !pclFeatureEnabled() || !pclEligibleRoom(room)) return "";
@@ -79,6 +90,14 @@
       for(var i = 0; i < items.length; i++){ if(items[i] && items[i].done) doneCount++; }
       var count = dock.querySelector(".pclCount");
       if(count) count.textContent = doneCount + "/" + items.length;
+      // keep the on-card progress chip in sync without a full card re-render
+      var chipSelector = '.pclProgressChip[data-pcl-progress="' + (window.CSS && CSS.escape ? CSS.escape(room.id) : room.id) + '"]';
+      var chip = document.querySelector(chipSelector);
+      if(chip){
+        chip.textContent = "✓ " + doneCount + "/" + items.length;
+        chip.classList.toggle("isComplete", items.length > 0 && doneCount >= items.length);
+        chip.setAttribute("aria-label", "Checklist " + doneCount + " of " + items.length + " complete");
+      }
     }
 
     function pclTogglePanel(roomId){
