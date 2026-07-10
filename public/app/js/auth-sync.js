@@ -1262,6 +1262,34 @@
       }
     }
 
+    function shouldExpectSignedInBoard(){
+      // A board that arrives here signed out should bounce to the sign-in
+      // screen ONLY when this device plausibly expects a signed-in clinic:
+      // the board URL (?next=board) or a remembered clinic from a previous
+      // sign-in. Genuine guest/standalone flows (and the startup auth screen
+      // itself) must never be redirected.
+      try{
+        var params = new URLSearchParams(window.location.search || "");
+        if(params.get("mode") === "startup" || params.get("auth") != null) return false;
+        if(params.get("next") === "board") return true;
+      }catch(e){}
+      try{
+        var lastPracticeKey = (typeof LAST_PRACTICE_ID_STORAGE_KEY !== "undefined") ? LAST_PRACTICE_ID_STORAGE_KEY : "roomboard.website.lastPracticeId.v1";
+        if(window.localStorage && window.localStorage.getItem(lastPracticeKey)) return true;
+      }catch(e){}
+      return false;
+    }
+
+    function redirectToStartupSignIn(){
+      if(!shouldExpectSignedInBoard()) return false;
+      try{
+        setStatus("Signed out. Taking you to sign in…");
+        setSyncUI("idle", "Signed out");
+        window.location.href = "/app/index.html?mode=startup&auth=login&next=board";
+        return true;
+      }catch(e){ return false; }
+    }
+
     async function requireAuthenticatedSession(context){
       if(!supabase){
         setStatus("Supabase not ready.");
@@ -4152,6 +4180,7 @@
                 window.__roomboardPracticeId = null;
                 if(typeof window.refreshAccountSettingsForSession === "function") window.refreshAccountSettingsForSession(null);
                 if(typeof window.refreshThemePrefsForSession === "function") window.refreshThemePrefsForSession(null);
+	              if(redirectToStartupSignIn()) return;
 	              state = ensureStateShape(loadLocal() || null);
 	              applyAccountSettingsToState(state);
 	              applySessionUiPrefs(state);
@@ -4163,6 +4192,7 @@
 	              }
               if(!hasRecoverableAuthSnapshot()){
                 updateAuthUI(false);
+                if(redirectToStartupSignIn()) return;
                 setSyncUI("idle", "Guest");
                 return;
               }
@@ -4179,6 +4209,7 @@
               window.__roomboardPracticeId = null;
               if(typeof window.refreshAccountSettingsForSession === "function") window.refreshAccountSettingsForSession(null);
               if(typeof window.refreshThemePrefsForSession === "function") window.refreshThemePrefsForSession(null);
+	              if(redirectToStartupSignIn()) return;
 	              state = ensureStateShape(loadLocal() || null);
 	              applyAccountSettingsToState(state);
 	              applySessionUiPrefs(state);
@@ -4218,6 +4249,10 @@
           window.__roomboardPracticeId = null;
           if(typeof window.refreshAccountSettingsForSession === "function") window.refreshAccountSettingsForSession(null);
           if(typeof window.refreshThemePrefsForSession === "function") window.refreshThemePrefsForSession(null);
+          // cold boot without a session on a device that expects a signed-in
+          // board (e.g. wall display refreshed after its session expired):
+          // land on the sign-in screen, not a dead guest board
+          if(redirectToStartupSignIn()) return;
           setStatus("Log in to load clinic data.");
           setSyncUI("idle", "Guest");
         }
