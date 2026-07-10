@@ -1274,8 +1274,19 @@
     #displayGrid.boxView[data-card-style="compact"] .room .time{
       font-size: calc(var(--fontTimer) * 0.92);
     }
+    /* compact's padding shorthand above wipes the top-right icon clearances
+       (notes dock 58px / redo 52px) — restore them or text runs under the
+       icons */
+    #displayGrid.boxView[data-card-style="compact"] .room.hasNotesDock .roomBody,
+    #displayGrid.boxView[data-card-style="compact"] .room.hasRedo .roomBody{
+      padding-right: 52px;
+    }
 
-    /* Big timer: the clock is the hero; supporting info shrinks. */
+    /* Big timer: the clock is the hero — a full-width centered display strip;
+       supporting info shrinks. */
+    #displayGrid.boxView[data-card-style="bigTimer"] .room{
+      padding-bottom: 92px; /* the 2.1x clock strip is taller than the default 56-64px reserve */
+    }
     #displayGrid.boxView[data-card-style="bigTimer"] .room .summary.roomInfoLine{
       font-size: calc(var(--fontDisplay) * 0.85);
       opacity: .92;
@@ -1284,10 +1295,25 @@
       gap: 8px;
     }
     #displayGrid.boxView[data-card-style="bigTimer"] .room .timerBox{
-      padding: 14px 12px;
+      left: 12px;
+      right: 12px;
+      width: auto;
+      max-width: none;
+      justify-content: center;
+      padding: 12px;
+    }
+    /* keep the wide clock clear of the bottom-right badge / redo button */
+    #displayGrid.boxView[data-card-style="bigTimer"] .room.hasDoctorBadge .timerBox{
+      right: calc(24px + (68px * var(--doctorInitBadgeScale, 1)));
+    }
+    #displayGrid.boxView[data-card-style="bigTimer"] .room.hasRedo .timerBox{
+      right: 56px;
+    }
+    #displayGrid.boxView[data-card-style="bigTimer"] .room.hasDoctorBadge.hasRedo .timerBox{
+      right: calc(70px + (68px * var(--doctorInitBadgeScale, 1)));
     }
     #displayGrid.boxView[data-card-style="bigTimer"] .room .time{
-      font-size: calc(var(--fontTimer) * 1.85);
+      font-size: calc(var(--fontTimer) * 2.1);
       font-weight: 700;
       letter-spacing: 1px;
     }
@@ -1303,21 +1329,40 @@
         linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
     }
 
-    /* High contrast: bolder borders + heavier text for at-a-distance reading. */
+    /* High contrast: scoreboard look — near-black body, thick accent frame,
+       solid accent header, heavy white text. Colours are hard-set (not theme
+       vars) so the at-a-distance contrast holds in light theme too. The JS
+       render path skips the pastel fill for this style and provides
+       --roomAccent / --roomAccentText. */
     #displayGrid.boxView[data-card-style="highContrast"] .room:not(.cleaning){
-      border-width: 2px;
-      border-top-width: 5px;
+      border: 3px solid var(--roomAccent, rgba(255,255,255,.35));
+      background: linear-gradient(180deg, rgba(7,12,24,.97), rgba(10,17,32,.94));
     }
-    #displayGrid.boxView[data-card-style="highContrast"] .room .roomName,
-    #displayGrid.boxView[data-card-style="highContrast"] .room .summary.roomInfoLine{
+    #displayGrid.boxView[data-card-style="highContrast"] .room:not(.cleaning) .roomTop{
+      background: var(--roomAccent, rgba(255,255,255,.08));
+      border-bottom: 0;
+    }
+    #displayGrid.boxView[data-card-style="highContrast"] .room:not(.cleaning) .roomName{
+      color: var(--roomAccentText, #0b1220);
+      opacity: 1;
       font-weight: 800;
     }
-    #displayGrid.boxView[data-card-style="highContrast"] .room .timerBox{
-      border-width: 2px;
+    #displayGrid.boxView[data-card-style="highContrast"] .room:not(.cleaning) .summary.roomInfoLine{
+      color: #f5f8ff;
+      font-weight: 800;
     }
-    #displayGrid.boxView[data-card-style="highContrast"] .room .time{
-      font-weight: 700;
-      text-shadow: 0 1px 2px rgba(0,0,0,.45);
+    #displayGrid.boxView[data-card-style="highContrast"] .room:not(.cleaning) .roomInfoSep,
+    #displayGrid.boxView[data-card-style="highContrast"] .room:not(.cleaning) .muted{
+      color: rgba(226,236,255,.72);
+    }
+    #displayGrid.boxView[data-card-style="highContrast"] .room:not(.cleaning) .timerBox{
+      border: 2px solid color-mix(in srgb, var(--roomAccent, #ffffff) 65%, transparent);
+      background: rgba(5,10,20,.85);
+    }
+    #displayGrid.boxView[data-card-style="highContrast"] .room:not(.cleaning) .time{
+      color: #ffffff;
+      font-weight: 800;
+      text-shadow: 0 1px 2px rgba(0,0,0,.5);
     }
 
     /* ── Minimal: no chrome, pure airy typography ─────────────────── */

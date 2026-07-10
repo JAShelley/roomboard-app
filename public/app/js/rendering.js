@@ -601,6 +601,12 @@
         // bar (handled in CSS via --roomAccent). Leave background/text to the
         // theme defaults — no full-colour fill, no contrast override.
         el.style.setProperty("--roomAccent", effectiveColor);
+      } else if((state.settings.cardStyle || "original") === "highContrast"){
+        // High contrast: scoreboard look. CSS paints a dark body, thick
+        // accent frame and a solid accent header — skip the pastel fill and
+        // hand CSS the accent pair (header bg + readable text on it).
+        el.style.setProperty("--roomAccent", effectiveColor);
+        el.style.setProperty("--roomAccentText", pickReadableTextColor(effectiveColor));
       } else {
         el.style.borderColor = effectiveColor + "55";
         el.style.setProperty("--roomAccent", effectiveColor);

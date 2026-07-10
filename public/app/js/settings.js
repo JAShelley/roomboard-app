@@ -69,14 +69,14 @@
       {
         id: "highContrast",
         label: "High contrast",
-        desc: "Bold borders and text for visibility.",
+        desc: "Scoreboard: dark card, bold colour frame.",
         svg: '<svg viewBox="0 0 140 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
-          + '<rect x="12" y="9" width="116" height="78" rx="12" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.55)" stroke-width="2.5"/>'
-          + '<rect x="20" y="9" width="100" height="8" rx="4" fill="rgba(125,211,252,.9)"/>'
-          + '<rect x="24" y="26" width="50" height="12" rx="4" fill="rgba(255,255,255,.95)"/>'
-          + '<circle cx="114" cy="32" r="6" fill="rgba(255,255,255,.50)"/>'
-          + '<rect x="24" y="46" width="82" height="8" rx="3" fill="rgba(255,255,255,.80)"/>'
-          + '<rect x="24" y="62" width="92" height="16" rx="5" fill="rgba(125,211,252,.20)" stroke="rgba(125,211,252,.75)" stroke-width="2"/>'
+          + '<rect x="12" y="9" width="116" height="78" rx="12" fill="rgba(7,12,24,.95)" stroke="rgba(125,211,252,.95)" stroke-width="3"/>'
+          + '<rect x="15" y="12" width="110" height="15" rx="8" fill="rgba(125,211,252,.95)"/>'
+          + '<rect x="22" y="16" width="34" height="7" rx="3.5" fill="rgba(11,18,32,.9)"/>'
+          + '<rect x="24" y="38" width="56" height="11" rx="4.5" fill="rgba(255,255,255,.96)"/>'
+          + '<rect x="24" y="60" width="92" height="18" rx="6" fill="rgba(5,10,20,.9)" stroke="rgba(125,211,252,.8)" stroke-width="2"/>'
+          + '<rect x="46" y="65" width="48" height="8" rx="3" fill="rgba(255,255,255,.95)"/>'
           + '</svg>'
       }
     ];
