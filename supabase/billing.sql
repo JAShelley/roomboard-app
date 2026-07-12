@@ -287,6 +287,14 @@ on conflict (product_id) do update
       active = true,
       updated_at = timezone('utc', now());
 
+-- Legacy product ids from the first App Store Connect setup. They are not in
+-- App Store Connect anymore and the confirm endpoint rejects them, so keep
+-- them deactivated (deactivated in production 2026-07-04).
+update public.app_store_products
+  set active = false,
+      updated_at = timezone('utc', now())
+  where product_id in ('Base_monthly', 'Base_annual');
+
 create or replace function public.app_store_subscription_has_access(p_practice_id uuid)
 returns boolean
 language sql
