@@ -3511,7 +3511,13 @@
       margin-top:0;
     }
     #displayGrid.listView .activeDoctorDividerLabel{
-      font-size:12px;
+      font-size:14px; /* match the grid view's doctor headings */
+    }
+    /* Only-active list mirrors the grid view: rows keep a readable height
+       and pack under their doctor headings instead of stretching to fill
+       the whole screen when only a few rooms are active. */
+    #displayGrid.listView.activeDoctorGrouped .room{
+      max-height:96px;
     }
     #displayGrid.listView .room{
       position:relative;

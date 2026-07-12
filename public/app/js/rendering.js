@@ -1167,7 +1167,15 @@
       var groupByDoctor = shouldRenderActiveDisplayDoctorGroups(renderMode);
       var nextStructureSig = buildDisplayStructureSignature(displayRooms, renderMode);
       var sameStructure = prevHadCards && !!prevStructureSig && prevStructureSig === nextStructureSig;
-      clearActiveDisplayFit();
+      // Same-structure rebuilds keep the current fit transform while the cards
+      // are recreated. Stripping it here paints one full frame at scale 1 (the
+      // giant-card flash right after the loading screen) because the re-fit
+      // only lands on the next animation frame. The stale transform is correct
+      // for an identical structure, and applyActiveDisplayFit re-measures from
+      // scratch anyway. Structural changes still reset everything and rebuild
+      // hidden behind displayReturnFitPending.
+      if(!sameStructure) clearActiveDisplayFit();
+      else holdDisplayLayoutSettling();
       // Re-mark pending after clearActiveDisplayFit cleared it, so the grid
       // stays hidden while cards are being rebuilt and the scale re-applied.
       // Skip the hide when we're rebuilding the identical structure: the cards
@@ -1179,7 +1187,7 @@
       grid.classList.toggle("activeDisplayFitSingle", renderMode === "grid" && groupByDoctor && displayRooms.length === 1);
       grid.classList.toggle("mobileQuickViewGrid", renderMode === "quick" || renderMode === "mobilecards");
       grid.classList.toggle("activeDoctorGrouped", groupByDoctor);
-      grid.classList.toggle("activeEmptyState", renderMode === "grid" && groupByDoctor && !displayRooms.length);
+      grid.classList.toggle("activeEmptyState", (renderMode === "grid" || renderMode === "list") && groupByDoctor && !displayRooms.length);
       grid.dataset.layout = renderMode;
       grid.dataset.cardStyle = state.settings.cardStyle || "original";
       grid.dataset.roomCount = String(displayRooms.length);
@@ -1202,6 +1210,14 @@
       if(isList){
         var lines = 16;
         if(groupByDoctor){
+          if(!displayRooms.length){
+            // same "All caught up!" state the grid view shows
+            grid.appendChild(createActiveEmptyElement());
+            syncRoomNotesLayers();
+            if(!skipTimerBindingRefresh) rebuildTimerBindings();
+            clearActiveDisplayFitPendingReturn();
+            return;
+          }
           appendActiveDoctorDisplayGroups(grid, displayRooms, renderMode, { maxRooms: lines });
           requestAnimationFrame(applyWbRoomNameMarquee);
           syncRoomNotesLayers();

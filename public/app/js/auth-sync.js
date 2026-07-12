@@ -1075,9 +1075,13 @@
     // flicker back) when the caller actually wants it to stay up.
     var boardLoadHideDelayTimer = null;
     var boardLoadHideFinishTimer = null;
+    var boardLoadHideSettleFrame = 0;
+    var boardLoadHideBackstopTimer = null;
     function cancelBoardLoadHide(){
       if(boardLoadHideDelayTimer){ clearTimeout(boardLoadHideDelayTimer); boardLoadHideDelayTimer = null; }
       if(boardLoadHideFinishTimer){ clearTimeout(boardLoadHideFinishTimer); boardLoadHideFinishTimer = null; }
+      if(boardLoadHideSettleFrame){ cancelAnimationFrame(boardLoadHideSettleFrame); boardLoadHideSettleFrame = 0; }
+      if(boardLoadHideBackstopTimer){ clearTimeout(boardLoadHideBackstopTimer); boardLoadHideBackstopTimer = null; }
     }
 
     function showBoardLoadOverlay(clinicName){
@@ -1130,22 +1134,56 @@
       el.removeAttribute("aria-hidden");
     }
 
+    function beginBoardLoadFade(el){
+      if(boardLoadHideBackstopTimer){ clearTimeout(boardLoadHideBackstopTimer); boardLoadHideBackstopTimer = null; }
+      el.classList.add("isHiding");
+      boardLoadHideFinishTimer = setTimeout(function(){
+        boardLoadHideFinishTimer = null;
+        el.setAttribute("hidden","");
+        el.setAttribute("aria-hidden","true");
+        el.classList.remove("isHiding");
+      }, 520);
+    }
+
+    // The load path schedules its final render through requestAnimationFrame
+    // (scheduleUiRefresh) and the display fit takes one more frame after that.
+    // Starting the fade in the same macrotask reveals the stale board, which
+    // then blinks (displayReturnFitPending hides the grid) or snaps to the new
+    // fit mid-fade — the glitch right after the loading screen. Hold the
+    // opaque overlay for at least two frames, and longer while the grid is
+    // hidden for a rebuild, so the fade only ever reveals the settled board.
+    function waitForBoardSettleThenFade(el, frames){
+      var settling = document.body && document.body.classList.contains("displayReturnFitPending");
+      if(frames < 2 || (settling && frames < 45)){
+        if(!boardLoadHideBackstopTimer){
+          // In a hidden tab animation frames never fire; force the fade after a
+          // hard cap so the overlay can never wedge onscreen. The board it
+          // reveals is re-fitted by the focus/visibilitychange handlers.
+          boardLoadHideBackstopTimer = setTimeout(function(){
+            boardLoadHideBackstopTimer = null;
+            if(boardLoadHideSettleFrame){ cancelAnimationFrame(boardLoadHideSettleFrame); boardLoadHideSettleFrame = 0; }
+            beginBoardLoadFade(el);
+          }, 4000);
+        }
+        boardLoadHideSettleFrame = requestAnimationFrame(function(){
+          boardLoadHideSettleFrame = 0;
+          waitForBoardSettleThenFade(el, frames + 1);
+        });
+        return;
+      }
+      beginBoardLoadFade(el);
+    }
+
     function hideBoardLoadOverlay(){
       var el = document.getElementById("boardLoadOverlay");
       if(!el || el.hidden) return;
       // Already hiding — don't stack a second fade.
-      if(boardLoadHideDelayTimer || boardLoadHideFinishTimer) return;
+      if(boardLoadHideDelayTimer || boardLoadHideFinishTimer || boardLoadHideSettleFrame || boardLoadHideBackstopTimer) return;
       var elapsed = Date.now() - boardLoadOverlayShownAt;
       var remaining = Math.max(0, BOARD_LOAD_OVERLAY_MIN_MS - elapsed);
       boardLoadHideDelayTimer = setTimeout(function(){
         boardLoadHideDelayTimer = null;
-        el.classList.add("isHiding");
-        boardLoadHideFinishTimer = setTimeout(function(){
-          boardLoadHideFinishTimer = null;
-          el.setAttribute("hidden","");
-          el.setAttribute("aria-hidden","true");
-          el.classList.remove("isHiding");
-        }, 520);
+        waitForBoardSettleThenFade(el, 0);
       }, remaining);
     }
 
