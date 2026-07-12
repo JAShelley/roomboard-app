@@ -2784,6 +2784,8 @@
 		        fontTimer: Math.max(12, Number(sourceSettings.fontTimer || 18)),
 		        fontInput: Math.max(10, Number(sourceSettings.fontInput || 14)),
 		        stopwatchStyle: String(sourceSettings.stopwatchStyle || "classic"),
+		        stopwatchRingEnabled: sourceSettings.stopwatchRingEnabled === true,
+		        stopwatchRingMinutes: Math.max(1, Math.min(600, Number(sourceSettings.stopwatchRingMinutes || 30))),
 		        dischargeIconStyle: String(sourceSettings.dischargeIconStyle || "paw"),
 		        displayFontColor: String(sourceSettings.displayFontColor || "#e8eefc"),
 		        displayMutedColor: String(sourceSettings.displayMutedColor || "#a9b6d3"),
@@ -2833,7 +2835,17 @@
 		      if(sharedUi.fontDisplay != null) targetState.settings.fontDisplay = Math.max(10, Number(sharedUi.fontDisplay || 14));
 		      if(sharedUi.fontTimer != null) targetState.settings.fontTimer = Math.max(12, Number(sharedUi.fontTimer || 18));
 		      if(sharedUi.fontInput != null) targetState.settings.fontInput = Math.max(10, Number(sharedUi.fontInput || 14));
-		      if(sharedUi.stopwatchStyle != null) targetState.settings.stopwatchStyle = String(sharedUi.stopwatchStyle || "classic");
+		      if(sharedUi.stopwatchStyle != null){
+		        var sharedStopwatchStyle = String(sharedUi.stopwatchStyle || "classic");
+		        // Legacy senders may still say style "ring" — map to the toggle.
+		        if(sharedStopwatchStyle === "ring"){
+		          sharedStopwatchStyle = "classic";
+		          targetState.settings.stopwatchRingEnabled = true;
+		        }
+		        targetState.settings.stopwatchStyle = sharedStopwatchStyle;
+		      }
+		      if(sharedUi.stopwatchRingEnabled != null) targetState.settings.stopwatchRingEnabled = sharedUi.stopwatchRingEnabled === true;
+		      if(sharedUi.stopwatchRingMinutes != null) targetState.settings.stopwatchRingMinutes = Math.max(1, Math.min(600, Number(sharedUi.stopwatchRingMinutes || 30)));
 		      if(sharedUi.dischargeIconStyle != null) targetState.settings.dischargeIconStyle = String(sharedUi.dischargeIconStyle || "paw");
 		      if(sharedUi.displayFontColor != null) targetState.settings.displayFontColor = String(sharedUi.displayFontColor || "#e8eefc");
 		      if(sharedUi.displayMutedColor != null) targetState.settings.displayMutedColor = String(sharedUi.displayMutedColor || "#a9b6d3");
@@ -3331,6 +3343,20 @@
           effectiveSettings = getBuiltInPersistentSettingsDefaults();
         }
         applyPersistentSettingsSnapshotToState(state, effectiveSettings, { syncWindow: false });
+        // The doctors table is the clinic-wide source of truth for initials.
+        // The personal settings snapshot also contains a doctorInitials map
+        // (it is part of the full settings capture) and would otherwise
+        // shadow the fresh table values merged above with whatever this
+        // account last saved.
+        (function(){
+          var doctorRows = results[1].data || [];
+          if(!doctorRows.length) return;
+          state.settings.doctorInitials = {};
+          for(var di=0; di<doctorRows.length; di++){
+            if(!doctorRows[di].name) continue;
+            state.settings.doctorInitials[doctorRows[di].name] = doctorRows[di].initials || getDoctorInitialsFallback(doctorRows[di].name);
+          }
+        }());
         if(shouldSeedUserSettings){
           try{
             await saveUserSettingsRecord(effectiveSettings, currentUserId);

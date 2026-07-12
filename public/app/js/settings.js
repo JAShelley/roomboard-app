@@ -1359,6 +1359,14 @@
         && String(($("timerAlert2AtSec") && $("timerAlert2AtSec").value) || "").trim() !== "";
     }
 
+    // Timer alert fields accept the Quick Add timer format — "20" means 20
+    // minutes, "20:30" means 20m30s — while storage stays in seconds.
+    function parseTimerAlertInputToSec(value){
+      var ms = parseQuickAddTimerInputToMs(value);
+      if(ms == null) return null;
+      return Math.max(0, Math.round(ms / 1000));
+    }
+
     function fontInputsReady(){
       return String(($("fontBase") && $("fontBase").value) || "").trim() !== ""
         && String(($("fontCard") && $("fontCard").value) || "").trim() !== ""
@@ -1426,8 +1434,14 @@
     function commitTimerAlertSettings(options){
       options = options || {};
       if(!options.force && !timerAlertInputsReady()) return false;
-	      state.settings.timerAlert1AtSec = Math.max(0, Number($("timerAlert1AtSec").value || 0));
-	      state.settings.timerAlert2AtSec = Math.max(0, Number($("timerAlert2AtSec").value || 0));
+	      var alert1Sec = parseTimerAlertInputToSec($("timerAlert1AtSec") && $("timerAlert1AtSec").value);
+	      var alert2Sec = parseTimerAlertInputToSec($("timerAlert2AtSec") && $("timerAlert2AtSec").value);
+	      if(alert1Sec == null || alert2Sec == null){
+	        if(options.force) setStatus("Timer alerts: enter minutes like 20, or minutes:seconds like 20:30.");
+	        return false;
+	      }
+	      state.settings.timerAlert1AtSec = alert1Sec;
+	      state.settings.timerAlert2AtSec = alert2Sec;
 	      state.settings.timerAlert1Color = String($("timerAlert1Color").value || "#fbbf24");
 	      state.settings.timerAlert2Color = String($("timerAlert2Color").value || "#fb7185");
 		      if($("timerAlertHeat")) state.settings.timerAlertHeat = !!$("timerAlertHeat").checked;
@@ -1453,8 +1467,9 @@
 	      state.settings.fontInput = Math.max(10, Number($("fontInput").value || 14));
 	      state.settings.fontDisplay = Math.max(10, Number($("fontDisplay").value || 14));
 	      if($("stopwatchStyle")) state.settings.stopwatchStyle = $("stopwatchStyle").value || "classic";
+	      if($("stopwatchRingEnabled")) state.settings.stopwatchRingEnabled = !!$("stopwatchRingEnabled").checked;
 	      if($("stopwatchRingMinutes")) state.settings.stopwatchRingMinutes = Math.max(1, Math.min(600, Number($("stopwatchRingMinutes").value || 30)));
-	      if($("stopwatchRingRow")) $("stopwatchRingRow").hidden = (state.settings.stopwatchStyle || "classic") !== "ring";
+	      if($("stopwatchRingRow")) $("stopwatchRingRow").hidden = state.settings.stopwatchRingEnabled !== true;
       if($("dischargeIconStyle")) state.settings.dischargeIconStyle = $("dischargeIconStyle").value || "paw";
 	      persistWindowUiSettings();
       persistAccountUiSettings();
@@ -1755,7 +1770,7 @@
         scheduleFontAutosave(true, 0);
       });
     });
-    ["stopwatchStyle", "dischargeIconStyle", "stopwatchRingMinutes"].forEach(function(id){
+    ["stopwatchStyle", "dischargeIconStyle", "stopwatchRingEnabled", "stopwatchRingMinutes"].forEach(function(id){
       var el = $(id);
       if(!el) return;
       el.addEventListener("change", function(){

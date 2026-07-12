@@ -300,7 +300,8 @@ function uuid(){
 	      var t1 = cachedTimerAlertThresholds.t1;
 	      var t2 = cachedTimerAlertThresholds.t2;
 	      var heatOn = !(state.settings.timerAlertHeat === false);
-	      var ringOn = String(state.settings.stopwatchStyle || "classic") === "ring";
+	      var ringOn = state.settings.stopwatchRingEnabled === true
+	        || String(state.settings.stopwatchStyle || "") === "ring"; // legacy style value
 	      var ringMs = Math.max(1, Number(state.settings.stopwatchRingMinutes || 30)) * 60000;
 	      for(var i=0;i<timerBindings.length;i++){
 	        var binding = timerBindings[i];

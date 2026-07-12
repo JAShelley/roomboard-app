@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" href="/favicon.png?v=mark2">
 <link rel="apple-touch-icon" href="/favicon.png?v=mark2">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="./styles.css?v=20260712b">
+<link rel="stylesheet" href="./styles.css?v=20260712d">
 <meta property="og:title" content="RoomBoard" data-id="th-modified" ><meta name="description" content="RoomBoard display board website" data-id="th-modified" ><meta property="og:description" content="RoomBoard display board website" data-id="th-modified" ><meta property="og:type" content="website" data-id="th-modified" ></head>
 <body class="displayTabActive"><button aria-label="Back to top" id="toTopBtn" title="Back to top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
 <div class="chip" data-state="idle" id="syncPill" title="Sync status">
@@ -307,7 +307,7 @@
 </div>
 </div>
 <section class="sxSection" id="clinicProfileEditPanel" hidden>
-<div class="sxHead">Edit clinic profile</div>
+<div class="sxHead">Edit clinic profile <span class="scopeBadge scopeBadgeClinic" title="Applies to everyone in this clinic">Clinic-wide</span></div>
 <div class="settingsCollapsibleBody">
 <div class="miniRow">
 <div class="field">
@@ -425,7 +425,7 @@ Manage subscription
 </div>
 </section>
 <section class="sxSection" id="feedbackPanel">
-<div class="sxHead">Team feedback</div>
+<div class="sxHead">Team feedback <span class="scopeBadge scopeBadgeClinic" title="Applies to everyone in this clinic">Clinic-wide</span></div>
 <div class="settingsCollapsibleBody">
 <textarea class="sxFeedbackTextarea" id="feedbackInput" placeholder="Example: Too many clicks to update a room. Or: We love the Quick Add workflow and want more tools like that." aria-label="Team feedback"></textarea>
 <div class="actions">
@@ -438,17 +438,18 @@ Manage subscription
 </div>
 <div class="tabPanel" id="tabRooms">
 <section class="sxSection">
-<div class="sxHead">Rooms</div>
+<div class="sxHead">Rooms <span class="scopeBadge scopeBadgeClinic" title="Applies to everyone in this clinic">Clinic-wide</span></div>
 <div class="settingsCollapsibleBody">
 <div class="sxAddRow">
 <input id="newRoomName" placeholder="e.g., Room 10" type="text" style="flex:1;" aria-label="New room name">
 <button class="btn sm primary" id="addRoomBtn" type="button">Add</button>
 </div>
+<div class="listInlineWarning" hidden id="roomsDupWarning" role="alert">Two rooms share the same name. Autosave is paused until each room has its own name.</div>
 <div id="roomsList" style="padding:0 16px 4px;"></div>
 </div>
 </section>
 <section class="sxSection">
-<div class="sxHead">Types &amp; color labels</div>
+<div class="sxHead">Types &amp; color labels <span class="scopeBadge scopeBadgeClinic" title="Applies to everyone in this clinic">Clinic-wide</span></div>
 <div class="settingsCollapsibleBody">
 <div class="sxAddRow">
 <input id="newColorTitle" placeholder="e.g., Waiting" type="text" style="flex:1;" aria-label="New type or color label name">
@@ -459,11 +460,12 @@ Manage subscription
 <span class="sxLabel">Default label</span>
 <select id="defaultColorLabelSelect" style="flex:1;" aria-label="Default label"></select>
 </div>
+<div class="listInlineWarning" hidden id="colorsDupWarning" role="alert">Two labels share the same name. Autosave is paused until each label has its own name.</div>
 <div id="colorsList" style="padding:0 16px 4px;"></div>
 </div>
 </section>
 <section class="sxSection" id="defaultChecklistPanel">
-<div class="sxHead">Default patient checklist <span class="planBadge">Advanced</span></div>
+<div class="sxHead">Default patient checklist <span class="planBadge">Advanced</span> <span class="scopeBadge scopeBadgeClinic" title="Applies to everyone in this clinic">Clinic-wide</span></div>
 <div class="settingsCollapsibleBody">
 <div class="sxRow"><span class="sxLabel">Show checklist on patient cards</span><input checked id="patientChecklistEnabledToggle" type="checkbox" aria-label="Show checklist on patient cards"></div>
 <p class="sxSubHead" style="font-weight:400;opacity:.75;">Every new patient starts with these items. Click a patient card on the board to open and check them off.</p>
@@ -475,7 +477,7 @@ Manage subscription
 </div>
 </section>
 <section class="sxSection">
-<div class="sxHead">Doctors</div>
+<div class="sxHead">Doctors <span class="scopeBadge scopeBadgeClinic" title="Applies to everyone in this clinic">Clinic-wide</span></div>
 <div class="settingsCollapsibleBody">
 <div class="sxAddRow">
 <input id="newDoctorName" placeholder="e.g., Dr. Smith" type="text" style="flex:1;" aria-label="New doctor name">
@@ -487,7 +489,7 @@ Manage subscription
 </div>
 </section>
 <section class="sxSection">
-<div class="sxHead">Quick notes</div>
+<div class="sxHead">Quick notes <span class="scopeBadge scopeBadgeClinic" title="Applies to everyone in this clinic">Clinic-wide</span></div>
 <div class="settingsCollapsibleBody">
 <div class="sxAddRow">
 <input id="newQuickNoteLabel" placeholder="e.g., Needs translator" type="text" style="flex:1;" aria-label="New quick note">
@@ -497,7 +499,7 @@ Manage subscription
 </div>
 </section>
 <section class="sxSection fullWidth" id="doctorBadgeStylesPanel">
-<div class="sxHead">Doctor badge style</div>
+<div class="sxHead">Doctor badge style <span class="scopeBadge scopeBadgeClinic" title="Applies to everyone in this clinic">Clinic-wide</span></div>
 <div class="settingsCollapsibleBody">
 <div class="sxRow">
 <span class="sxLabel">Badge size</span>
@@ -527,7 +529,7 @@ Manage subscription
 </div>
 <div class="tabPanel" id="tabAppearance">
 <section class="sxSection">
-<div class="sxHead">Theme presets</div>
+<div class="sxHead">Theme presets <span class="scopeBadge scopeBadgePersonal" title="Follows your login on any device">My defaults</span></div>
 <div class="settingsCollapsibleBody">
 <div class="themePresetGrid" id="themePresetGrid"></div>
 <div class="sxRowGroup">
@@ -549,7 +551,7 @@ Manage subscription
 </div>
 </section>
 <section class="sxSection">
-<div class="sxHead">Display layout</div>
+<div class="sxHead">Display layout <span class="scopeBadge scopeBadgeWindow" title="Only this browser window">This window</span></div>
 <div class="settingsCollapsibleBody">
 <div class="sxRowGroup">
 <div class="sxRow">
@@ -572,7 +574,7 @@ Manage subscription
 </div>
 </div>
 <div class="sxRow">
-<span class="sxLabel">Line spacing</span>
+<span class="sxLabel">Line spacing<span class="sxLabelNote">syncs clinic-wide</span></span>
 <div class="sxSlider">
 <input id="roomCardLineHeight" max="1.8" min="1" step="0.05" type="range" style="flex:1;" aria-label="Line spacing">
 <input class="sxVal" id="roomCardLineHeightValue" inputmode="decimal" type="text" aria-label="Line spacing value">
@@ -582,7 +584,7 @@ Manage subscription
 </div>
 </section>
 <section class="sxSection">
-<div class="sxHead">Room card fields</div>
+<div class="sxHead">Room card fields <span class="scopeBadge scopeBadgeClinic" title="Applies to everyone in this clinic">Clinic-wide</span></div>
 <div class="settingsCollapsibleBody">
 <div class="sxRowGroup">
 <div class="sxRow"><span class="sxLabel">Patient name</span><input checked id="showRoomCardPatient" type="checkbox" aria-label="Show patient name"></div>
@@ -598,7 +600,7 @@ Manage subscription
 </div>
 </section>
 <section class="sxSection">
-<div class="sxHead">Fonts</div>
+<div class="sxHead">Fonts <span class="scopeBadge scopeBadgePersonal" title="Follows your login on any device">My defaults</span></div>
 <div class="settingsCollapsibleBody">
 <div class="sxRowGroup">
 <div class="sxRow">
@@ -625,7 +627,7 @@ Manage subscription
 </div>
 </section>
 <section class="sxSection">
-<div class="sxHead">Display colors</div>
+<div class="sxHead">Display colors <span class="scopeBadge scopeBadgePersonal" title="Follows your login on any device">My defaults</span></div>
 <div class="settingsCollapsibleBody">
 <div class="sxRowGroup">
 <div class="sxRow">
@@ -645,7 +647,7 @@ Manage subscription
 </select>
 </div>
 <div class="sxRow" id="doctorHighlightWrap">
-<span class="sxLabel">Highlight doctor</span>
+<span class="sxLabel">Highlight doctor<span class="sxLabelNote">this window only</span></span>
 <select id="doctorHighlightSelect" aria-label="Highlight doctor">
 <option value="">None</option>
 </select>
@@ -654,7 +656,7 @@ Manage subscription
 </div>
 </section>
 <section class="sxSection">
-<div class="sxHead">Card layout</div>
+<div class="sxHead">Card layout <span class="scopeBadge scopeBadgePersonal" title="Follows your login on any device">My defaults</span></div>
 <div class="settingsCollapsibleBody">
 <div class="cardLayoutGrid" id="cardLayoutGrid" role="radiogroup" aria-label="Card layout"></div>
 <select id="cardStyle" style="display:none" aria-hidden="true" tabindex="-1">
@@ -668,7 +670,7 @@ Manage subscription
 </div>
 </section>
 <section class="sxSection mobileOnlySettingsCard">
-<div class="sxHead">Mobile quick view</div>
+<div class="sxHead">Mobile quick view <span class="scopeBadge scopeBadgeWindow" title="Only this browser window">This window</span></div>
 <div class="settingsCollapsibleBody">
 <div class="sxRowGroup">
 <div class="sxRow">
@@ -697,7 +699,7 @@ Manage subscription
 </div>
 </section>
 <section class="sxSection" id="headerBrandingPanel">
-<div class="sxHead">Header branding</div>
+<div class="sxHead">Header branding <span class="scopeBadge scopeBadgeClinic" title="Applies to everyone in this clinic">Clinic-wide</span></div>
 <div class="settingsCollapsibleBody">
 <div class="sxRowGroup">
 <div class="sxRow">
@@ -735,7 +737,7 @@ Manage subscription
 </div>
 </section>
 <section class="sxSection">
-<div class="sxHead">Actions</div>
+<div class="sxHead">Actions <span class="scopeBadge scopeBadgePersonal" title="Follows your login on any device">My defaults</span></div>
 <div class="settingsCollapsibleBody">
 <div class="sxRowGroup">
 <div class="sxRow">
@@ -749,12 +751,15 @@ Manage subscription
 <option value="neon">Neon</option>
 <option value="paper">Paper</option>
 <option value="embossed">Embossed</option>
-<option value="ring">Ring (progress)</option>
 </select>
 </div>
+<div class="sxRow">
+<span class="sxLabel">Progress outline<span class="sxLabelNote">stopwatch outline fills like a ring as time passes</span></span>
+<input id="stopwatchRingEnabled" type="checkbox" aria-label="Fill the stopwatch outline as time passes">
+</div>
 <div class="sxRow" hidden id="stopwatchRingRow">
-<span class="sxLabel">Ring interval<span class="sxLabelNote">minutes for the ring to fill completely</span></span>
-<input class="sxInputNum" id="stopwatchRingMinutes" min="1" max="600" step="1" type="number" aria-label="Ring interval in minutes">
+<span class="sxLabel">Outline interval<span class="sxLabelNote">minutes for the outline to fill completely</span></span>
+<input class="sxInputNum" id="stopwatchRingMinutes" min="1" max="600" step="1" type="number" aria-label="Outline fill interval in minutes">
 </div>
 <div class="sxRow">
 <span class="sxLabel">Discharge icon</span>
@@ -770,17 +775,17 @@ Manage subscription
 </div>
 <div class="tabPanel" id="tabAlerts">
 <div class="sxSection">
-<div class="sxHead">Timer alerts</div>
+<div class="sxHead">Timer alerts <span class="scopeBadge scopeBadgeClinic" title="Applies to everyone in this clinic">Clinic-wide</span></div>
 <div class="sxRow sxAlertRow">
-<span class="sxLabel">Alert 1 after<span class="sxLabelNote">seconds elapsed → card color changes</span></span>
-<input class="sxInputNum" id="timerAlert1AtSec" min="0" step="10" type="number" aria-label="Alert 1 after (seconds)">
-<span class="sxAlertBadge">sec</span>
+<span class="sxLabel">Alert 1 after<span class="sxLabelNote">minutes elapsed → card color changes</span></span>
+<input class="sxInputNum" id="timerAlert1AtSec" placeholder="20 or 20:30" type="text" aria-label="Alert 1 after (minutes, or minutes:seconds)">
+<span class="sxAlertBadge">min</span>
 <input id="timerAlert1Color" type="color" aria-label="Alert 1 color">
 </div>
 <div class="sxRow sxAlertRow">
 <span class="sxLabel">Alert 2 after<span class="sxLabelNote">overrides alert 1 color</span></span>
-<input class="sxInputNum" id="timerAlert2AtSec" min="0" step="10" type="number" aria-label="Alert 2 after (seconds)">
-<span class="sxAlertBadge">sec</span>
+<input class="sxInputNum" id="timerAlert2AtSec" placeholder="45 or 45:30" type="text" aria-label="Alert 2 after (minutes, or minutes:seconds)">
+<span class="sxAlertBadge">min</span>
 <input id="timerAlert2Color" type="color" aria-label="Alert 2 color">
 </div>
 <div class="sxRow">
@@ -879,7 +884,7 @@ Manage subscription
 </div>
 </div>
 <div class="sxSection">
-<div class="sxHead">Defaults &amp; backup</div>
+<div class="sxHead">Defaults &amp; backup <span class="scopeBadge scopeBadgeClinic" title="Applies to everyone in this clinic">Clinic-wide</span></div>
 <div class="sxToolBody">
 <p class="sxToolDesc">Save your current board layout, fonts, and display settings as the clinic-wide default.</p>
 <button class="btn sm primary" id="savePracticeDefaultsBtn" type="button">Save as default</button>
@@ -932,13 +937,13 @@ Manage subscription
 </div>
 </aside>
 <script src="./config.js?v=20260704a"></script>
-<script src="./js/compat.js?v=20260709a"></script>
-<script src="./js/board-state.js?v=20260712a"></script>
-<script src="./js/rendering.js?v=20260712b"></script>
-<script src="./js/settings.js?v=20260709a"></script>
+<script src="./js/compat.js?v=20260712d"></script>
+<script src="./js/board-state.js?v=20260712d"></script>
+<script src="./js/rendering.js?v=20260712d"></script>
+<script src="./js/settings.js?v=20260712d"></script>
 <script src="./js/checklist.js?v=20260626d"></script>
 <script src="./js/patient-checklist.js?v=20260709a"></script>
-<script src="./js/auth-sync.js?v=20260712b"></script>
+<script src="./js/auth-sync.js?v=20260712d"></script>
 <script src="./js/ux.js?v=20260606a"></script>
 <script src="./js/theme.js?v=20260517d"></script>
 <script src="./js/desktop-capture-panel.js?v=20260606a"></script>

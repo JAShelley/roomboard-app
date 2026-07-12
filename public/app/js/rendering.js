@@ -2214,6 +2214,45 @@
         }
 
 
+    // Duplicate room names / label titles block clinic-wide saves, but the
+    // Save check card lives on the Tools tab where nobody sees it. Highlight
+    // the offending rows right where the user is typing instead. The key
+    // normalizers must match collectSettingsValidationIssues so the inline
+    // warning appears exactly when autosave actually pauses.
+    function refreshListDuplicateWarning(listId, warningId, normalizeKey){
+      var list = $(listId);
+      var warn = $(warningId);
+      if(!list || !warn) return;
+      var rows = list.querySelectorAll(".listRow");
+      var counts = Object.create(null);
+      var i, field, key;
+      for(i=0;i<rows.length;i++){
+        field = rows[i].querySelector('input[type="text"]');
+        key = field ? normalizeKey(field.value) : "";
+        if(key) counts[key] = (counts[key] || 0) + 1;
+      }
+      var hasDupes = false;
+      for(i=0;i<rows.length;i++){
+        field = rows[i].querySelector('input[type="text"]');
+        key = field ? normalizeKey(field.value) : "";
+        var isDupe = !!(key && counts[key] > 1);
+        rows[i].classList.toggle("isDuplicate", isDupe);
+        if(field) field.setAttribute("aria-invalid", isDupe ? "true" : "false");
+        if(isDupe) hasDupes = true;
+      }
+      warn.hidden = !hasDupes;
+    }
+    function refreshRoomsDuplicateWarning(){
+      refreshListDuplicateWarning("roomsList", "roomsDupWarning", function(value){
+        return normalizeSimpleName(value).toLowerCase();
+      });
+    }
+    function refreshColorsDuplicateWarning(){
+      refreshListDuplicateWarning("colorsList", "colorsDupWarning", function(value){
+        return normalizeColorLabelTitle(value, "").toLowerCase();
+      });
+    }
+
     function renderSettingsLists(){
       bumpRenderPerf("settingsRenders");
       if($("displayFontColor")) $("displayFontColor").value = state.settings.displayFontColor || "#e8eefc";
@@ -2352,6 +2391,7 @@
             room.name = input.value;
             queueSettingsConfigSave({ renderSettingsLists: false });
             requestBoardRoomRefresh([room.id], { includeIntake: true });
+            refreshRoomsDuplicateWarning();
           });
           input.addEventListener("blur", function(){
             room.name = input.value;
@@ -2383,6 +2423,7 @@
           roomsList.appendChild(row);
         })(state.rooms[i]);
       }
+      refreshRoomsDuplicateWarning();
 
       // Doctors list
       var doctorsList = $("doctorsList");
@@ -2498,7 +2539,10 @@
             });
             input.addEventListener("blur", function(){
               state.settings.doctorInitials[docName] = input.value;
-              persistAccountUiSettings();
+              // Initials live in the clinic-wide doctors table; a config save
+              // is what publishes them to other devices (a user-settings save
+              // only reached this account).
+              queueSettingsConfigSave({ immediate: true });
               var affectedRoomIds = getRoomIdsMatching(function(room){
                 return room && room.doctor === docName;
               });
@@ -2516,7 +2560,7 @@
               var btn = this;
               runLockedAction("settings.clear-doctor-initials." + String(docName || ""), function(){
                 state.settings.doctorInitials[docName] = "";
-                persistAccountUiSettings();
+                queueSettingsConfigSave({ immediate: true, renderSettingsLists: false });
                 var affectedRoomIds = getRoomIdsMatching(function(room){
                   return room && room.doctor === docName;
                 });
@@ -2688,6 +2732,7 @@
             requestBoardRoomRefresh(getRoomIdsMatching(function(room){
               return room && room.colorLabelId === color.id;
             }), { includeIntake: true });
+            refreshColorsDuplicateWarning();
           });
           titleInput.addEventListener("change", commitColorLabelChanges);
           titleInput.addEventListener("blur", function(){
@@ -2744,6 +2789,7 @@
           colorsList.appendChild(row);
         })(sortedColorLabels[c]);
       }
+      refreshColorsDuplicateWarning();
 
       // Quick notes list
       var quickNotesList = $("quickNotesList");
@@ -2855,15 +2901,19 @@
 	        mobileQuickViewBtn.setAttribute("aria-label", quickViewOn ? "Mobile quick view on" : "Mobile quick view off");
 	        mobileQuickViewBtn.title = quickViewOn ? "Mobile quick view on" : "Mobile quick view off";
 	      }
-		      if($("stopwatchStyle")) $("stopwatchStyle").value = state.settings.stopwatchStyle || "classic";
+	      var uiStopwatchStyle = String(state.settings.stopwatchStyle || "classic");
+	      var uiStopwatchRingOn = state.settings.stopwatchRingEnabled === true || uiStopwatchStyle === "ring";
+	      if(uiStopwatchStyle === "ring") uiStopwatchStyle = "classic"; // legacy style value
+	      if($("stopwatchStyle")) $("stopwatchStyle").value = uiStopwatchStyle;
+	      if($("stopwatchRingEnabled")) $("stopwatchRingEnabled").checked = uiStopwatchRingOn;
 	      if($("stopwatchRingMinutes")) $("stopwatchRingMinutes").value = state.settings.stopwatchRingMinutes || 30;
-	      if($("stopwatchRingRow")) $("stopwatchRingRow").hidden = (state.settings.stopwatchStyle || "classic") !== "ring";
+	      if($("stopwatchRingRow")) $("stopwatchRingRow").hidden = !uiStopwatchRingOn;
 	      if($("timerAlertHeat")) $("timerAlertHeat").checked = state.settings.timerAlertHeat !== false;
 	      if($("dischargeIconStyle")) $("dischargeIconStyle").value = state.settings.dischargeIconStyle || "paw";
 		      syncOptionalUi();
 
-	      if($("timerAlert1AtSec")) $("timerAlert1AtSec").value = state.settings.timerAlert1AtSec || 0;
-      if($("timerAlert2AtSec")) $("timerAlert2AtSec").value = state.settings.timerAlert2AtSec || 0;
+	      if($("timerAlert1AtSec")) $("timerAlert1AtSec").value = formatSecondsAsTimerInput(state.settings.timerAlert1AtSec || 0);
+      if($("timerAlert2AtSec")) $("timerAlert2AtSec").value = formatSecondsAsTimerInput(state.settings.timerAlert2AtSec || 0);
       if($("timerAlert1Color")) $("timerAlert1Color").value = state.settings.timerAlert1Color || "#fbbf24";
       if($("timerAlert2Color")) $("timerAlert2Color").value = state.settings.timerAlert2Color || "#fb7185";
       if($("practiceNameColor")) $("practiceNameColor").value = state.settings.practiceNameColor || "#fecdd3";

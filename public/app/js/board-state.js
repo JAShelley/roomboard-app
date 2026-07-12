@@ -198,6 +198,7 @@
       displayOnlyActive: false,
       displaySortMode: "room",
       stopwatchStyle: "classic",
+      stopwatchRingEnabled: false,
       stopwatchRingMinutes: 30,
       timerAlertHeat: true,
       highlightDoctor: "",
@@ -377,6 +378,7 @@
 	      "displayOnlyActive",
 	      "displaySortMode",
 			      "stopwatchStyle",
+			      "stopwatchRingEnabled",
 			      "stopwatchRingMinutes",
 			      "highlightDoctor",
 			      "cardTextMode",
@@ -405,6 +407,7 @@
 	      "displayOnlyActive",
 	      "displaySortMode",
 	      "stopwatchStyle",
+	      "stopwatchRingEnabled",
 	      "stopwatchRingMinutes",
 	      "highlightDoctor",
 	      "cardTextMode",
@@ -434,6 +437,7 @@
 			      displayOnlyActive: false,
 			      displaySortMode: "room",
 			      stopwatchStyle: "classic",
+			      stopwatchRingEnabled: false,
 			      stopwatchRingMinutes: 30,
 			      highlightDoctor: "",
 			      cardTextMode: "auto",
@@ -1056,6 +1060,13 @@
       targetState.settings.timerAlert1AtSec = Math.max(0, Number(targetState.settings.timerAlert1AtSec || 0));
 	      targetState.settings.timerAlert2AtSec = Math.max(targetState.settings.timerAlert1AtSec, Number(targetState.settings.timerAlert2AtSec || 0));
 	      targetState.settings.stopwatchRingMinutes = Math.max(1, Math.min(600, Number(targetState.settings.stopwatchRingMinutes || 30)));
+	      // Legacy: "ring" used to be a stopwatch style of its own; it is now a
+	      // progress-outline toggle that layers on any style.
+	      if(String(targetState.settings.stopwatchStyle || "") === "ring"){
+	        targetState.settings.stopwatchStyle = "classic";
+	        targetState.settings.stopwatchRingEnabled = true;
+	      }
+	      targetState.settings.stopwatchRingEnabled = targetState.settings.stopwatchRingEnabled === true;
 	      targetState.settings.timerAlertHeat = targetState.settings.timerAlertHeat !== false;
 	      targetState.settings.practiceNameColor = String(targetState.settings.practiceNameColor || "#fecdd3");
 	      targetState.settings.showPracticeNameBadge = targetState.settings.showPracticeNameBadge !== false;
@@ -1722,6 +1733,16 @@
       return null;
     }
 
+    // Inverse of parseQuickAddTimerInputToMs for settings fields that store
+    // seconds: whole minutes render as "20", otherwise "20:30".
+    function formatSecondsAsTimerInput(totalSeconds){
+      var sec = Math.max(0, Math.round(Number(totalSeconds) || 0));
+      var minutes = Math.floor(sec / 60);
+      var seconds = sec % 60;
+      if(!seconds) return String(minutes);
+      return minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+    }
+
     function setQuickAddTimerDraft(roomId, elapsedMs, options){
       options = options || {};
       var draft = readQuickAddFormDraft() || quickAddDraftState || getQuickAddDraftFromRoom(findRoomById(roomId));
@@ -2177,7 +2198,11 @@ function applyFonts(){
 	    function applyStopwatchStyle(){
 	      var style = String(state && state.settings && state.settings.stopwatchStyle || "classic").trim();
 	      if(!style) style = "classic";
+	      var ringOn = !!(state && state.settings && state.settings.stopwatchRingEnabled);
+	      // Legacy style value from an unmigrated device/save.
+	      if(style === "ring"){ style = "classic"; ringOn = true; }
 	      document.documentElement.setAttribute("data-stopwatch-style", style);
+	      document.documentElement.setAttribute("data-stopwatch-ring", ringOn ? "on" : "off");
 	    }
 
 
