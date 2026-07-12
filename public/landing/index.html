@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/landing/styles.css">
+<link rel="stylesheet" href="/landing/styles.css?v=20260712">
 </head>
 <body>
 <div id="scrollProgress" aria-hidden="true"></div>
@@ -38,7 +38,6 @@
       <a href="#capture">Capture</a>
       <a href="#devices">Devices</a>
       <a href="#customize">Customize</a>
-      <a href="#reviews">Reviews</a>
       <a href="#pricing">Pricing</a>
       <a href="#faq">FAQ</a>
     </div>
@@ -61,7 +60,6 @@
   <a href="#capture">Capture</a>
   <a href="#devices">Devices</a>
   <a href="#customize">Customize</a>
-  <a href="#reviews">Reviews</a>
   <a href="#pricing">Pricing</a>
   <a href="#faq">FAQ</a>
   <div class="mobile-menu-auth">
@@ -690,34 +688,6 @@
   </div>
 </section>
 
-<!-- ===================== REVIEWS ===================== -->
-<section class="section" id="reviews">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow">From the front desk</span>
-      <h2>What clinics say about RoomBoard</h2>
-      <p>We're early — here's what our first clinic says after using RoomBoard in production.</p>
-    </div>
-
-    <!-- ADD A REVIEW: copy one <article class="review"> … </article> block below and edit the stars, quote, initials, name, and role. -->
-    <div class="reviews-grid reviews-grid--single">
-      <article class="review reveal">
-        <div class="review-stars" aria-label="5 out of 5 stars">★★★★★</div>
-        <p class="review-quote">RoomBoard gave our team a much clearer view of what was happening throughout the hospital. We could quickly see which rooms were occupied, how long clients had been waiting, and which rooms needed to be cleaned. It helped improve communication between our front desk, technicians, and doctors.</p>
-        <div class="review-author">
-          <span class="review-avatar" aria-hidden="true">BC</span>
-          <span class="review-meta"><strong>Practice Manager</strong><small>Bourbon City Animal Hospital</small></span>
-        </div>
-      </article>
-    </div>
-
-    <div class="reviews-cta">
-      <span>Using RoomBoard at your practice?</span>
-      <a class="btn ghost" href="mailto:support@theroomboard.com?subject=My%20RoomBoard%20review">Share your review →</a>
-    </div>
-  </div>
-</section>
-
 <!-- ===================== PRICING ===================== -->
 <section class="section" id="pricing">
   <div class="wrap">
@@ -779,10 +749,13 @@
       </div>
 
     </div>
-    <p class="pricing-multiloc">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.5"/></svg>
-      Multiple locations? Every additional clinic gets <strong>25% off</strong>.
-    </p>
+    <div class="multiloc-banner reveal">
+      <span class="ml-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l6-4v18M13 21V10l6 3v8"/><path d="M8 9h.01M8 12h.01M8 15h.01"/></svg>
+      </span>
+      <p class="ml-text"><strong>Multiple locations?</strong> Every additional clinic gets <strong>25% off</strong>. Corporate group? We'll build you a plan — volume pricing, centralized billing, priority onboarding.</p>
+      <a class="btn ghost ml-cta" href="mailto:support@theroomboard.com?subject=Corporate%20pricing%20for%20our%20group">Talk to us →</a>
+    </div>
     <p class="pricing-note">Cancel any time. Questions? Email us at <a href="mailto:support@theroomboard.com" style="color:var(--teal-600);font-weight:600">support@theroomboard.com</a></p>
   </div>
 </section>
@@ -829,7 +802,7 @@
       </div>
       <div class="qa">
         <button class="qa-q" aria-expanded="false">How much does it cost after the trial?<span class="chev"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
-        <div class="qa-a"><p>Pricing is per clinic, with unlimited team members. Base is $29.99/month (or $300/year) and includes the web board, appointment capture, always-on timers, real-time sync, and unlimited rooms and team members. Advanced is $49.99/month (or $500/year) and adds custom clinic branding &amp; logo, the Stats dashboard, practice &amp; per-patient checklists, and the iPhone &amp; iPad app once it clears App Store review. The first 40 clinics can lock in Advanced at $29.99/month for life, and every additional clinic location gets 25% off. Both plans start with a 14-day free trial — you won't be charged until the trial ends, and you can cancel anytime before then.</p></div>
+        <div class="qa-a"><p>Pricing is per clinic, with unlimited team members. Base is $29.99/month (or $300/year) and includes the web board, appointment capture, always-on timers, real-time sync, and unlimited rooms and team members. Advanced is $49.99/month (or $500/year) and adds custom clinic branding &amp; logo, the Stats dashboard, practice &amp; per-patient checklists, and the iPhone &amp; iPad app once it clears App Store review. The first 40 clinics can lock in Advanced at $29.99/month for life, and every additional clinic location gets 25% off. Corporate groups with many locations can email <a href="mailto:support@theroomboard.com?subject=Corporate%20pricing%20for%20our%20group" style="color:var(--teal-600);font-weight:600">support@theroomboard.com</a> for volume pricing with centralized billing. Both plans start with a 14-day free trial — you won't be charged until the trial ends, and you can cancel anytime before then.</p></div>
       </div>
     </div>
   </div>

@@ -1396,14 +1396,20 @@ ul { padding: 0; margin: 0; }
 a.fo-spots { cursor: pointer; transition: color .15s ease; }
 a.fo-spots:hover { color: var(--coral); text-decoration: underline; text-underline-offset: 3px; }
 
-/* Multi-location discount note */
-.pricing-multiloc {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  margin-top: 30px; font-size: 15px; color: var(--ink-2);
+/* Multi-location & corporate banner */
+.multiloc-banner {
+  display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px 18px;
+  max-width: 820px; margin: 30px auto 0; padding: 16px 24px; text-align: center;
+  background: linear-gradient(120deg, color-mix(in srgb, var(--teal-600) 10%, var(--surface)), var(--surface));
+  border: 1.5px solid color-mix(in srgb, var(--teal-600) 32%, transparent);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm);
 }
-.pricing-multiloc svg { width: 18px; height: 18px; color: var(--teal-600); flex: none; }
-.pricing-multiloc strong { color: var(--ink); font-weight: 700; }
-[data-theme="dark"] .pricing-multiloc svg { color: var(--teal-300); }
+.ml-icon { flex: none; display: inline-flex; }
+.ml-icon svg { width: 22px; height: 22px; color: var(--teal-600); display: block; }
+.ml-text { font-size: 15px; color: var(--ink-2); line-height: 1.5; margin: 0; }
+.ml-text strong { color: var(--ink); font-weight: 700; }
+.ml-cta { flex: none; }
+[data-theme="dark"] .ml-icon svg { color: var(--teal-300); }
 
 @media (max-width: 940px) {
   .testimonials-grid { grid-template-columns: 1fr; }
