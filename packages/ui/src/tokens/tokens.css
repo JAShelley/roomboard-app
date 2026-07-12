@@ -1,0 +1,113 @@
+/* ============================================================
+   RoomBoard Design Tokens
+   Extracted from public/app/styles.css + public/landing/styles.css
+   ============================================================ */
+
+:root {
+  /* --- Brand palette --- */
+  --rb-teal-50:  #f0f9ff;
+  --rb-teal-100: #e0f2fe;
+  --rb-teal-300: #7dd3fc;
+  --rb-teal-500: #0ea5e9;
+  --rb-teal-600: #0369a1;
+  --rb-teal-700: #035683;
+  --rb-coral:      #fb923c;
+  --rb-coral-soft: #fff7ed;
+
+  /* --- Status colours (visit types / room states) --- */
+  --rb-status-exam:      #3b82f6;
+  --rb-status-recheck:   #f59e0b;
+  --rb-status-procedure: #ef476f;
+  --rb-status-ready:     #18b06b;
+  --rb-status-consult:   #8b5cf6;
+  --rb-status-cleaning:  #fbbf24;
+  --rb-status-workin:    #f59e0b;
+
+  /* --- Semantic colours --- */
+  --rb-success: #22c55e;
+  --rb-warning: #f59e0b;
+  --rb-danger:  #ef4444;
+
+  /* --- Timer alert thresholds --- */
+  --rb-timer-alert-1: #fbbf24;
+  --rb-timer-alert-2: #fb7185;
+
+  /* --- Light theme surfaces (landing page) --- */
+  --rb-bg:           #f4f7fb;
+  --rb-bg-2:         #eaf0f7;
+  --rb-surface:      #ffffff;
+  --rb-surface-2:    #f8fafc;
+  --rb-ink:          #0f1b2d;
+  --rb-ink-2:        #33425a;
+  --rb-muted:        #54627a;
+  --rb-line:         #e4ebf3;
+  --rb-line-strong:  #d3deea;
+  --rb-ring:         #0369a1;
+
+  /* --- Dark theme surfaces (app board) --- */
+  --rb-dark-bg:      #0b1220;
+  --rb-dark-text:    #e8eefc;
+  --rb-dark-muted:   #a9b6d3;
+  --rb-dark-border:  rgba(255, 255, 255, 0.10);
+  --rb-dark-panel:   rgba(15, 27, 51, 0.92);
+  --rb-dark-panel-2: rgba(10, 16, 30, 0.70);
+
+  /* --- Typography --- */
+  --rb-font-body:    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --rb-font-display: "Space Grotesk", var(--rb-font-body);
+  --rb-font-mono:    ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+
+  /* --- Font sizes --- */
+  --rb-text-xs:   11px;
+  --rb-text-sm:   12px;
+  --rb-text-base: 14px;
+  --rb-text-md:   15px;
+  --rb-text-lg:   16px;
+  --rb-text-xl:   18px;
+  --rb-text-2xl:  20px;
+  --rb-text-3xl:  24px;
+
+  /* --- Border radius --- */
+  --rb-radius-sm: 8px;
+  --rb-radius:    12px;
+  --rb-radius-md: 16px;
+  --rb-radius-lg: 26px;
+  --rb-radius-full: 999px;
+
+  /* --- Shadows --- */
+  --rb-shadow-sm: 0 1px 2px rgba(15,27,45,.06), 0 2px 8px rgba(15,27,45,.05);
+  --rb-shadow-md: 0 12px 30px rgba(15,27,45,.10);
+  --rb-shadow-lg: 0 30px 70px rgba(11,38,53,.18);
+  --rb-shadow-dark-sm: 0 6px 18px rgba(0,0,0,.25);
+  --rb-shadow-dark-md: 0 12px 40px rgba(0,0,0,.45);
+
+  /* --- Spacing scale --- */
+  --rb-space-1:  4px;
+  --rb-space-2:  8px;
+  --rb-space-3:  12px;
+  --rb-space-4:  16px;
+  --rb-space-5:  20px;
+  --rb-space-6:  24px;
+  --rb-space-8:  32px;
+  --rb-space-10: 40px;
+  --rb-space-12: 48px;
+
+  /* --- Transitions --- */
+  --rb-transition: 0.16s ease;
+  --rb-transition-spring: 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* --- Dark theme overrides (data-theme="dark" on a landing page context) --- */
+[data-theme="dark"] {
+  --rb-bg:        #0a1422;
+  --rb-bg-2:      #0d1a2c;
+  --rb-surface:   #101e33;
+  --rb-surface-2: #0c1729;
+  --rb-ink:       #eaf1ff;
+  --rb-ink-2:     #c2cfe6;
+  --rb-muted:     #8195b4;
+  --rb-line:      rgba(255,255,255,.09);
+  --rb-line-strong: rgba(255,255,255,.16);
+  --rb-teal-50:   #061a2e;
+  --rb-coral-soft: #2c1808;
+}

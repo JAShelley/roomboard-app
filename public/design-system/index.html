@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RoomBoard Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+/* ── tokens ─────────────────────────────────────────────── */
+:root {
+  --rb-teal-50:  #f0f9ff; --rb-teal-100: #e0f2fe;
+  --rb-teal-300: #7dd3fc; --rb-teal-500: #0ea5e9;
+  --rb-teal-600: #0369a1; --rb-teal-700: #035683;
+  --rb-coral: #fb923c; --rb-coral-soft: #fff7ed;
+
+  --rb-status-exam:      #3b82f6;
+  --rb-status-recheck:   #f59e0b;
+  --rb-status-procedure: #ef476f;
+  --rb-status-ready:     #18b06b;
+  --rb-status-consult:   #8b5cf6;
+  --rb-status-cleaning:  #fbbf24;
+  --rb-status-workin:    #f59e0b;
+
+  --rb-success: #22c55e; --rb-warning: #f59e0b; --rb-danger: #ef4444;
+  --rb-timer-alert-1: #fbbf24; --rb-timer-alert-2: #fb7185;
+
+  --rb-dark-bg:      #0b1220;
+  --rb-dark-text:    #e8eefc;
+  --rb-dark-muted:   #a9b6d3;
+  --rb-dark-border:  rgba(255,255,255,.10);
+  --rb-dark-panel:   rgba(15,27,51,.92);
+
+  --rb-font-body:    "Inter", system-ui, sans-serif;
+  --rb-font-display: "Space Grotesk", var(--rb-font-body);
+  --rb-font-mono:    ui-monospace, "SF Mono", Menlo, monospace;
+
+  --rb-radius-sm: 8px; --rb-radius: 12px; --rb-radius-md: 16px;
+  --rb-radius-lg: 26px; --rb-radius-full: 999px;
+
+  --rb-shadow-dark-sm: 0 6px 18px rgba(0,0,0,.25);
+  --rb-shadow-dark-md: 0 12px 40px rgba(0,0,0,.45);
+
+  --rb-transition: .16s ease;
+}
+
+/* ── reset + base ───────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  background: #06090f;
+  color: var(--rb-dark-text);
+  font-family: var(--rb-font-body);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── layout ─────────────────────────────────────────────── */
+.page { max-width: 1100px; margin: 0 auto; padding: 48px 32px 96px; }
+
+.page-header {
+  display: flex; align-items: center; gap: 14px;
+  padding-bottom: 36px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  margin-bottom: 56px;
+}
+.page-header svg { flex-shrink: 0; }
+.page-header h1 {
+  font-family: var(--rb-font-display);
+  font-size: 28px; font-weight: 800; letter-spacing: -.03em;
+  color: #eef3ff;
+}
+.page-header p { font-size: 13px; color: var(--rb-dark-muted); margin-top: 2px; }
+
+.section { margin-bottom: 64px; }
+.section-title {
+  font-family: var(--rb-font-display);
+  font-size: 11px; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--rb-teal-300);
+  margin-bottom: 24px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title::after {
+  content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.07);
+}
+
+.card {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: var(--rb-radius-md);
+  padding: 28px;
+}
+
+/* ── color palette ──────────────────────────────────────── */
+.palette-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+}
+.swatch {
+  display: flex; flex-direction: column; gap: 7px;
+}
+.swatch-dot {
+  width: 100%; aspect-ratio: 1;
+  border-radius: var(--rb-radius-sm);
+  border: 1px solid rgba(255,255,255,.10);
+}
+.swatch-name { font-size: 10px; color: var(--rb-dark-muted); font-family: var(--rb-font-mono); }
+.swatch-hex  { font-size: 11px; color: var(--rb-dark-text); font-weight: 600; }
+
+/* ── type scale ─────────────────────────────────────────── */
+.type-row {
+  display: flex; align-items: baseline; gap: 20px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.type-row:last-child { border-bottom: none; }
+.type-meta { font-size: 10px; color: var(--rb-dark-muted); font-family: var(--rb-font-mono); min-width: 120px; }
+.type-sample { color: #eef3ff; }
+
+/* ── component rows ─────────────────────────────────────── */
+.row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.col { display: flex; flex-direction: column; gap: 14px; }
+
+/* ── buttons ────────────────────────────────────────────── */
+.rb-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px; border-radius: var(--rb-radius-full);
+  font-family: var(--rb-font-display); font-weight: 700; cursor: pointer;
+  border: none; transition: opacity var(--rb-transition), transform var(--rb-transition);
+  white-space: nowrap;
+}
+.rb-btn:hover { opacity: .88; transform: translateY(-1px); }
+.rb-btn-sm  { font-size: 12px; padding: 7px 14px; }
+.rb-btn-md  { font-size: 13px; padding: 10px 20px; }
+.rb-btn-lg  { font-size: 15px; padding: 13px 26px; }
+
+.rb-btn-primary {
+  background: linear-gradient(135deg, #0ea5e9, #0369a1);
+  color: #fff; box-shadow: 0 4px 14px rgba(3,105,161,.35);
+}
+.rb-btn-ghost {
+  background: rgba(255,255,255,.07);
+  color: var(--rb-dark-text); border: 1px solid rgba(255,255,255,.12);
+}
+.rb-btn-warn {
+  background: rgba(251,146,60,.12);
+  color: #fb923c; border: 1px solid rgba(251,146,60,.28);
+}
+.rb-btn-danger {
+  background: rgba(239,68,68,.12);
+  color: #f87171; border: 1px solid rgba(239,68,68,.28);
+}
+.rb-btn-busy { opacity: .55; pointer-events: none; }
+.rb-btn-busy::after {
+  content: ''; width: 12px; height: 12px;
+  border: 2px solid currentColor; border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+/* ── live pill ──────────────────────────────────────────── */
+.rb-live-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border-radius: var(--rb-radius-full);
+  font-size: 11px; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; white-space: nowrap;
+}
+.rb-live-pill .dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.rb-pill-live {
+  background: rgba(34,197,94,.10); color: #4ade80;
+  border: 1px solid rgba(34,197,94,.25);
+}
+.rb-pill-live .dot { background: #22c55e; animation: pulse 1.6s ease-in-out infinite; }
+.rb-pill-syncing {
+  background: rgba(125,211,252,.08); color: #7dd3fc;
+  border: 1px solid rgba(125,211,252,.20);
+}
+.rb-pill-syncing .dot { background: #7dd3fc; animation: spin .9s linear infinite; border-radius: 0; width: 8px; height: 8px; border: 2px solid #7dd3fc; border-top-color: transparent; background: transparent; }
+.rb-pill-error {
+  background: rgba(239,68,68,.10); color: #f87171;
+  border: 1px solid rgba(239,68,68,.25);
+}
+.rb-pill-error .dot { background: #ef4444; }
+.rb-pill-idle {
+  background: rgba(255,255,255,.05); color: #5b6f96;
+  border: 1px solid rgba(255,255,255,.10);
+}
+.rb-pill-idle .dot { background: #5b6f96; }
+
+/* ── doctor badge ───────────────────────────────────────── */
+.rb-doctor {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--rb-font-display); font-weight: 800;
+  letter-spacing: -.01em; flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+.rb-doctor-circle { border-radius: 50%; }
+.rb-doctor-rounded { border-radius: var(--rb-radius); }
+.rb-doctor-squircle { border-radius: 30%; }
+
+/* ── toggle ─────────────────────────────────────────────── */
+.rb-toggle { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
+.rb-toggle-track {
+  position: relative; width: 40px; height: 24px;
+  border-radius: var(--rb-radius-full); transition: background var(--rb-transition);
+}
+.rb-toggle-knob {
+  position: absolute; top: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  transition: left var(--rb-transition), background var(--rb-transition);
+}
+.rb-toggle-on .rb-toggle-track  { background: linear-gradient(135deg, #0ea5e9, #0369a1); }
+.rb-toggle-on .rb-toggle-knob   { left: 19px; background: #fff; }
+.rb-toggle-off .rb-toggle-track { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.08); }
+.rb-toggle-off .rb-toggle-knob  { left: 3px; background: #8195b4; }
+.rb-toggle-label { font-size: 13px; color: var(--rb-dark-text); user-select: none; }
+
+/* ── status badge ───────────────────────────────────────── */
+.rb-status {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; padding: 3px 8px;
+  border-radius: var(--rb-radius-full);
+}
+.rb-status .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── timer box ──────────────────────────────────────────── */
+.rb-timer { display: inline-block; }
+
+/* ── room card ──────────────────────────────────────────── */
+.rb-room-card {
+  border-radius: var(--rb-radius-md);
+  border: 2px solid transparent;
+  box-shadow: 0 10px 24px rgba(0,0,0,.30);
+  min-height: 200px;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  font-family: var(--rb-font-body);
+  width: 200px;
+  flex-shrink: 0;
+}
+.rb-room-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 10px 16px;
+}
+.rb-room-card-name {
+  font-family: var(--rb-font-display); font-weight: 700; font-size: 13px;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.rb-room-card-body { padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.rb-room-card-footer {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 0 16px 14px; margin-top: auto;
+}
+.rb-patient-name { font-weight: 700; font-size: 16px; line-height: 1.32; }
+.rb-visit-type   { font-weight: 600; font-size: 14px; opacity: .85; }
+
+/* ── board header ───────────────────────────────────────── */
+.rb-board-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 4px 6px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  margin-bottom: 10px;
+  font-family: var(--rb-font-body);
+  color: #e8eefc;
+}
+.rb-practice-name {
+  font-family: var(--rb-font-display); font-weight: 800; font-size: 15px;
+  color: #eef3ff; letter-spacing: -.02em; white-space: nowrap;
+}
+.rb-board-date { font-size: 10.5px; color: #5b6f96; letter-spacing: .01em; padding-left: 25px; }
+
+/* ── board surface ──────────────────────────────────────── */
+.rb-board-surface {
+  background: radial-gradient(120% 120% at 50% -10%, #122036, #070d18 70%);
+  border-radius: var(--rb-radius-lg);
+  padding: 20px;
+  color: #e8eefc;
+}
+.rb-room-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+/* ── token table ─────────────────────────────────────────── */
+.token-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+.token-row {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px; font-family: var(--rb-font-mono);
+  padding: 7px 10px;
+  background: rgba(255,255,255,.03);
+  border-radius: var(--rb-radius-sm);
+}
+.token-swatch {
+  width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,.12);
+}
+.token-name  { color: var(--rb-teal-300); flex: 1; }
+.token-value { color: var(--rb-dark-muted); font-size: 11px; }
+
+/* ── spacing viz ─────────────────────────────────────────── */
+.spacing-grid { display: flex; flex-direction: column; gap: 10px; }
+.space-row { display: flex; align-items: center; gap: 14px; }
+.space-bar {
+  height: 16px; border-radius: 4px;
+  background: linear-gradient(90deg, #0ea5e9, #7dd3fc);
+  min-width: 4px;
+}
+.space-label { font-size: 11px; font-family: var(--rb-font-mono); color: var(--rb-dark-muted); min-width: 80px; }
+
+/* ── radius viz ──────────────────────────────────────────── */
+.radius-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+.radius-box {
+  background: rgba(14,165,233,.15); border: 2px solid #0ea5e9;
+  width: 52px; height: 52px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px;
+}
+.radius-label { font-size: 10px; font-family: var(--rb-font-mono); color: var(--rb-teal-300); }
+.radius-val   { font-size: 11px; color: var(--rb-dark-muted); }
+
+/* ── animations ──────────────────────────────────────────── */
+@keyframes spin  { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+@keyframes rb-neon-glow {
+  0%,100% { text-shadow: 0 0 4px #0ea5e9, 0 0 12px #0ea5e9aa; }
+  50%      { text-shadow: 0 0 8px #7dd3fc, 0 0 24px #7dd3fc88; }
+}
+
+/* ── timer styles ────────────────────────────────────────── */
+.timer-classic {
+  font-family: var(--rb-font-mono); font-size: 22px; font-weight: 700;
+  letter-spacing: .04em; color: #e8eefc;
+  background: rgba(0,0,0,.28); border-radius: var(--rb-radius-sm);
+  padding: 4px 10px;
+}
+.timer-minimal {
+  font-family: var(--rb-font-body); font-size: 20px; font-weight: 800;
+  color: rgba(232,238,252,.9); letter-spacing: -.01em;
+}
+.timer-glass {
+  font-family: var(--rb-font-mono); font-size: 20px; font-weight: 700;
+  letter-spacing: .05em; color: #e8eefc;
+  background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.18);
+  border-radius: var(--rb-radius-sm); padding: 4px 10px;
+  backdrop-filter: blur(6px);
+}
+.timer-scoreboard {
+  font-family: var(--rb-font-mono); font-size: 24px; font-weight: 900;
+  letter-spacing: .06em; color: #ffd700;
+  background: #0a0f18; border: 2px solid #2a3346;
+  border-radius: 6px; padding: 2px 10px;
+  text-shadow: 0 0 6px rgba(255,215,0,.40);
+}
+.timer-pill {
+  font-family: var(--rb-font-display); font-size: 13px; font-weight: 700;
+  color: #e8eefc; background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.20);
+  border-radius: var(--rb-radius-full); padding: 4px 12px;
+}
+.timer-neon {
+  font-family: var(--rb-font-mono); font-size: 22px; font-weight: 700;
+  color: #7dd3fc; letter-spacing: .06em;
+  animation: rb-neon-glow 2s ease-in-out infinite;
+}
+.timer-paper {
+  font-family: var(--rb-font-body); font-size: 19px; font-weight: 700;
+  color: rgba(232,238,252,.8); letter-spacing: .01em;
+  border-bottom: 2px dashed rgba(232,238,252,.20);
+  padding-bottom: 2px;
+}
+.timer-embossed {
+  font-family: var(--rb-font-mono); font-size: 20px; font-weight: 800;
+  color: #c4d0e4;
+  background: linear-gradient(160deg, #1c2840, #0e1a2d);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: var(--rb-radius-sm); padding: 4px 10px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.06);
+}
+
+/* ── alert states ────────────────────────────────────────── */
+.timer-alert1 { color: var(--rb-timer-alert-1) !important; }
+.timer-alert2 { color: var(--rb-timer-alert-2) !important; animation: pulse 1s ease-in-out infinite; }
+
+/* ── divider util ────────────────────────────────────────── */
+.divider { height: 1px; background: rgba(255,255,255,.07); margin: 32px 0; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- header -->
+  <div class="page-header">
+    <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+      <rect x="12" y="2" width="8" height="28" rx="3" fill="#ef4444"/>
+      <rect x="2" y="12" width="28" height="8" rx="3" fill="#ef4444"/>
+    </svg>
+    <div>
+      <h1>RoomBoard Design System</h1>
+      <p>Design tokens, component library, and visual reference</p>
+    </div>
+  </div>
+
+
+  <!-- ── COLORS ─────────────────────────────────────────── -->
+  <section class="section">
+    <div class="section-title">Brand Palette</div>
+    <div class="card">
+      <div class="palette-grid">
+        <div class="swatch"><div class="swatch-dot" style="background:#f0f9ff"></div><div class="swatch-name">teal-50</div><div class="swatch-hex">#f0f9ff</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#e0f2fe"></div><div class="swatch-name">teal-100</div><div class="swatch-hex">#e0f2fe</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#7dd3fc"></div><div class="swatch-name">teal-300</div><div class="swatch-hex">#7dd3fc</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#0ea5e9"></div><div class="swatch-name">teal-500</div><div class="swatch-hex">#0ea5e9</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#0369a1"></div><div class="swatch-name">teal-600</div><div class="swatch-hex">#0369a1</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#035683"></div><div class="swatch-name">teal-700</div><div class="swatch-hex">#035683</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#fb923c"></div><div class="swatch-name">coral</div><div class="swatch-hex">#fb923c</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#fff7ed"></div><div class="swatch-name">coral-soft</div><div class="swatch-hex">#fff7ed</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">Room Status Colors</div>
+    <div class="card">
+      <div class="palette-grid">
+        <div class="swatch"><div class="swatch-dot" style="background:#3b82f6"></div><div class="swatch-name">exam</div><div class="swatch-hex">#3b82f6</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#f59e0b"></div><div class="swatch-name">recheck</div><div class="swatch-hex">#f59e0b</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#ef476f"></div><div class="swatch-name">procedure</div><div class="swatch-hex">#ef476f</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#18b06b"></div><div class="swatch-name">ready</div><div class="swatch-hex">#18b06b</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#8b5cf6"></div><div class="swatch-name">consult</div><div class="swatch-hex">#8b5cf6</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#fbbf24"></div><div class="swatch-name">cleaning</div><div class="swatch-hex">#fbbf24</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#22c55e"></div><div class="swatch-name">success</div><div class="swatch-hex">#22c55e</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#ef4444"></div><div class="swatch-name">danger</div><div class="swatch-hex">#ef4444</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#fbbf24"></div><div class="swatch-name">alert-1</div><div class="swatch-hex">#fbbf24</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#fb7185"></div><div class="swatch-name">alert-2</div><div class="swatch-hex">#fb7185</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">Dark Theme Surfaces</div>
+    <div class="card">
+      <div class="palette-grid">
+        <div class="swatch"><div class="swatch-dot" style="background:#0b1220; border-color:rgba(255,255,255,.20)"></div><div class="swatch-name">dark-bg</div><div class="swatch-hex">#0b1220</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#e8eefc"></div><div class="swatch-name">dark-text</div><div class="swatch-hex">#e8eefc</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:#a9b6d3"></div><div class="swatch-name">dark-muted</div><div class="swatch-hex">#a9b6d3</div></div>
+        <div class="swatch"><div class="swatch-dot" style="background:rgba(15,27,51,.92); border-color:rgba(255,255,255,.20)"></div><div class="swatch-name">dark-panel</div><div class="swatch-hex">rgba(15,27,51,.92)</div></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── TYPOGRAPHY ─────────────────────────────────────── -->
+  <section class="section">
+    <div class="section-title">Typography</div>
+    <div class="card">
+      <div class="type-row">
+        <div class="type-meta">display / 800<br>Space Grotesk</div>
+        <div class="type-sample" style="font-family:var(--rb-font-display);font-size:28px;font-weight:800;letter-spacing:-.03em;color:#eef3ff">Room 3 · Dr. Chen</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">heading / 700<br>Space Grotesk</div>
+        <div class="type-sample" style="font-family:var(--rb-font-display);font-size:20px;font-weight:700;letter-spacing:-.02em">Westside Dental</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">label-caps / 700<br>Space Grotesk</div>
+        <div class="type-sample" style="font-family:var(--rb-font-display);font-size:11px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--rb-dark-muted)">EXAM · RECHECK · PROCEDURE</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">body / 500<br>Inter</div>
+        <div class="type-sample" style="font-size:14px;font-weight:500">Sarah Johnson · Cleaning</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">small / 400<br>Inter</div>
+        <div class="type-sample" style="font-size:12px;color:var(--rb-dark-muted)">Today · 3 active rooms</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">mono<br>SF Mono</div>
+        <div class="type-sample" style="font-family:var(--rb-font-mono);font-size:20px;font-weight:700;letter-spacing:.04em">14:32</div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── SPACING + RADIUS ───────────────────────────────── -->
+  <section class="section">
+    <div class="section-title">Spacing Scale</div>
+    <div class="card">
+      <div class="spacing-grid">
+        <div class="space-row"><div class="space-label">--rb-space-1</div><div class="space-bar" style="width:4px"></div><div style="font-size:11px;color:var(--rb-dark-muted);font-family:var(--rb-font-mono)">4px</div></div>
+        <div class="space-row"><div class="space-label">--rb-space-2</div><div class="space-bar" style="width:8px"></div><div style="font-size:11px;color:var(--rb-dark-muted);font-family:var(--rb-font-mono)">8px</div></div>
+        <div class="space-row"><div class="space-label">--rb-space-3</div><div class="space-bar" style="width:12px"></div><div style="font-size:11px;color:var(--rb-dark-muted);font-family:var(--rb-font-mono)">12px</div></div>
+        <div class="space-row"><div class="space-label">--rb-space-4</div><div class="space-bar" style="width:16px"></div><div style="font-size:11px;color:var(--rb-dark-muted);font-family:var(--rb-font-mono)">16px</div></div>
+        <div class="space-row"><div class="space-label">--rb-space-5</div><div class="space-bar" style="width:20px"></div><div style="font-size:11px;color:var(--rb-dark-muted);font-family:var(--rb-font-mono)">20px</div></div>
+        <div class="space-row"><div class="space-label">--rb-space-6</div><div class="space-bar" style="width:24px"></div><div style="font-size:11px;color:var(--rb-dark-muted);font-family:var(--rb-font-mono)">24px</div></div>
+        <div class="space-row"><div class="space-label">--rb-space-8</div><div class="space-bar" style="width:32px"></div><div style="font-size:11px;color:var(--rb-dark-muted);font-family:var(--rb-font-mono)">32px</div></div>
+        <div class="space-row"><div class="space-label">--rb-space-10</div><div class="space-bar" style="width:40px"></div><div style="font-size:11px;color:var(--rb-dark-muted);font-family:var(--rb-font-mono)">40px</div></div>
+        <div class="space-row"><div class="space-label">--rb-space-12</div><div class="space-bar" style="width:48px"></div><div style="font-size:11px;color:var(--rb-dark-muted);font-family:var(--rb-font-mono)">48px</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">Border Radius</div>
+    <div class="card">
+      <div class="radius-row">
+        <div><div class="radius-box" style="border-radius:8px"><div class="radius-label">sm</div><div class="radius-val">8px</div></div></div>
+        <div><div class="radius-box" style="border-radius:12px"><div class="radius-label">base</div><div class="radius-val">12px</div></div></div>
+        <div><div class="radius-box" style="border-radius:16px"><div class="radius-label">md</div><div class="radius-val">16px</div></div></div>
+        <div><div class="radius-box" style="border-radius:26px"><div class="radius-label">lg</div><div class="radius-val">26px</div></div></div>
+        <div><div class="radius-box" style="border-radius:999px;width:64px;height:32px"><div class="radius-label" style="font-size:9px">full</div></div></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── COMPONENTS ─────────────────────────────────────── -->
+
+  <!-- Button -->
+  <section class="section">
+    <div class="section-title">Button</div>
+    <div class="card col" style="gap:20px">
+      <div>
+        <div style="font-size:11px;color:var(--rb-dark-muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.07em">Variants</div>
+        <div class="row">
+          <button class="rb-btn rb-btn-primary rb-btn-md">Get Started</button>
+          <button class="rb-btn rb-btn-ghost rb-btn-md">Cancel</button>
+          <button class="rb-btn rb-btn-warn rb-btn-md">Discharge</button>
+          <button class="rb-btn rb-btn-danger rb-btn-md">Delete Room</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--rb-dark-muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.07em">Sizes</div>
+        <div class="row" style="align-items:center">
+          <button class="rb-btn rb-btn-primary rb-btn-sm">Small</button>
+          <button class="rb-btn rb-btn-primary rb-btn-md">Medium</button>
+          <button class="rb-btn rb-btn-primary rb-btn-lg">Large</button>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--rb-dark-muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.07em">Busy state</div>
+        <div class="row">
+          <button class="rb-btn rb-btn-primary rb-btn-md rb-btn-busy">Saving</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LivePill -->
+  <section class="section">
+    <div class="section-title">Live Pill</div>
+    <div class="card">
+      <div class="row">
+        <div class="rb-live-pill rb-pill-live"><span class="dot"></span>Live</div>
+        <div class="rb-live-pill rb-pill-syncing"><span class="dot"></span>Syncing</div>
+        <div class="rb-live-pill rb-pill-error"><span class="dot"></span>Error</div>
+        <div class="rb-live-pill rb-pill-idle"><span class="dot"></span>Idle</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Toggle -->
+  <section class="section">
+    <div class="section-title">Toggle</div>
+    <div class="card">
+      <div class="row">
+        <div class="rb-toggle rb-toggle-on">
+          <span class="rb-toggle-track"><span class="rb-toggle-knob"></span></span>
+          <span class="rb-toggle-label">Only Active Rooms</span>
+        </div>
+        <div class="rb-toggle rb-toggle-off">
+          <span class="rb-toggle-track"><span class="rb-toggle-knob"></span></span>
+          <span class="rb-toggle-label">Show Notes</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Status Badge -->
+  <section class="section">
+    <div class="section-title">Status Badge</div>
+    <div class="card">
+      <div class="row">
+        <div class="rb-status" style="background:rgba(59,130,246,.12);color:#60a5fa;border:1px solid rgba(59,130,246,.25)">
+          <span class="dot" style="background:#3b82f6"></span>Exam
+        </div>
+        <div class="rb-status" style="background:rgba(245,158,11,.12);color:#fbbf24;border:1px solid rgba(245,158,11,.25)">
+          <span class="dot" style="background:#f59e0b"></span>Recheck
+        </div>
+        <div class="rb-status" style="background:rgba(239,71,111,.12);color:#f87185;border:1px solid rgba(239,71,111,.25)">
+          <span class="dot" style="background:#ef476f"></span>Procedure
+        </div>
+        <div class="rb-status" style="background:rgba(139,92,246,.12);color:#a78bfa;border:1px solid rgba(139,92,246,.25)">
+          <span class="dot" style="background:#8b5cf6"></span>Consult
+        </div>
+        <div class="rb-status" style="background:rgba(24,176,107,.12);color:#34d399;border:1px solid rgba(24,176,107,.25)">
+          <span class="dot" style="background:#18b06b"></span>Ready
+        </div>
+        <div class="rb-status" style="background:rgba(251,191,36,.10);color:#fcd34d;border:1px solid rgba(251,191,36,.22)">
+          <span class="dot" style="background:#fbbf24"></span>Cleaning
+        </div>
+        <div class="rb-status" style="background:rgba(255,255,255,.06);color:#8195b4;border:1px solid rgba(255,255,255,.10)">
+          <span class="dot" style="background:#8195b4"></span>Empty
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Doctor Badge -->
+  <section class="section">
+    <div class="section-title">Doctor Badge</div>
+    <div class="card">
+      <div class="row" style="align-items:center">
+        <div class="rb-doctor rb-doctor-circle" style="width:48px;height:48px;background:#2d6be4;color:#fff;font-size:16px">JC</div>
+        <div class="rb-doctor rb-doctor-circle" style="width:48px;height:48px;background:#7c3aed;color:#fff;font-size:16px">SR</div>
+        <div class="rb-doctor rb-doctor-circle" style="width:48px;height:48px;background:#0d7560;color:#fff;font-size:16px">AM</div>
+        <div class="rb-doctor rb-doctor-circle" style="width:48px;height:48px;background:#b45309;color:#fff;font-size:16px">KP</div>
+        <div class="rb-doctor rb-doctor-rounded" style="width:48px;height:48px;background:#be185d;color:#fff;font-size:16px">LT</div>
+        <div class="rb-doctor rb-doctor-squircle" style="width:48px;height:48px;background:#1d4ed8;color:#fff;font-size:16px">RN</div>
+        <div style="color:var(--rb-dark-muted);font-size:12px;margin-left:8px">circle · rounded · squircle</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Timer Styles -->
+  <section class="section">
+    <div class="section-title">Timer Box — All 8 Styles</div>
+    <div class="card">
+      <div class="row" style="flex-wrap:wrap;gap:28px 36px;align-items:flex-start">
+        <div class="col" style="gap:6px;align-items:flex-start">
+          <div style="font-size:10px;color:var(--rb-dark-muted);text-transform:uppercase;letter-spacing:.07em">classic</div>
+          <div class="timer-classic">14:32</div>
+        </div>
+        <div class="col" style="gap:6px;align-items:flex-start">
+          <div style="font-size:10px;color:var(--rb-dark-muted);text-transform:uppercase;letter-spacing:.07em">minimal</div>
+          <div class="timer-minimal">14:32</div>
+        </div>
+        <div class="col" style="gap:6px;align-items:flex-start">
+          <div style="font-size:10px;color:var(--rb-dark-muted);text-transform:uppercase;letter-spacing:.07em">glass</div>
+          <div class="timer-glass">14:32</div>
+        </div>
+        <div class="col" style="gap:6px;align-items:flex-start">
+          <div style="font-size:10px;color:var(--rb-dark-muted);text-transform:uppercase;letter-spacing:.07em">scoreboard</div>
+          <div class="timer-scoreboard">14:32</div>
+        </div>
+        <div class="col" style="gap:6px;align-items:flex-start">
+          <div style="font-size:10px;color:var(--rb-dark-muted);text-transform:uppercase;letter-spacing:.07em">pill</div>
+          <div class="timer-pill">14:32</div>
+        </div>
+        <div class="col" style="gap:6px;align-items:flex-start">
+          <div style="font-size:10px;color:var(--rb-dark-muted);text-transform:uppercase;letter-spacing:.07em">neon</div>
+          <div class="timer-neon">14:32</div>
+        </div>
+        <div class="col" style="gap:6px;align-items:flex-start">
+          <div style="font-size:10px;color:var(--rb-dark-muted);text-transform:uppercase;letter-spacing:.07em">paper</div>
+          <div class="timer-paper">14:32</div>
+        </div>
+        <div class="col" style="gap:6px;align-items:flex-start">
+          <div style="font-size:10px;color:var(--rb-dark-muted);text-transform:uppercase;letter-spacing:.07em">embossed</div>
+          <div class="timer-embossed">14:32</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div style="font-size:11px;color:var(--rb-dark-muted);margin-bottom:14px;text-transform:uppercase;letter-spacing:.07em">Alert states</div>
+      <div class="row">
+        <div class="col" style="gap:5px">
+          <div style="font-size:10px;color:var(--rb-dark-muted)">idle</div>
+          <div class="timer-classic">03:12</div>
+        </div>
+        <div class="col" style="gap:5px">
+          <div style="font-size:10px;color:var(--rb-dark-muted)">alert-1 (yellow)</div>
+          <div class="timer-classic timer-alert1">18:45</div>
+        </div>
+        <div class="col" style="gap:5px">
+          <div style="font-size:10px;color:var(--rb-dark-muted)">alert-2 (red, pulse)</div>
+          <div class="timer-classic timer-alert2">31:07</div>
+        </div>
+        <div class="col" style="gap:5px">
+          <div style="font-size:10px;color:var(--rb-dark-muted)">cleaning</div>
+          <div class="timer-classic" style="color:#f3c969">🧹 08:22</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Room Cards -->
+  <section class="section">
+    <div class="section-title">Room Card</div>
+    <div class="card">
+      <div class="rb-board-surface" style="overflow-x:auto">
+        <div class="rb-board-header">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+            <div style="display:flex;align-items:center;gap:7px">
+              <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true">
+                <rect x="7" y="0" width="6" height="20" rx="2" fill="#ef4444"/>
+                <rect x="0" y="7" width="20" height="6" rx="2" fill="#ef4444"/>
+              </svg>
+              <span class="rb-practice-name">Westside Dental</span>
+            </div>
+            <span class="rb-board-date">Today · 4 active</span>
+          </div>
+          <button style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);padding:5px 8px 5px 10px;border-radius:999px;cursor:pointer">
+            <span style="font-size:9.5px;font-weight:700;letter-spacing:.05em;color:#8096b8;text-transform:uppercase">Only Active</span>
+            <span style="width:34px;height:20px;border-radius:999px;background:#1e2d47;position:relative;display:inline-block">
+              <span style="position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#7a90b8"></span>
+            </span>
+          </button>
+          <div class="rb-live-pill rb-pill-live" style="margin-left:4px"><span class="dot"></span>Live</div>
+        </div>
+
+        <div style="display:flex;gap:14px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px">
+
+          <!-- Exam card -->
+          <div class="rb-room-card" style="background:linear-gradient(170deg,#4b93f8,#1d6fd4);border-top:3px solid #6baaf8;color:#12233b">
+            <div class="rb-room-card-header" style="background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(0,0,0,.10));border-bottom:1px solid #6baaf844">
+              <span class="rb-room-card-name">Room 1</span>
+              <div class="rb-status" style="background:rgba(59,130,246,.20);color:#dbeafe;border:1px solid rgba(255,255,255,.20);font-size:10px">
+                <span class="dot" style="background:#93c5fd"></span>Exam
+              </div>
+            </div>
+            <div class="rb-room-card-body">
+              <div>
+                <div class="rb-patient-name">Sarah Johnson <span style="opacity:.6;padding:0 4px">·</span><span class="rb-visit-type">Cleaning</span></div>
+                <div style="font-size:12px;color:#7dd3fc;font-style:italic;margin-top:4px;opacity:.9">Sensitive teeth noted</div>
+              </div>
+            </div>
+            <div class="rb-room-card-footer">
+              <div class="timer-classic" style="font-size:18px">14:32</div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+                <div class="rb-doctor rb-doctor-circle" style="width:38px;height:38px;background:rgba(0,0,0,.25);color:#dbeafe;font-size:13px;border:2px solid rgba(255,255,255,.20)">JC</div>
+                <button class="rb-btn rb-btn-ghost rb-btn-sm" style="color:#12233b;background:rgba(255,255,255,.20);border-color:rgba(255,255,255,.30);font-size:11px;padding:5px 9px">Discharge</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Procedure card -->
+          <div class="rb-room-card" style="background:linear-gradient(170deg,#f06080,#c42050);border-top:3px solid #f07090;color:#12233b">
+            <div class="rb-room-card-header" style="background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(0,0,0,.10));border-bottom:1px solid #f0709044">
+              <span class="rb-room-card-name">Room 2</span>
+              <div class="rb-status" style="background:rgba(239,71,111,.20);color:#fce7f3;border:1px solid rgba(255,255,255,.20);font-size:10px">
+                <span class="dot" style="background:#f9a8d4"></span>Proc
+              </div>
+            </div>
+            <div class="rb-room-card-body">
+              <div>
+                <div class="rb-patient-name">Marcus Torres <span style="opacity:.6;padding:0 4px">·</span><span class="rb-visit-type">Root Canal</span></div>
+              </div>
+            </div>
+            <div class="rb-room-card-footer">
+              <div class="timer-classic timer-alert1" style="font-size:18px">28:07</div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+                <div class="rb-doctor rb-doctor-circle" style="width:38px;height:38px;background:rgba(0,0,0,.25);color:#fce7f3;font-size:13px;border:2px solid rgba(255,255,255,.20)">SR</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Consult card -->
+          <div class="rb-room-card" style="background:linear-gradient(170deg,#a07cf8,#6b3fd4);border-top:3px solid #b09af8;color:#12233b">
+            <div class="rb-room-card-header" style="background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(0,0,0,.10));border-bottom:1px solid #b09af844">
+              <span class="rb-room-card-name">Room 3</span>
+              <div class="rb-status" style="background:rgba(139,92,246,.20);color:#ede9fe;border:1px solid rgba(255,255,255,.20);font-size:10px">
+                <span class="dot" style="background:#c4b5fd"></span>Consult
+              </div>
+            </div>
+            <div class="rb-room-card-body">
+              <div>
+                <div class="rb-patient-name">Amy Nguyen <span style="opacity:.6;padding:0 4px">·</span><span class="rb-visit-type">Consultation</span></div>
+              </div>
+            </div>
+            <div class="rb-room-card-footer">
+              <div class="timer-classic" style="font-size:18px">06:18</div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+                <div class="rb-doctor rb-doctor-circle" style="width:38px;height:38px;background:rgba(0,0,0,.25);color:#ede9fe;font-size:13px;border:2px solid rgba(255,255,255,.20)">AM</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ready card -->
+          <div class="rb-room-card" style="background:linear-gradient(170deg,#30c87c,#0f8a50);border-top:3px solid #50d890;color:#12233b">
+            <div class="rb-room-card-header" style="background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(0,0,0,.10));border-bottom:1px solid #50d89044">
+              <span class="rb-room-card-name">Room 4</span>
+              <div class="rb-status" style="background:rgba(24,176,107,.20);color:#d1fae5;border:1px solid rgba(255,255,255,.20);font-size:10px">
+                <span class="dot" style="background:#6ee7b7"></span>Ready
+              </div>
+            </div>
+            <div class="rb-room-card-body">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:11px;font-weight:700;background:rgba(255,255,255,.20);color:#12233b;border-radius:999px;padding:3px 9px">✓ Room</span>
+                <span style="font-size:11px;font-weight:700;background:rgba(255,255,255,.20);color:#12233b;border-radius:999px;padding:3px 9px">✓ Dr.</span>
+              </div>
+              <div class="rb-patient-name" style="font-size:13px">Carlos Reyes waiting</div>
+            </div>
+            <div class="rb-room-card-footer">
+              <div class="timer-classic" style="font-size:18px">02:45</div>
+            </div>
+          </div>
+
+          <!-- Cleaning card -->
+          <div class="rb-room-card" style="background:linear-gradient(170deg,#20242c,#15171c);border-top:3px solid rgba(245,181,10,.5);color:#e7c98b">
+            <div class="rb-room-card-header" style="background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.10));border-bottom:1px solid rgba(245,181,10,.2)">
+              <span class="rb-room-card-name">Room 5</span>
+            </div>
+            <div class="rb-room-card-body">
+              <span style="font-weight:800;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:#f3c969;opacity:.85">🧹 Cleaning</span>
+            </div>
+            <div class="rb-room-card-footer">
+              <div class="timer-classic" style="font-size:18px;color:#f3c969">🧹 03:10</div>
+            </div>
+          </div>
+
+          <!-- Empty card -->
+          <div class="rb-room-card" style="background:linear-gradient(170deg,#2a3346,#1b2436);border-top:3px solid rgba(255,255,255,.08);color:#c4d0e4">
+            <div class="rb-room-card-header" style="background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.05));border-bottom:1px solid rgba(255,255,255,.08)">
+              <span class="rb-room-card-name">Room 6</span>
+            </div>
+            <div class="rb-room-card-body">
+              <span style="font-weight:600;opacity:.5;font-size:13px">Empty</span>
+            </div>
+            <div class="rb-room-card-footer">
+              <div class="timer-classic" style="font-size:18px;opacity:.35">00:00</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- footer -->
+  <div style="text-align:center;padding-top:32px;font-size:12px;color:var(--rb-dark-muted)">
+    RoomBoard Design System · @roomboard/ui v0.1.0
+  </div>
+
+</div>
+</body>
+</html>

@@ -21,6 +21,8 @@ native-stats-mac/
 .swift-module-cache/
 ios/
 public/stats-viewer/
+# Android Studio build output only — the Android app source lives in roomboard-app
+android/
 
 # TS incremental build cache
 tsconfig.tsbuildinfo

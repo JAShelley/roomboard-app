@@ -1,0 +1,41 @@
+/* RoomBoard UI — main stylesheet */
+@import "./tokens/tokens.css";
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap");
+
+*, *::before, *::after { box-sizing: border-box; }
+
+@keyframes rb-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes rb-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .45; }
+}
+
+@keyframes rb-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Board surface — dark background matching the real app */
+.rb-board-surface {
+  background: radial-gradient(120% 120% at 50% -10%, #122036, #070d18 70%);
+  border-radius: var(--rb-radius-lg);
+  padding: 20px;
+  color: #e8eefc;
+}
+
+/* Room grid */
+.rb-room-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+/* Accessible focus ring */
+:focus-visible {
+  outline: 3px solid var(--rb-ring, #0369a1);
+  outline-offset: 2px;
+}
