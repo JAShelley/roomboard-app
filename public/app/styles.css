@@ -1272,20 +1272,20 @@
     }
     /* Progress outline (Actions → Progress outline toggle): the stopwatch
        box's own outline fills clockwise from 12 o'clock over the configured
-       interval (--ringP set by the ticker). Layered over the border of ANY
-       stopwatch style as a masked conic-gradient band, so each style keeps
-       its own background/border underneath. */
+       interval (--ringP set by the ticker). The band is exactly --swRingW
+       thick (each style's border width, default 1px) and sits precisely on
+       the border, so enabling it changes nothing about the stopwatch design
+       except the outline itself filling. No position override here: the
+       boxView timerBox is already position:absolute (its own containing
+       block) and forcing relative un-anchors it from the card bottom. */
     .timerRing{ display:none; }
-    html[data-stopwatch-ring="on"] #displayGrid.boxView .timerBox{
-      position:relative;
-    }
     html[data-stopwatch-ring="on"] #displayGrid.boxView .timerBox .timerRing{
       display:block;
       position:absolute;
       inset:0;
       border-radius:inherit;
       pointer-events:none;
-      padding: max(2px, calc(var(--fontTimer, 18px) * 0.12));
+      padding: var(--swRingW, 1px);
       background: conic-gradient(currentColor var(--ringP, 0%), transparent 0);
       -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
       -webkit-mask-composite: xor;
@@ -1412,6 +1412,7 @@
     #displayGrid.boxView[data-card-style="highContrast"] .room:not(.cleaning) .timerBox{
       border: 2px solid color-mix(in srgb, var(--roomAccent, #ffffff) 65%, transparent);
       background: rgba(5,10,20,.85);
+      --swRingW: 2px;
     }
     #displayGrid.boxView[data-card-style="highContrast"] .room:not(.cleaning) .time{
       color: #ffffff;
@@ -1459,6 +1460,9 @@
       background:transparent;
       box-shadow:none;
     }
+    /* No outline on minimal, so there's nothing for the progress outline to
+       fill — hide it rather than invent chrome the style deliberately lacks */
+    html[data-stopwatch-style="minimal"] #displayGrid.boxView .timerBox .timerRing{ display:none; }
     html[data-stopwatch-style="minimal"] .timerBox .muted{
       text-transform:uppercase;
       letter-spacing:.18em;
@@ -1499,6 +1503,7 @@
       padding:13px 16px;
       border-radius:10px;
       border:2px solid #05080f;
+      --swRingW: 2px;
       background:
         radial-gradient(rgba(255,255,255,.045) 1px, transparent 1.6px) 0 0 / 7px 7px,
         linear-gradient(180deg, #060a13, #0a0f1c);
@@ -1548,6 +1553,7 @@
       padding:10px 16px;
       border-radius:14px;
       border:1.5px solid rgba(56,189,248,.9);
+      --swRingW: 1.5px;
       background: rgba(7,11,22,.55);
       box-shadow:
         0 0 0 1px rgba(56,189,248,.22),
