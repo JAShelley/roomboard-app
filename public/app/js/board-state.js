@@ -342,10 +342,11 @@
     window.getLastKnownPracticeId = getLastKnownPracticeId;
     window.getBootPersistenceScope = getBootPersistenceScope;
       var REMOTE_CONFIG_REFRESH_THROTTLE_MS = 1200;
-      // Every tick is a cheap updated_at version probe (see startAutoPull in
-      // auth-sync.js); the full board is only downloaded when the version
-      // moved, so the tick can stay fast without heavy egress.
+      // The five-second cadence is used only while Realtime is reconnecting
+      // or unhealthy. Healthy channels get an infrequent safety probe; the
+      // full board is still downloaded only when its version moved.
       var AUTO_PULL_INTERVAL_MS = 5000;
+      var REALTIME_HEALTHY_PROBE_INTERVAL_MS = 60000;
       var SHORT_INTERACTION_HOLD_MS = 450;
       var CHANGE_INTERACTION_HOLD_MS = 700;
       var TEXT_INPUT_HOLD_MS = 1200;
@@ -2231,13 +2232,18 @@ function applyFonts(){
       return 0.2126*R + 0.7152*G + 0.0722*B;
     }
     function pickReadableTextColor(bgHex){
-      // Returns a high-contrast text color for the given background color.
-      // Threshold tuned for TV readability.
+      // Returns a high-contrast text color for the given background color by
+      // comparing the actual WCAG contrast of white vs dark ink. White keeps
+      // a 1.5x bias so saturated brand colors (reds, strong blues) keep the
+      // conventional white label, but mid/pastel tones (sky, teal, mint,
+      // lavender, amber) flip to dark ink — the old L>0.55 luminance cutoff
+      // left white text at ~2:1 on those.
       var rgb = hexToRgb(bgHex);
       if(!rgb) return (state.settings.displayFontColor || "#e8eefc");
       var L = relativeLuminance(rgb);
-      // L close to 1 = bright background -> use dark text
-      return (L > 0.55) ? "#0b1220" : "#ffffff";
+      var whiteContrast = 1.05 / (L + 0.05);
+      var darkContrast = (L + 0.05) / 0.0558; // 0.0558 = luminance(#0b1220) + 0.05
+      return (whiteContrast * 1.5 >= darkContrast) ? "#ffffff" : "#0b1220";
     }
     function contrastRatio(hexA, hexB){
       var rgbA = hexToRgb(hexA);

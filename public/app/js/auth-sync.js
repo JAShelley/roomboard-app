@@ -173,6 +173,11 @@
 	    var lastKnownBoardUpdatedAtIso = null;
 	    var lastKnownBoardUpdatedAtMs = 0;
 	    var boardVersionProbeInFlight = null;
+	    var lastHealthyBoardVersionProbeAt = 0;
+	    // This is the exact server snapshot used as the base for the next
+	    // field-level merge. It prevents a local full-board snapshot from
+	    // replacing a concurrent update to another room.
+	    var lastSyncedBoardState = null;
 	    // Consecutive failed version probes. Network blips are routine on wall
 	    // displays (wifi drops, device sleep/wake), so nothing is surfaced until
 	    // the streak shows a real outage; the probe loop retries regardless.
@@ -202,6 +207,27 @@
 	    function resetKnownBoardVersion(){
 	      lastKnownBoardUpdatedAtIso = null;
 	      lastKnownBoardUpdatedAtMs = 0;
+	      lastHealthyBoardVersionProbeAt = 0;
+	      lastSyncedBoardState = null;
+	    }
+
+	    function cloneBoardStateForMerge(boardState){
+	      var source = boardState && typeof boardState === "object" ? boardState : {};
+	      return {
+	        rooms: Array.isArray(source.rooms) ? JSON.parse(JSON.stringify(source.rooms)) : [],
+	        sharedUi: source.sharedUi && typeof source.sharedUi === "object"
+	          ? JSON.parse(JSON.stringify(source.sharedUi))
+	          : {}
+	      };
+	    }
+
+	    function getBoardMergeBase(){
+	      return cloneBoardStateForMerge(lastSyncedBoardState || { rooms: [], sharedUi: {} });
+	    }
+
+	    function rememberSyncedBoardState(boardState){
+	      lastSyncedBoardState = cloneBoardStateForMerge(boardState);
+	      return lastSyncedBoardState;
 	    }
 
     function getSessionTechViewStorageKey(scope){
@@ -1431,6 +1457,153 @@
 	      return true;
 	    }
 
+	    // Write-ahead outbox for session end-writes: an end that fails (offline,
+	    // tab closed mid-flight) would otherwise leave the row open forever once
+	    // the room's session link is cleared. Entries are replayed by
+	    // flushPendingStatsSessionEnds until delivered or expired.
+	    var PENDING_STATS_ENDS_STORAGE_KEY = "roomboard.website.pendingStatsSessionEnds.v1";
+	    var PENDING_STATS_END_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+	    var pendingStatsEndFlushTimer = null;
+	    var pendingStatsEndFlushInFlight = false;
+
+	    function isPendingStatsEndEntry(entry){
+	      return !!(entry
+	        && (entry.table === "room_sessions" || entry.table === "cleaning_sessions")
+	        && isUuidLike(entry.sessionId));
+	    }
+
+	    function readPendingStatsSessionEnds(){
+	      try{
+	        var raw = window.localStorage && window.localStorage.getItem(PENDING_STATS_ENDS_STORAGE_KEY);
+	        var parsed = raw ? JSON.parse(raw) : [];
+	        return Array.isArray(parsed) ? parsed.filter(isPendingStatsEndEntry) : [];
+	      }catch(e){ return []; }
+	    }
+
+	    function writePendingStatsSessionEnds(entries){
+	      try{
+	        if(!window.localStorage) return;
+	        if(entries && entries.length) window.localStorage.setItem(PENDING_STATS_ENDS_STORAGE_KEY, JSON.stringify(entries));
+	        else window.localStorage.removeItem(PENDING_STATS_ENDS_STORAGE_KEY);
+	      }catch(e){}
+	    }
+
+	    function enqueuePendingStatsSessionEnd(entry){
+	      if(!isPendingStatsEndEntry(entry)) return;
+	      entry.queuedAtIso = entry.queuedAtIso || isoNow();
+	      var entries = readPendingStatsSessionEnds().filter(function(existing){
+	        return !(existing.table === entry.table && existing.sessionId === entry.sessionId);
+	      });
+	      entries.push(entry);
+	      writePendingStatsSessionEnds(entries);
+	    }
+
+	    function removePendingStatsSessionEnd(tableName, sessionId){
+	      var entries = readPendingStatsSessionEnds();
+	      var kept = entries.filter(function(entry){
+	        return !(entry.table === tableName && entry.sessionId === sessionId);
+	      });
+	      if(kept.length !== entries.length) writePendingStatsSessionEnds(kept);
+	    }
+
+	    function getPendingStatsEndSessionIdMap(){
+	      var map = {};
+	      readPendingStatsSessionEnds().forEach(function(entry){ map[entry.sessionId] = true; });
+	      return map;
+	    }
+
+	    function clearRoomLinksForClosedSession(tableName, sessionId){
+	      if(!state || !Array.isArray(state.rooms)) return false;
+	      var key = tableName === "room_sessions" ? "activeRoomSessionId" : "activeCleaningSessionId";
+	      var changed = false;
+	      state.rooms.forEach(function(room){
+	        if(room && room[key] === sessionId){
+	          room[key] = null;
+	          changed = true;
+	        }
+	      });
+	      return changed;
+	    }
+
+	    async function flushPendingStatsSessionEnds(){
+	      if(pendingStatsEndFlushInFlight) return;
+	      var entries = readPendingStatsSessionEnds();
+	      if(!entries.length) return;
+	      if(!statsLoggingAvailable || !supabase) return;
+	      var nowMs = Date.now();
+	      var fresh = entries.filter(function(entry){
+	        var queuedMs = Date.parse(entry.queuedAtIso || "");
+	        return !isFinite(queuedMs) || (nowMs - queuedMs) <= PENDING_STATS_END_MAX_AGE_MS;
+	      });
+	      if(fresh.length !== entries.length){
+	        writePendingStatsSessionEnds(fresh);
+	        if(!fresh.length) return;
+	      }
+	      if(!await requireAuthenticatedSession("Stats end retry")) return;
+	      pendingStatsEndFlushInFlight = true;
+	      var linksCleared = false;
+	      try{
+	        for(var i=0;i<fresh.length;i++){
+	          var entry = fresh[i];
+	          try{
+	            var rowRes = await supabase.from(entry.table)
+	              .select("started_at")
+	              .eq("id", entry.sessionId)
+	              .is("ended_at", null)
+	              .maybeSingle();
+	            if(rowRes && rowRes.error) throw rowRes.error;
+	            if(!rowRes || !rowRes.data){
+	              // already closed elsewhere (or gone) — nothing left to deliver
+	              removePendingStatsSessionEnd(entry.table, entry.sessionId);
+	              continue;
+	            }
+	            var endedAtIso = normalizeServerNowIso(entry.endedAtIso) || getEstimatedServerNowIso();
+	            var durationMs = Number(entry.durationMs);
+	            if(!isFinite(durationMs) || durationMs < 1) durationMs = 1;
+	            var startedMs = Date.parse(rowRes.data.started_at);
+	            // ended_at must stay after started_at (DB constraint: ended_after_started)
+	            if(isFinite(startedMs) && !(Date.parse(endedAtIso) > startedMs)){
+	              endedAtIso = new Date(startedMs + durationMs).toISOString();
+	            }
+	            var payload = {
+	              ended_at: endedAtIso,
+	              duration_ms: durationMs,
+	              room_name: entry.roomName || null
+	            };
+	            if(entry.table === "room_sessions") payload.doctor_name = entry.doctorName || null;
+	            var updateRes = await supabase.from(entry.table)
+	              .update(payload)
+	              .eq("id", entry.sessionId)
+	              .is("ended_at", null);
+	            if(updateRes && updateRes.error) throw updateRes.error;
+	            removePendingStatsSessionEnd(entry.table, entry.sessionId);
+	            if(clearRoomLinksForClosedSession(entry.table, entry.sessionId)) linksCleared = true;
+	          }catch(err){
+	            if(isMissingStatsTableError(err)){
+	              disableStatsLogging(err);
+	              return;
+	            }
+	            // likely offline — keep the rest queued and retry as one batch later
+	            break;
+	          }
+	        }
+	      } finally {
+	        pendingStatsEndFlushInFlight = false;
+	      }
+	      if(linksCleared) persistSessionTrackingState();
+	      if(readPendingStatsSessionEnds().length) scheduleStatsEndFlush(60 * 1000);
+	    }
+
+	    function scheduleStatsEndFlush(delayMs){
+	      if(pendingStatsEndFlushTimer) clearTimeout(pendingStatsEndFlushTimer);
+	      pendingStatsEndFlushTimer = setTimeout(function(){
+	        pendingStatsEndFlushTimer = null;
+	        flushPendingStatsSessionEnds().catch(function(err){
+	          console.warn("Stats session end retry failed:", err);
+	        });
+	      }, typeof delayMs === "number" ? delayMs : 4000);
+	    }
+
 	    async function logRoomSessionStart(room, options){
 	      var roomId = "";
 	      var pendingToken = "";
@@ -1517,13 +1690,23 @@
           persistSessionTrackingState();
           return;
         }
-        if(!await requireAuthenticatedSession("Room session end")) return;
-        var endedAtIso = normalizeServerNowIso(options.endedAtIso) || await getServerNowIso();
         var durationMs = Number(options.durationMs);
         if(!isFinite(durationMs) || durationMs < 0) durationMs = computeElapsed(room.timer);
         if(durationMs < 1) durationMs = 1;
         var doctorName = options.doctorName != null ? options.doctorName : (room.doctor || null);
         var roomName = options.roomName != null ? options.roomName : (room.name || room.label || room.id);
+        // Write-ahead: record the close before any network call so a failed or
+        // interrupted write is replayed by flushPendingStatsSessionEnds later.
+        enqueuePendingStatsSessionEnd({
+          table: "room_sessions",
+          sessionId: String(sessionId),
+          endedAtIso: normalizeServerNowIso(options.endedAtIso) || getEstimatedServerNowIso(),
+          durationMs: durationMs,
+          doctorName: doctorName,
+          roomName: roomName
+        });
+        if(!await requireAuthenticatedSession("Room session end")) return;
+        var endedAtIso = normalizeServerNowIso(options.endedAtIso) || await getServerNowIso();
         // Clamp ended_at to be strictly after started_at (DB constraint: ended_after_started)
         var sessionRow = await supabase.from("room_sessions").select("started_at").eq("id", sessionId).maybeSingle();
         if(sessionRow && sessionRow.data && sessionRow.data.started_at){
@@ -1542,6 +1725,7 @@
           })
           .eq("id", sessionId);
         if(res && res.error) throw res.error;
+        removePendingStatsSessionEnd("room_sessions", String(sessionId));
         if(liveRoom && liveRoom.activeRoomSessionId === sessionId) liveRoom.activeRoomSessionId = null;
         if(room.activeRoomSessionId === sessionId) room.activeRoomSessionId = null;
         if(pendingToken) delete pendingRoomSessionEndSnapshotByToken[pendingToken];
@@ -1554,6 +1738,7 @@
         console.error("logRoomSessionEnd failed", e);
         setStatus("Room session end failed: " + getErrorMessage(e));
         setSyncUI("err", "Stats write failed");
+        scheduleStatsEndFlush(8000);
       }
     }
 
@@ -1641,12 +1826,21 @@
           persistSessionTrackingState();
           return;
         }
-        if(!await requireAuthenticatedSession("Cleaning session end")) return;
-        var endedAtIso = normalizeServerNowIso(options.endedAtIso) || await getServerNowIso();
         var durationMs = Number(options.durationMs);
         if(!isFinite(durationMs) || durationMs < 0) durationMs = computeElapsed(room.cleaningTimer);
         if(durationMs < 1) durationMs = 1;
         var roomName = options.roomName != null ? options.roomName : (room.name || room.label || room.id);
+        // Write-ahead: record the close before any network call so a failed or
+        // interrupted write is replayed by flushPendingStatsSessionEnds later.
+        enqueuePendingStatsSessionEnd({
+          table: "cleaning_sessions",
+          sessionId: String(sessionId),
+          endedAtIso: normalizeServerNowIso(options.endedAtIso) || getEstimatedServerNowIso(),
+          durationMs: durationMs,
+          roomName: roomName
+        });
+        if(!await requireAuthenticatedSession("Cleaning session end")) return;
+        var endedAtIso = normalizeServerNowIso(options.endedAtIso) || await getServerNowIso();
         // Clamp ended_at to be strictly after started_at (DB constraint: ended_after_started)
         var sessionRow = await supabase.from("cleaning_sessions").select("started_at").eq("id", sessionId).maybeSingle();
         if(sessionRow && sessionRow.data && sessionRow.data.started_at){
@@ -1664,6 +1858,7 @@
           })
           .eq("id", sessionId);
         if(res && res.error) throw res.error;
+        removePendingStatsSessionEnd("cleaning_sessions", String(sessionId));
         if(liveRoom && liveRoom.activeCleaningSessionId === sessionId) liveRoom.activeCleaningSessionId = null;
         if(room.activeCleaningSessionId === sessionId) room.activeCleaningSessionId = null;
         if(pendingToken) delete pendingCleaningSessionEndSnapshotByToken[pendingToken];
@@ -1676,6 +1871,7 @@
         console.error("logCleaningSessionEnd failed", e);
         setStatus("Cleaning session end failed: " + getErrorMessage(e));
         setSyncUI("err", "Stats write failed");
+        scheduleStatsEndFlush(8000);
       }
     }
 
@@ -1689,10 +1885,68 @@
 	      return false;
 	    }
 
+	    function roomNeedsStatsCoverageWork(room){
+	      if(!room) return false;
+	      if(room.needsCleaning){
+	        if(!hasCleaningCoverageEvidence(room)) return false;
+	        return !timerHasProgress(room.cleaningTimer) || !room.activeCleaningSessionId;
+	      }
+	      if(!roomHasAssignedPatient(room)) return false;
+	      return !timerHasProgress(room.timer) || !room.activeRoomSessionId;
+	    }
+
+	    function adoptOpenStatsSessionForRoom(room, openRows, linkedIds, pendingEndIds, nowIso){
+	      var nameKey = normalizeRoomNameKey(room.name || room.label || room.id);
+	      if(!nameKey) return "";
+	      var nowMs = Date.parse(nowIso);
+	      var best = null;
+	      var bestStartedMs = 0;
+	      for(var i=0;i<(openRows || []).length;i++){
+	        var row = openRows[i];
+	        var id = String(row && row.id || "");
+	        if(!isUuidLike(id) || linkedIds[id] || pendingEndIds[id]) continue;
+	        if(normalizeRoomNameKey(row.room_name) !== nameKey) continue;
+	        var startedMs = Date.parse(row.started_at);
+	        if(!isFinite(startedMs)) continue;
+	        // stale rows are orphans to close, not sessions to resume
+	        if(isFinite(nowMs) && nowMs - startedMs > 12 * 60 * 60 * 1000) continue;
+	        if(!best || startedMs > bestStartedMs){
+	          best = row;
+	          bestStartedMs = startedMs;
+	        }
+	      }
+	      return best ? String(best.id) : "";
+	    }
+
 	    async function reconcileStatsCoverage(reason){
 	      if(!statsLoggingAvailable || !supabase || !currentPracticeId || !state || !Array.isArray(state.rooms) || !state.rooms.length) return false;
+	      if(!state.rooms.some(roomNeedsStatsCoverageWork)) return false;
 	      if(!await requireAuthenticatedSession("Stats coverage")) return false;
 	      var coverageNowIso = await getServerNowIso();
+	      // Adopt matching open rows before inserting so concurrent clients
+	      // converge on one session instead of racing to insert duplicates.
+	      var openRoomSessions = [];
+	      var openCleaningSessions = [];
+	      try{
+	        var openRows = await Promise.all([
+	          fetchOpenStatsSessionsForDiagnostics("room_sessions"),
+	          fetchOpenStatsSessionsForDiagnostics("cleaning_sessions")
+	        ]);
+	        openRoomSessions = openRows[0];
+	        openCleaningSessions = openRows[1];
+	      }catch(err){
+	        if(isMissingStatsTableError(err)){
+	          disableStatsLogging(err);
+	          return false;
+	        }
+	        // adoption is best-effort; the session-start guards below still hold
+	      }
+	      var linkedIds = {};
+	      state.rooms.forEach(function(r){
+	        if(r && isUuidLike(r.activeRoomSessionId)) linkedIds[String(r.activeRoomSessionId)] = true;
+	        if(r && isUuidLike(r.activeCleaningSessionId)) linkedIds[String(r.activeCleaningSessionId)] = true;
+	      });
+	      var pendingEndIds = getPendingStatsEndSessionIdMap();
       var changedRoomIds = [];
       for(var i=0;i<state.rooms.length;i++){
         var room = state.rooms[i];
@@ -1703,9 +1957,19 @@
 	            applyTimerStartAt(room.cleaningTimer, coverageNowIso);
 	            changedRoomIds.push(room.id);
 	          }
-	          if(!room.activeCleaningSessionId) await logCleaningSessionStart(room, {
-	            startedAtIso: deriveTimerStartedAtIso(room.cleaningTimer, coverageNowIso)
-	          });
+	          if(!room.activeCleaningSessionId){
+	            var adoptedCleaningId = adoptOpenStatsSessionForRoom(room, openCleaningSessions, linkedIds, pendingEndIds, coverageNowIso);
+	            if(adoptedCleaningId){
+	              room.activeCleaningSessionId = adoptedCleaningId;
+	              linkedIds[adoptedCleaningId] = true;
+	              if(changedRoomIds.indexOf(room.id) < 0) changedRoomIds.push(room.id);
+	            } else {
+	              await logCleaningSessionStart(room, {
+	                startedAtIso: deriveTimerStartedAtIso(room.cleaningTimer, coverageNowIso)
+	              });
+	              if(isUuidLike(room.activeCleaningSessionId)) linkedIds[String(room.activeCleaningSessionId)] = true;
+	            }
+	          }
 	          continue;
 	        }
 	        if(!roomHasAssignedPatient(room)) continue;
@@ -1713,27 +1977,40 @@
 	          applyTimerStartAt(room.timer, coverageNowIso);
 	          changedRoomIds.push(room.id);
 	        }
-	        if(!room.activeRoomSessionId) await logRoomSessionStart(room, {
-	          startedAtIso: deriveTimerStartedAtIso(room.timer, coverageNowIso)
-	        });
+	        if(!room.activeRoomSessionId){
+	          var adoptedRoomId = adoptOpenStatsSessionForRoom(room, openRoomSessions, linkedIds, pendingEndIds, coverageNowIso);
+	          if(adoptedRoomId){
+	            room.activeRoomSessionId = adoptedRoomId;
+	            linkedIds[adoptedRoomId] = true;
+	            if(changedRoomIds.indexOf(room.id) < 0) changedRoomIds.push(room.id);
+	          } else {
+	            await logRoomSessionStart(room, {
+	              startedAtIso: deriveTimerStartedAtIso(room.timer, coverageNowIso)
+	            });
+	            if(isUuidLike(room.activeRoomSessionId)) linkedIds[String(room.activeRoomSessionId)] = true;
+	          }
+	        }
 	      }
       if(changedRoomIds.length){
         saveLocal();
         requestBoardRoomRefresh(changedRoomIds, { includeIntake: true, timerBindings: true });
         scheduleRemoteSave("board", { immediate: true });
-        setStatus((reason || "Timer recovery") + " restored " + changedRoomIds.length + " room timer" + (changedRoomIds.length === 1 ? "" : "s") + ".");
+        setStatus((reason || "Timer recovery") + " repaired stopwatch coverage for " + changedRoomIds.length + " room" + (changedRoomIds.length === 1 ? "" : "s") + ".");
       }
       return !!changedRoomIds.length;
     }
 
-	    function scheduleStatsCoverageCheck(reason){
+	    function scheduleStatsCoverageCheck(reason, delayMs){
 	      if(statsCoverageTimer) clearTimeout(statsCoverageTimer);
+	      // Jittered so simultaneous board applies across clients don't all try
+	      // to repair (and double-insert sessions) at the same moment.
+	      var delay = typeof delayMs === "number" ? delayMs : (1800 + Math.floor(Math.random() * 2600));
 	      statsCoverageTimer = setTimeout(function(){
 	        statsCoverageTimer = null;
 	        reconcileStatsCoverage(reason).catch(function(err){
 	          console.warn("Stats coverage check failed:", err);
 	        });
-	      }, 180);
+	      }, delay);
 	    }
 
 	    function normalizeRoomNameKey(name){
@@ -2422,10 +2699,22 @@
 	      if(sessionKeepAliveTimer) clearInterval(sessionKeepAliveTimer);
 	      sessionKeepAliveTimer = setInterval(function(){
 	        refreshSupabaseSessionIfNeeded("interval");
+	        scheduleStatsCoverageCheck("Periodic check");
+	        scheduleStatsEndFlush();
 	      }, 5 * 60 * 1000);
+	      // Deliver any session end-writes left queued by a previous tab/session.
+	      scheduleStatsEndFlush(8000);
         if(typeof document !== "undefined" && document.addEventListener){
           document.addEventListener("visibilitychange", function(){
-            if(document.visibilityState === "visible") refreshSupabaseSessionIfNeeded("visible");
+            if(document.visibilityState === "visible"){
+              refreshSupabaseSessionIfNeeded("visible");
+              // Hidden tabs do not poll. On return, verify the version now
+              // instead of waiting up to the healthy-channel safety interval.
+              lastHealthyBoardVersionProbeAt = 0;
+              setTimeout(function(){ runBoardVersionProbeTick(); }, 0);
+              scheduleStatsCoverageCheck("Tab visible");
+              scheduleStatsEndFlush(2000);
+            }
           });
         }
         if(typeof window !== "undefined" && window.addEventListener){
@@ -2442,6 +2731,8 @@
             setTimeout(function(){
               if(typeof runBoardVersionProbeTick === "function") runBoardVersionProbeTick();
             }, 800);
+            scheduleStatsCoverageCheck("Reconnect");
+            scheduleStatsEndFlush(1500);
           });
           window.addEventListener("offline", function(){
             setSyncUI("err", "Offline");
@@ -2876,6 +3167,79 @@
 	      });
 	    }
 
+	    function getBoardMergeRoomKey(room){
+	      if(!room || typeof room !== "object") return "";
+	      return String(room.dbId || room.id || "").trim();
+	    }
+
+	    function mergeBoardObjectChanges(baseObject, proposedObject, currentObject){
+	      var base = baseObject && typeof baseObject === "object" ? baseObject : {};
+	      var proposed = proposedObject && typeof proposedObject === "object" ? proposedObject : {};
+	      var current = currentObject && typeof currentObject === "object"
+	        ? JSON.parse(JSON.stringify(currentObject))
+	        : {};
+	      var keys = Object.create(null);
+	      var key;
+	      for(key in base) if(Object.prototype.hasOwnProperty.call(base, key)) keys[key] = true;
+	      for(key in proposed) if(Object.prototype.hasOwnProperty.call(proposed, key)) keys[key] = true;
+	      for(key in keys){
+	        if(!Object.prototype.hasOwnProperty.call(keys, key)) continue;
+	        var baseHas = Object.prototype.hasOwnProperty.call(base, key);
+	        var proposedHas = Object.prototype.hasOwnProperty.call(proposed, key);
+	        var changed = baseHas !== proposedHas
+	          || (baseHas && proposedHas && JSON.stringify(base[key]) !== JSON.stringify(proposed[key]));
+	        if(!changed) continue;
+	        if(proposedHas) current[key] = JSON.parse(JSON.stringify(proposed[key]));
+	        else delete current[key];
+	      }
+	      return current;
+	    }
+
+	    // Rebase edits made while a save was in flight onto the merged server
+	    // result. This mirrors merge_practice_board_state so a remote change to
+	    // one room remains visible while a newer local action is queued.
+	    function mergeBoardStateChanges(baseBoardState, proposedBoardState, currentBoardState){
+	      var base = cloneBoardStateForMerge(baseBoardState);
+	      var proposed = cloneBoardStateForMerge(proposedBoardState);
+	      var current = cloneBoardStateForMerge(currentBoardState);
+	      var output = cloneBoardStateForMerge(current);
+	      var currentByKey = Object.create(null);
+	      var baseByKey = Object.create(null);
+	      var proposedByKey = Object.create(null);
+	      var removedRoomKeys = Object.create(null);
+	      var i;
+
+	      for(i=0;i<current.rooms.length;i++) currentByKey[getBoardMergeRoomKey(current.rooms[i])] = i;
+	      for(i=0;i<base.rooms.length;i++) baseByKey[getBoardMergeRoomKey(base.rooms[i])] = base.rooms[i];
+	      for(i=0;i<proposed.rooms.length;i++) proposedByKey[getBoardMergeRoomKey(proposed.rooms[i])] = proposed.rooms[i];
+
+	      for(var roomKey in baseByKey){
+	        if(!Object.prototype.hasOwnProperty.call(baseByKey, roomKey) || !roomKey) continue;
+	        var proposalRoom = proposedByKey[roomKey];
+	        var currentIndex = currentByKey[roomKey];
+	        if(!proposalRoom){
+	          removedRoomKeys[roomKey] = true;
+	          continue;
+	        }
+	        if(currentIndex != null){
+	          output.rooms[currentIndex] = mergeBoardObjectChanges(baseByKey[roomKey], proposalRoom, output.rooms[currentIndex]);
+	        } else {
+	          output.rooms.push(JSON.parse(JSON.stringify(proposalRoom)));
+	        }
+	      }
+
+	      for(roomKey in proposedByKey){
+	        if(!Object.prototype.hasOwnProperty.call(proposedByKey, roomKey) || !roomKey || Object.prototype.hasOwnProperty.call(baseByKey, roomKey)) continue;
+	        if(currentByKey[roomKey] == null) output.rooms.push(JSON.parse(JSON.stringify(proposedByKey[roomKey])));
+	      }
+	      output.rooms = output.rooms.filter(function(room){
+	        return !removedRoomKeys[getBoardMergeRoomKey(room)];
+	      });
+
+	      output.sharedUi = mergeBoardObjectChanges(base.sharedUi, proposed.sharedUi, current.sharedUi);
+	      return output;
+	    }
+
 	    function getCurrentBoardSignatureWithSharedUi(sharedUi){
 	      return getBoardStateSignature({
 	        rooms: JSON.parse(JSON.stringify(state && state.rooms ? state.rooms : [])),
@@ -2967,6 +3331,9 @@
       lastRealtimeChannelStatus = nextStatus;
       if(nextStatus === "SUBSCRIBED"){
         realtimeChannelHealthy = true;
+        // Verify a newly restored channel once, then fall back to the
+        // low-frequency healthy-channel safety probe.
+        lastHealthyBoardVersionProbeAt = 0;
         noteRealtimeEvent("realtime-subscribed");
         clearRealtimeReconnectTimer();
         if(__pendingRemoteState){
@@ -2978,6 +3345,9 @@
       }
       if(nextStatus === "CHANNEL_ERROR" || nextStatus === "TIMED_OUT" || nextStatus === "CLOSED"){
         realtimeChannelHealthy = false;
+        // Do not wait for the next normal timer cadence when the websocket
+        // tells us it is unhealthy; the version probe becomes the fallback.
+        setTimeout(function(){ runBoardVersionProbeTick(); }, 0);
       }
     }
 
@@ -3000,6 +3370,8 @@
       var incoming = boardState && typeof boardState === "object" ? boardState : {};
       var incomingSignature = getBoardStateSignature(incoming);
       if(!options.force && incomingSignature === lastAppliedBoardStateSignature){
+        rememberSyncedBoardState(incoming);
+        if(incomingUpdatedAtMs) rememberBoardVersion(incomingUpdatedAt);
         return false;
       }
 	      var previousRooms = state && state.rooms ? state.rooms : [];
@@ -3036,6 +3408,7 @@
       applySessionUiPrefs(nextState);
       state = nextState;
       lastAppliedBoardStateSignature = incomingSignature;
+      rememberSyncedBoardState(incoming);
       if(incomingUpdatedAtMs) rememberBoardVersion(incomingUpdatedAt);
       if(options.skipLocalSave !== true) saveLocal();
       refreshKnownRoomIds(state.rooms);
@@ -3058,6 +3431,9 @@
           window.applyCurrentTheme();
         }
       }
+      // Self-heal stopwatch/stats drift after every applied board change
+      // (load, realtime, probe re-download, save rebase).
+      scheduleStatsCoverageCheck("Board sync");
       return true;
     }
 
@@ -3124,20 +3500,51 @@
       };
     }
 
+    function isMissingBoardMergeFunctionError(err){
+      if(!err) return false;
+      var code = String(err.code || "");
+      var text = String(err.message || err.details || err.hint || "").toLowerCase();
+      return code === "PGRST202"
+        || code === "42883"
+        || (text.indexOf("merge_practice_board_state") >= 0 && text.indexOf("not") >= 0);
+    }
+
     async function saveBoard(practiceId, boardState){
       if(!supabase || !practiceId) return false;
+      var proposedBoardState = cloneBoardStateForMerge(boardState);
       var saveRes = await supabase
-        .from("practice_board_state")
-        .upsert({
-          practice_id: practiceId,
-          board_state: boardState
-        }, { onConflict: "practice_id" })
-        .select("updated_at")
+        .rpc("merge_practice_board_state", {
+          p_practice_id: practiceId,
+          p_base_board_state: getBoardMergeBase(),
+          p_proposed_board_state: proposedBoardState
+        })
         .maybeSingle();
+
+      // Keep the existing board available during a deployment where the web
+      // bundle reaches a project before its SQL migration. The merge RPC is
+      // the normal path and is required before calling this P0 complete.
+      if(saveRes.error && isMissingBoardMergeFunctionError(saveRes.error)){
+        console.warn("Board merge RPC is not installed yet; using legacy board save.");
+        saveRes = await supabase
+          .from("practice_board_state")
+          .upsert({
+            practice_id: practiceId,
+            board_state: proposedBoardState
+          }, { onConflict: "practice_id" })
+          .select("board_state, updated_at")
+          .maybeSingle();
+      }
       if(saveRes.error) throw saveRes.error;
+      var savedBoardState = saveRes.data && saveRes.data.board_state
+        ? saveRes.data.board_state
+        : proposedBoardState;
+      rememberSyncedBoardState(savedBoardState);
       rememberBoardVersion(saveRes.data && saveRes.data.updated_at ? saveRes.data.updated_at : null);
       noteBoardActivity("save-board");
-      return saveRes.data || null;
+      return {
+        board_state: savedBoardState,
+        updated_at: saveRes.data && saveRes.data.updated_at ? saveRes.data.updated_at : null
+      };
     }
 
     function subscribeToBoard(practiceId){
@@ -3376,6 +3783,10 @@
           });
         } else {
           resetKnownBoardVersion();
+          // No remote board row yet. Keep an empty merge base so the first
+          // save inserts local rooms without treating the boot snapshot as
+          // already persisted.
+          rememberSyncedBoardState({ rooms: [], sharedUi: {} });
           lastAppliedBoardStateSignature = getBoardStateSignature(buildBoardStatePayload());
         }
         saveLocal();
@@ -3786,7 +4197,8 @@
     }
 
     async function saveClinicBoardData(){
-      var nextSignature = getRoomBoardSignature();
+      var proposedBoardState = buildBoardStatePayload();
+      var nextSignature = getBoardStateSignature(proposedBoardState);
 	      if(nextSignature === lastRoomBoardSignature){
 	        localBoardDirty = false;
 	        await persistDoctorBadgeSettingsSnapshotIfNeeded();
@@ -3799,9 +4211,31 @@
         throw createRetryableSaveError("Board save deferred until sign in.");
       }
       setSyncUI("syncing", "Saving board");
-      await saveBoard(currentPracticeId, buildBoardStatePayload());
-      lastRoomBoardSignature = nextSignature;
-      localBoardDirty = false;
+      var savedBoard = await saveBoard(currentPracticeId, proposedBoardState);
+      var savedBoardState = savedBoard && savedBoard.board_state ? savedBoard.board_state : {};
+      var savedSignature = getBoardStateSignature(savedBoardState);
+      var currentAfterSave = buildBoardStatePayload();
+      if(getBoardStateSignature(currentAfterSave) === nextSignature){
+        applyBoardState(savedBoardState, {
+          force: true,
+          updatedAt: savedBoard && savedBoard.updated_at ? savedBoard.updated_at : null
+        });
+      } else {
+        var rebasedLocalBoardState = mergeBoardStateChanges(proposedBoardState, currentAfterSave, savedBoardState);
+        applyBoardState(rebasedLocalBoardState, {
+          force: true,
+          updatedAt: savedBoard && savedBoard.updated_at ? savedBoard.updated_at : null
+        });
+        // applyBoardState normally treats its input as a server snapshot. The
+        // rebased input above includes newer local edits, so restore the real
+        // server base before the queued follow-up save runs.
+        rememberSyncedBoardState(savedBoardState);
+      }
+      // A user can continue editing while this save is in flight. In that
+      // case retain the dirty flag so the next flush merges those newer edits
+      // against the server response instead of discarding them.
+      lastRoomBoardSignature = savedSignature;
+      localBoardDirty = getRoomBoardSignature() !== savedSignature;
 	      await persistDoctorBadgeSettingsSnapshotIfNeeded();
 	      clearRemoteSaveRetry();
       setSyncUI("ok", "Board saved");
@@ -4161,6 +4595,7 @@
       if(staleDisplayWatchdogTimer) clearInterval(staleDisplayWatchdogTimer);
       staleDisplayWatchdogTimer = setInterval(function(){
         if(!supabase || !currentPracticeId) return;
+	      if(typeof document !== "undefined" && document.visibilityState === "hidden") return;
         if(saving || remoteRefreshInFlight || remoteConfigRefreshInFlight || watchdogRecoveryInFlight) return;
         var ageMs = Date.now() - Number(lastBoardActivityAt || 0);
         if(ageMs < STALE_DISPLAY_THRESHOLD_MS) return;
@@ -4687,22 +5122,27 @@
 
 	    function runBoardVersionProbeTick(){
 	      if(!supabase || !currentPracticeId) return null;
+	      if(typeof document !== "undefined" && document.visibilityState === "hidden") return null;
 	      if(remoteRateLimitUntil > Date.now()) return null;
 	      if(saving || boardVersionProbeInFlight) return null;
-        // Near-live without the egress: every tick costs only an updated_at
-        // probe (~a hundred bytes), so a change that realtime dropped still
-        // lands within one tick. The full board download happens only when
-        // the remote version is actually newer than what this client last
-        // applied or saved. (The old scheme pulled the whole board on a
-        // timer: every 6s when realtime was down, every 25s even when the
-        // board was idle — heavy egress AND up to ~30s perceived lag when
-        // the realtime channel silently dropped events.)
+	      var now = Date.now();
+	      if(realtimeChannelHealthy){
+	        if(now - lastHealthyBoardVersionProbeAt < REALTIME_HEALTHY_PROBE_INTERVAL_MS) return null;
+	        lastHealthyBoardVersionProbeAt = now;
+	      }
+        // Realtime carries normal updates. This is a low-egress safety probe
+        // when subscribed and a 5-second recovery probe only when Realtime is
+        // unavailable, so an idle fleet does not multiply database reads.
         boardVersionProbeInFlight = probeBoardVersion().then(function(updatedAt){
           if(boardProbeFailureStreak >= BOARD_PROBE_OFFLINE_STREAK){
             setSyncUI("ok", "Reconnected");
             setStatus("Connection restored.");
           }
           boardProbeFailureStreak = 0;
+	        // A successful version response proves this display is still
+	        // connected. Count it as activity so the stale-display watchdog
+	        // does not reload an otherwise quiet, healthy board every 2 minutes.
+	        noteBoardActivity("version-probe");
           var remoteMs = getBoardUpdatedAtMs(updatedAt);
           if(!remoteMs || remoteMs <= lastKnownBoardUpdatedAtMs) return false;
           if(isUiInteractionLocked()){
@@ -4717,6 +5157,9 @@
           }
           boardProbeFailureStreak++;
           if(isNetworkFetchError(e)){
+	          // A failed REST probe means this tab cannot prove its socket is
+	          // still usable. Switch back to the short recovery cadence.
+	          realtimeChannelHealthy = false;
             // routine on wall displays (wifi blip, sleep/wake): retry quietly,
             // only surface a persistent outage
             if(boardProbeFailureStreak === 1) console.warn("Board version probe failed (network):", e);
@@ -4737,6 +5180,7 @@
 	    function startAutoPull(){
 	      if(autoPullTimer) clearInterval(autoPullTimer);
 	      autoPullTimer = setInterval(runBoardVersionProbeTick, AUTO_PULL_INTERVAL_MS);
+	      runBoardVersionProbeTick();
 	    }
 
     function msToHMS(ms){

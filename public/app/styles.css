@@ -1428,6 +1428,12 @@
     #displayGrid.boxView[data-card-style="lobby"] .room{
       border:1px solid rgba(15,23,42,.14);
       background: linear-gradient(180deg, #ffffff, #eef2fb);
+      /* theme-proof ink: without this, cleaning-card titles and the
+         "Being cleaned" pill inherit the dark theme's light text and
+         vanish on the white card */
+      color:#17233b;
+      /* idle progress-outline ring color on the light timer box */
+      --cardMuted: rgba(23,35,59,.58);
     }
     #displayGrid.boxView[data-card-style="lobby"] .room:not(.cleaning) .roomTop{
       background: var(--roomAccent, rgba(15,23,42,.08));
@@ -1448,7 +1454,32 @@
       background:#f4f7ff;
     }
     #displayGrid.boxView[data-card-style="lobby"] .room .time{ color:#17233b; }
-    #displayGrid.boxView[data-card-style="lobby"] .room.isEmptyDisplayCard{ opacity:.78; }
+    /* Cleaning: keep the light lobby surface but tint it amber; the dark ink
+       set on .room above keeps the title and pill readable. */
+    #displayGrid.boxView[data-card-style="lobby"] .room.cleaning{
+      border-color: rgba(180,120,20,.40);
+      background: linear-gradient(180deg, #fff8e6, #f5ead0);
+    }
+    #displayGrid.boxView[data-card-style="lobby"] .room.cleaning .roomTop{
+      background: rgba(251,191,36,.32);
+      border-bottom: 0;
+    }
+    /* .pill's color comes from the theme's --btnText (light on dark themes),
+       which disappears on the light lobby card */
+    #displayGrid.boxView[data-card-style="lobby"] .room .pill{ color:#17233b; }
+    /* Empty: the base .6 whole-card opacity blends the white card into the
+       dark page and turns it gray — dim with a muted light surface and a
+       washed-out header instead, at full opacity. */
+    #displayGrid.boxView[data-card-style="lobby"] .room.isEmptyDisplayCard{
+      opacity: 1;
+      background: linear-gradient(180deg, #f5f7fc, #e8edf8);
+    }
+    #displayGrid.boxView[data-card-style="lobby"] .room.isEmptyDisplayCard:not(.cleaning) .roomTop{
+      background: color-mix(in srgb, var(--roomAccent, #93a5c8) 34%, #ffffff);
+    }
+    #displayGrid.boxView[data-card-style="lobby"] .room.isEmptyDisplayCard:not(.cleaning) .roomName{
+      color:#17233b;
+    }
 
     /* ── Minimal: no chrome, pure airy typography ─────────────────── */
     html[data-stopwatch-style="minimal"] .timerBox,
