@@ -1272,12 +1272,14 @@
     }
     /* Progress outline (Actions → Progress outline toggle): the stopwatch
        box's own outline fills clockwise from 12 o'clock over the configured
-       interval (--ringP set by the ticker). The band is exactly --swRingW
-       thick (each style's border width, default 1px) and sits precisely on
-       the border, so enabling it changes nothing about the stopwatch design
-       except the outline itself filling. No position override here: the
-       boxView timerBox is already position:absolute (its own containing
-       block) and forcing relative un-anchors it from the card bottom. */
+       interval (--ringP set by the ticker). The band hugs the border —
+       --swRingW is each style's border width (default 1px) plus a hair so
+       the fill is visible over the outline it covers without changing the
+       box's geometry. No position override here: the boxView timerBox is
+       already position:absolute (its own containing block) and forcing
+       relative un-anchors it from the card bottom. The state color rules
+       below must carry the #displayGrid ID or the base rule's specificity
+       wins and the ring never leaves the idle color. */
     .timerRing{ display:none; }
     html[data-stopwatch-ring="on"] #displayGrid.boxView .timerBox .timerRing{
       display:block;
@@ -1285,7 +1287,7 @@
       inset:0;
       border-radius:inherit;
       pointer-events:none;
-      padding: var(--swRingW, 1px);
+      padding: calc(var(--swRingW, 1px) + 1.5px);
       background: conic-gradient(currentColor var(--ringP, 0%), transparent 0);
       -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
       -webkit-mask-composite: xor;
@@ -1293,10 +1295,10 @@
       mask-composite: exclude;
       color: var(--cardMuted, var(--muted));
     }
-    html[data-stopwatch-ring="on"] .timerBox.timerRunning .timerRing{ color:#22c55e; }
-    html[data-stopwatch-ring="on"] .timerBox.timerAlert1 .timerRing{ color: var(--timerAlert1Color, #fbbf24); }
-    html[data-stopwatch-ring="on"] .timerBox.timerAlert2 .timerRing{ color: var(--timerAlert2Color, #fb7185); }
-    html[data-stopwatch-ring="on"] .timerBox.timerCleaning .timerRing{ color:#f59e0b; }
+    html[data-stopwatch-ring="on"] #displayGrid.boxView .timerBox.timerRunning .timerRing{ color:#22c55e; }
+    html[data-stopwatch-ring="on"] #displayGrid.boxView .timerBox.timerAlert1 .timerRing{ color: var(--timerAlert1Color, #fbbf24); }
+    html[data-stopwatch-ring="on"] #displayGrid.boxView .timerBox.timerAlert2 .timerRing{ color: var(--timerAlert2Color, #fb7185); }
+    html[data-stopwatch-ring="on"] #displayGrid.boxView .timerBox.timerCleaning .timerRing{ color:#f59e0b; }
 
     /* ══ Card layout variants ════════════════════════════════════════
        Selected via Settings → Card layout (state.settings.cardStyle),
