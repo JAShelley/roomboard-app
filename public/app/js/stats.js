@@ -1450,6 +1450,304 @@
     }).join("");
   }
 
+  // ===== Doctor focus (Breakdowns tab) =====
+  function getFocusDoctor(){ return ($("doctorFocusSelect") && $("doctorFocusSelect").value || "").trim(); }
+
+  function populateDoctorFocus(roomRows){
+    var select = $("doctorFocusSelect");
+    if(!select) return;
+    var current = getFocusDoctor();
+    var doctors = {};
+    (roomRows || []).forEach(function(row){
+      var name = (row.doctor_name || "").trim();
+      if(name) doctors[name] = true;
+    });
+    var names = Object.keys(doctors).sort(function(a, b){ return a.localeCompare(b); });
+    select.innerHTML = '<option value="">Select a doctor…</option>';
+    names.forEach(function(name){
+      var option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      select.appendChild(option);
+    });
+    select.value = (current && doctors[current]) ? current : "";
+  }
+
+  function meanDuration(durations){
+    if(!durations.length) return 0;
+    return durations.reduce(function(sum, v){ return sum + v; }, 0) / durations.length;
+  }
+
+  function computeHourDrift(rows){
+    var byHour = {};
+    (rows || []).forEach(function(row){
+      var started = new Date(row.started_at);
+      var durationMs = Number(row.duration_ms || 0);
+      if(isNaN(started.getTime()) || !isFinite(durationMs) || durationMs <= 0) return;
+      var hour = started.getHours();
+      if(!byHour[hour]) byHour[hour] = [];
+      byHour[hour].push(durationMs);
+    });
+    return Object.keys(byHour).map(Number).sort(function(a, b){ return a - b; }).map(function(hour){
+      return { hour: hour, count: byHour[hour].length, avgMs: meanDuration(byHour[hour]) };
+    });
+  }
+
+  function computeDoctorPace(rows){
+    var sessions = (rows || []).map(function(row){
+      var start = new Date(row.started_at).getTime();
+      var end = new Date(row.ended_at).getTime();
+      return { start: start, end: end };
+    }).filter(function(s){ return isFinite(s.start) && isFinite(s.end) && s.end > s.start; })
+      .sort(function(a, b){ return a.start - b.start; });
+    if(!sessions.length) return null;
+
+    // Sweep session boundaries to time-weight concurrency while the doctor has >=1 open room.
+    var events = [];
+    sessions.forEach(function(s){
+      events.push({ t: s.start, delta: 1 });
+      events.push({ t: s.end, delta: -1 });
+    });
+    events.sort(function(a, b){ return a.t - b.t || a.delta - b.delta; });
+    var current = 0, lastT = 0, activeMs = 0, multiMs = 0, weightedSum = 0, maxConcurrent = 0;
+    events.forEach(function(ev){
+      if(current > 0){
+        var dt = ev.t - lastT;
+        activeMs += dt;
+        weightedSum += current * dt;
+        if(current >= 2) multiMs += dt;
+      }
+      current += ev.delta;
+      if(current > maxConcurrent) maxConcurrent = current;
+      lastT = ev.t;
+    });
+
+    // Idle gaps between a doctor's consecutive non-overlapping sessions on the same local day.
+    var gaps = [];
+    for(var i = 1; i < sessions.length; i++){
+      var gap = sessions[i].start - sessions[i - 1].end;
+      if(gap <= 0 || gap > 120 * 60000) continue;
+      var prevDay = new Date(sessions[i - 1].end), nextDay = new Date(sessions[i].start);
+      if(prevDay.toDateString() !== nextDay.toDateString()) continue;
+      gaps.push(gap);
+    }
+
+    return {
+      sessionCount: sessions.length,
+      avgConcurrency: activeMs ? (weightedSum / activeMs) : 0,
+      maxConcurrent: maxConcurrent,
+      multiRoomShare: activeMs ? (multiMs / activeMs) * 100 : 0,
+      medianGapMs: gaps.length ? median(gaps) : null,
+      gapCount: gaps.length
+    };
+  }
+
+  function doctorFocusMetricCard(label, value, note){
+    return '<article class="metricCard">'
+      + '<strong>' + escapeHtml(label) + '</strong>'
+      + '<span>' + escapeHtml(value) + '</span>'
+      + (note ? ('<em>' + escapeHtml(note) + '</em>') : '')
+      + '</article>';
+  }
+
+  function computeDoctorFocusData(allRoomRows, doctorName){
+    var doctorRows = (allRoomRows || []).filter(function(row){
+      return (row.doctor_name || "").trim() === doctorName;
+    });
+    var doctorDur = doctorRows.map(function(r){ return Number(r.duration_ms || 0); }).filter(function(v){ return isFinite(v) && v > 0; });
+    var clinicDur = (allRoomRows || []).map(function(r){ return Number(r.duration_ms || 0); }).filter(function(v){ return isFinite(v) && v > 0; });
+    var rangeDays = Math.max(1, getRangeDayCount());
+    var weekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    var byWeekday = {};
+    doctorRows.forEach(function(row){
+      var started = new Date(row.started_at);
+      if(isNaN(started.getTime())) return;
+      var day = weekdayNames[started.getDay()];
+      byWeekday[day] = (byWeekday[day] || 0) + 1;
+    });
+    var busiestWeekday = "", busiestCount = -1;
+    Object.keys(byWeekday).forEach(function(day){
+      if(byWeekday[day] > busiestCount){ busiestCount = byWeekday[day]; busiestWeekday = day; }
+    });
+    return {
+      doctor: doctorName,
+      rows: doctorRows,
+      rangeDays: rangeDays,
+      visits: doctorRows.length,
+      visitsPerDay: doctorRows.length / rangeDays,
+      avgMs: meanDuration(doctorDur),
+      medianMs: doctorDur.length ? median(doctorDur) : 0,
+      p90Ms: doctorDur.length ? percentile(doctorDur, 0.9) : 0,
+      hours: doctorDur.reduce(function(sum, v){ return sum + v; }, 0) / 3600000,
+      clinicAvgMs: meanDuration(clinicDur),
+      clinicMedianMs: clinicDur.length ? median(clinicDur) : 0,
+      clinicP90Ms: clinicDur.length ? percentile(clinicDur, 0.9) : 0,
+      busiestWeekday: busiestWeekday,
+      busiestWeekdayCount: busiestCount,
+      hourDrift: computeHourDrift(doctorRows),
+      clinicHourDrift: computeHourDrift(allRoomRows),
+      pace: computeDoctorPace(doctorRows)
+    };
+  }
+
+  function renderDoctorFocus(allRoomRows){
+    var statsEl = $("doctorFocusStats");
+    if(!statsEl) return;
+    populateDoctorFocus(allRoomRows);
+    var doctorName = getFocusDoctor();
+    if(!doctorName){
+      statsEl.innerHTML = '<div class="emptyState">Select a doctor to load their performance summary.</div>';
+      renderBarList("doctorHourDrift", [], "Select a doctor to see hour-of-day drift.");
+      var paceEl = $("doctorPaceList");
+      if(paceEl) paceEl.innerHTML = '<div class="emptyState">Select a doctor to see pace stats.</div>';
+      return;
+    }
+
+    var data = computeDoctorFocusData(allRoomRows, doctorName);
+    if(!data.visits){
+      statsEl.innerHTML = '<div class="emptyState">No sessions for ' + escapeHtml(doctorName) + ' in this range.</div>';
+      renderBarList("doctorHourDrift", [], "No sessions in this range.");
+      var paceEl2 = $("doctorPaceList");
+      if(paceEl2) paceEl2.innerHTML = '<div class="emptyState">No sessions in this range.</div>';
+      return;
+    }
+
+    statsEl.innerHTML =
+      doctorFocusMetricCard("Visits", String(data.visits), formatCount(data.visitsPerDay) + " per day")
+      + doctorFocusMetricCard("Avg room time", formatDurationCompact(data.avgMs), "clinic " + formatDurationCompact(data.clinicAvgMs))
+      + doctorFocusMetricCard("Median room time", formatDurationCompact(data.medianMs), "clinic " + formatDurationCompact(data.clinicMedianMs))
+      + doctorFocusMetricCard("P90 room time", formatDurationCompact(data.p90Ms), "clinic " + formatDurationCompact(data.clinicP90Ms))
+      + doctorFocusMetricCard("Room hours", formatCount(data.hours), "in selected range")
+      + doctorFocusMetricCard("Busiest weekday", data.busiestWeekday || "—", data.busiestWeekdayCount > 0 ? (data.busiestWeekdayCount + " visits") : "");
+
+    var clinicByHour = {};
+    data.clinicHourDrift.forEach(function(h){ clinicByHour[h.hour] = h; });
+    var maxAvg = data.hourDrift.reduce(function(m, h){ return Math.max(m, h.avgMs); }, 0) || 1;
+    renderBarList("doctorHourDrift", data.hourDrift.map(function(h){
+      var clinic = clinicByHour[h.hour];
+      return {
+        label: formatHourLabel(h.hour),
+        value: formatDurationCompact(h.avgMs),
+        percent: (h.avgMs / maxAvg) * 100,
+        note: h.count + " visit" + (h.count === 1 ? "" : "s"),
+        detail: clinic ? ("clinic " + formatDurationCompact(clinic.avgMs)) : ""
+      };
+    }), "No sessions in this range.");
+
+    var paceListEl = $("doctorPaceList");
+    if(paceListEl){
+      var pace = data.pace;
+      var paceItems = [];
+      if(pace){
+        paceItems.push({ label: "Avg rooms at once", value: formatCount(pace.avgConcurrency) + (pace.maxConcurrent > 1 ? (" (peak " + pace.maxConcurrent + ")") : "") });
+        paceItems.push({ label: "Time running 2+ rooms", value: formatPercent(pace.multiRoomShare) + " of active time" });
+        paceItems.push({
+          label: "Typical gap between visits",
+          value: pace.medianGapMs != null
+            ? (formatDurationCompact(pace.medianGapMs) + " (" + pace.gapCount + " gap" + (pace.gapCount === 1 ? "" : "s") + ")")
+            : "Not enough back-to-back visits"
+        });
+      }
+      paceListEl.innerHTML = paceItems.length
+        ? paceItems.map(function(item){
+            return '<div class="highlightItem"><strong>' + escapeHtml(item.label) + '</strong><span>' + escapeHtml(item.value) + '</span></div>';
+          }).join("")
+        : '<div class="emptyState">No sessions in this range.</div>';
+    }
+  }
+
+  // ===== Doctor report card (print) =====
+  function buildDoctorReportHtml(data, rangeLabel){
+    function row(metric, doctorValue, clinicValue){
+      return '<tr><td>' + escapeHtml(metric) + '</td><td>' + escapeHtml(doctorValue) + '</td><td>' + escapeHtml(clinicValue || "") + '</td></tr>';
+    }
+    var clinicByHour = {};
+    data.clinicHourDrift.forEach(function(h){ clinicByHour[h.hour] = h; });
+    var hourRows = data.hourDrift.map(function(h){
+      var clinic = clinicByHour[h.hour];
+      return '<tr><td>' + escapeHtml(formatHourLabel(h.hour)) + '</td><td>' + h.count + '</td><td>'
+        + escapeHtml(formatDurationCompact(h.avgMs)) + '</td><td>'
+        + escapeHtml(clinic ? formatDurationCompact(clinic.avgMs) : "—") + '</td></tr>';
+    }).join("");
+    var pace = data.pace;
+    return '<!doctype html><html><head><meta charset="utf-8"><title>Doctor report card — ' + escapeHtml(data.doctor) + '</title>'
+      + '<style>'
+      + 'body{font-family:"Avenir Next","Segoe UI",sans-serif;color:#111827;margin:32px;font-size:13px;}'
+      + 'h1{font-size:22px;margin:0 0 2px;} h2{font-size:14px;margin:22px 0 8px;text-transform:uppercase;letter-spacing:.06em;color:#374151;}'
+      + '.meta{color:#6b7280;margin:0 0 4px;}'
+      + 'table{border-collapse:collapse;width:100%;margin-top:4px;}'
+      + 'th,td{border:1px solid #d1d5db;padding:6px 10px;text-align:left;}'
+      + 'th{background:#f3f4f6;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#374151;}'
+      + '.note{margin-top:24px;padding-top:10px;border-top:1px solid #d1d5db;color:#6b7280;font-size:11px;}'
+      + '@media print{ body{margin:12mm;} }'
+      + '</style></head><body>'
+      + '<h1>Doctor report card — ' + escapeHtml(data.doctor) + '</h1>'
+      + '<p class="meta">Range: ' + escapeHtml(rangeLabel) + ' · Generated ' + escapeHtml(new Date().toLocaleDateString()) + ' · RoomBoard</p>'
+      + '<h2>Summary</h2>'
+      + '<table><thead><tr><th>Metric</th><th>' + escapeHtml(data.doctor) + '</th><th>Clinic</th></tr></thead><tbody>'
+      + row("Visits", String(data.visits) + " (" + formatCount(data.visitsPerDay) + "/day)", "")
+      + row("Average room time", formatDurationCompact(data.avgMs), formatDurationCompact(data.clinicAvgMs))
+      + row("Median room time", formatDurationCompact(data.medianMs), formatDurationCompact(data.clinicMedianMs))
+      + row("P90 room time", formatDurationCompact(data.p90Ms), formatDurationCompact(data.clinicP90Ms))
+      + row("Room hours", formatCount(data.hours), "")
+      + row("Busiest weekday", data.busiestWeekday ? (data.busiestWeekday + " (" + data.busiestWeekdayCount + " visits)") : "—", "")
+      + '</tbody></table>'
+      + '<h2>Visit length by hour of day</h2>'
+      + '<table><thead><tr><th>Start hour</th><th>Visits</th><th>' + escapeHtml(data.doctor) + ' avg</th><th>Clinic avg</th></tr></thead><tbody>'
+      + (hourRows || '<tr><td colspan="4">No sessions in range.</td></tr>')
+      + '</tbody></table>'
+      + '<h2>Pace &amp; multi-room flow</h2>'
+      + '<table><tbody>'
+      + (pace
+        ? (row("Average rooms at once", formatCount(pace.avgConcurrency) + (pace.maxConcurrent > 1 ? (" (peak " + pace.maxConcurrent + ")") : ""), "")
+          + row("Time running 2+ rooms", formatPercent(pace.multiRoomShare) + " of active time", "")
+          + row("Typical gap between visits", pace.medianGapMs != null ? formatDurationCompact(pace.medianGapMs) : "Not enough back-to-back visits", ""))
+        : row("Pace", "No sessions in range.", ""))
+      + '</tbody></table>'
+      + '<p class="note">Durations describe workload and room flow only — they are not a measure of clinical quality or thoroughness. Case mix is not captured.</p>'
+      + '</body></html>';
+  }
+
+  function printDoctorReport(){
+    var doctorName = getFocusDoctor();
+    if(!doctorName){
+      setStatus("Pick a doctor in Breakdowns → Doctor performance to print a report card.");
+      return;
+    }
+    if(!lastRows){
+      setStatus("Refresh stats before printing a report card.");
+      return;
+    }
+    var averageRules = getAverageExclusionRules();
+    var allRows = filterRowsByDurationRules(lastRows.room || [], averageRules);
+    var data = computeDoctorFocusData(allRows, doctorName);
+    if(!data.visits){
+      setStatus("No sessions for " + doctorName + " in this range.");
+      return;
+    }
+    var range = getStatsRange();
+    var rangeLabel = range.start.toLocaleDateString() + " – " + range.end.toLocaleDateString();
+    var html = buildDoctorReportHtml(data, rangeLabel);
+
+    var frame = document.createElement("iframe");
+    frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;";
+    document.body.appendChild(frame);
+    var frameDoc = frame.contentWindow.document;
+    frameDoc.open();
+    frameDoc.write(html);
+    frameDoc.close();
+    setTimeout(function(){
+      try{
+        frame.contentWindow.focus();
+        frame.contentWindow.print();
+      } catch(e){
+        console.error(e);
+        setStatus("Could not open the print dialog: " + getErrorMessage(e));
+      }
+      setTimeout(function(){ frame.remove(); }, 60000);
+    }, 150);
+  }
+
   function renderStats(roomRows, cleaningRows){
     roomRows = roomRows || [];
     cleaningRows = cleaningRows || [];
@@ -1640,6 +1938,7 @@
       '<div class="highlightItem"><strong>Range coverage</strong><span>' + escapeHtml(String(getRangeDayCount())) + ' day(s), ' + escapeHtml(String(getRangeDayCount(selectedTrendDays))) + ' graphed</span></div>';
 
     renderBreakdownTables(statsAllRoomRows, statsCleaningRows, statsRoomRows, selectedDoctor, isComparison, averageRules);
+    renderDoctorFocus(statsAllRoomRows);
   }
 
   // ===== Data loading =====
@@ -2027,6 +2326,8 @@
     $("statsEnd").addEventListener("change", function(){ clearActivePreset(); refreshStatsIfReady(); });
     $("statsGroupBy").addEventListener("change", function(){ savePreferences(); rerenderStatsIfLoaded(); });
     $("statsDoctorFilter").addEventListener("change", function(){ savePreferences(); rerenderStatsIfLoaded(); });
+    $("doctorFocusSelect").addEventListener("change", rerenderStatsIfLoaded);
+    $("printDoctorReportBtn").addEventListener("click", printDoctorReport);
     $("statsGraphMode").addEventListener("change", function(){ savePreferences(); rerenderStatsIfLoaded(); });
     $("statsTrendMetric").addEventListener("change", function(){ savePreferences(); rerenderStatsIfLoaded(); });
     ["statsAverageExcludeBelow", "statsAverageExcludeAbove"].forEach(function(id){

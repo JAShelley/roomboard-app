@@ -1457,6 +1457,45 @@
         </div>
 	      </div>
 	    </section>
+	    <section class="panel card">
+	      <div class="toolbar">
+	        <div>
+	          <p class="eyebrow">Doctor focus</p>
+	          <h2 class="sectionTitle">Doctor performance</h2>
+	          <p class="sectionSubtitle">Pace, time-of-day drift, and multi-room flow for one provider, benchmarked against the clinic. Describes workload and flow &mdash; not clinical quality.</p>
+	        </div>
+	        <div class="actions">
+	          <button class="secondary" id="printDoctorReportBtn" type="button">Print report card</button>
+	        </div>
+	      </div>
+	      <div class="controls">
+	        <div class="field">
+	          <label for="doctorFocusSelect">Doctor</label>
+	          <select id="doctorFocusSelect">
+	            <option value="">Select a doctor&hellip;</option>
+	          </select>
+	        </div>
+	      </div>
+	      <div class="statsGrid doctorFocusStats" id="doctorFocusStats" style="margin-top:14px;">
+	        <div class="emptyState">Select a doctor to load their performance summary.</div>
+	      </div>
+	      <div class="split" style="margin-top:14px;">
+	        <div class="inset">
+	          <h3 class="sectionTitle" style="margin-bottom:6px;">Visit length by hour of day</h3>
+	          <p class="sectionSubtitle" style="margin-bottom:12px;">Average visit duration for sessions started in each hour, next to the clinic average for that hour.</p>
+	          <div class="barList" id="doctorHourDrift">
+	            <div class="emptyState">Select a doctor to see hour-of-day drift.</div>
+	          </div>
+	        </div>
+	        <div class="inset">
+	          <h3 class="sectionTitle" style="margin-bottom:6px;">Pace &amp; multi-room flow</h3>
+	          <p class="sectionSubtitle" style="margin-bottom:12px;">How this doctor moves between rooms in the selected range.</p>
+	          <div class="highlights" id="doctorPaceList">
+	            <div class="emptyState">Select a doctor to see pace stats.</div>
+	          </div>
+	        </div>
+	      </div>
+	    </section>
     </div>
 
     <div class="tabPanel" data-tab-panel="logs" role="tabpanel">
