@@ -27,3 +27,4 @@ android/
 # TS incremental build cache
 tsconfig.tsbuildinfo
 *.tsbuildinfo
+.claude/settings.local.json
