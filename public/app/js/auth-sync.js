@@ -407,6 +407,7 @@
       if(joinPanel && !loggedIn){
         joinPanel.style.display = authAccessMode === "login" ? "block" : "none";
         if(joinFields) joinFields.hidden = false;
+        if($("joinPracticeCredentials")) $("joinPracticeCredentials").hidden = false;
         if(joinActions) joinActions.hidden = false;
         if(inviteBox) inviteBox.hidden = true;
         if(inviteActions) inviteActions.hidden = true;
@@ -467,6 +468,8 @@
       var panel = $("joinPracticePanel");
       var panelLabel = $("joinPracticePanelLabel");
       var panelHelp = $("joinPracticePanelHelp");
+      var joinFields = $("joinPracticeFields");
+      var joinCredentials = $("joinPracticeCredentials");
       var joinActions = $("joinPracticeActions");
       var inviteBox = $("practiceInviteBox");
       var inviteActions = $("practiceInviteActions");
@@ -481,6 +484,8 @@
       if(panelHelp) panelHelp.textContent = inviteCode
         ? "Share this code with staff so they can join the same RoomBoard practice."
         : "If your clinic already has RoomBoard, create your user here with the clinic invite code.";
+      if(joinFields) joinFields.hidden = !!inviteCode;
+      if(joinCredentials) joinCredentials.hidden = !!inviteCode;
       if(joinActions) joinActions.hidden = !!inviteCode;
       if(inviteBox) inviteBox.hidden = !inviteCode;
       if(inviteActions) inviteActions.hidden = !inviteCode;
