@@ -564,6 +564,17 @@
     };
   }
 
+  function getPreviousStatsRange(range){
+    var startMs = new Date(range.startIso).getTime();
+    var lengthMs = new Date(range.endIso).getTime() - startMs;
+    return {
+      start: new Date(startMs - lengthMs),
+      end: new Date(startMs - 24 * 3600 * 1000),
+      startIso: new Date(startMs - lengthMs).toISOString(),
+      endIso: range.startIso
+    };
+  }
+
   function getRoomLogsRange(){
     var normalized = normalizeRangeInput("roomLogsStart", "roomLogsEnd", 29);
     return {
@@ -1363,6 +1374,82 @@
       + '</svg>';
   }
 
+  function computeCompareMetrics(roomRows, cleaningRows, averageRules){
+    var roomDur = (roomRows || []).map(function(r){ return Number(r.duration_ms || 0); }).filter(function(v){ return isFinite(v) && v >= 0; });
+    var cleanDur = (cleaningRows || []).map(function(r){ return Number(r.duration_ms || 0); }).filter(function(v){ return isFinite(v) && v >= 0; });
+    return {
+      visits: (roomRows || []).length,
+      avgRoomMs: averageDuration(roomDur, averageRules),
+      medianRoomMs: roomDur.length ? median(roomDur) : 0,
+      roomHours: roomDur.reduce(function(sum, v){ return sum + v; }, 0) / 3600000,
+      cleanings: (cleaningRows || []).length,
+      avgCleanMs: averageDuration(cleanDur, averageRules)
+    };
+  }
+
+  function formatCompareDelta(current, previous, goodWhenUp){
+    if(!(previous > 0)){
+      if(current > 0) return { text: "new", cls: "" };
+      return { text: "—", cls: "" };
+    }
+    var pct = ((current - previous) / previous) * 100;
+    if(Math.abs(pct) < 0.5) return { text: "≈ same", cls: "" };
+    var arrow = pct > 0 ? "▲" : "▼";
+    var improving = goodWhenUp ? (pct > 0) : (pct < 0);
+    return {
+      text: arrow + " " + formatPercent(Math.abs(pct)),
+      cls: improving ? "success" : "warn"
+    };
+  }
+
+  function renderTrendComparison(currentRoomRows, currentCleaningRows, averageRules, selectedDoctor, isComparison, trendDays){
+    var grid = $("trendCompareGrid");
+    var meta = $("trendCompareMeta");
+    if(!grid) return;
+    if(!lastRows || !lastRows.prevRange){
+      grid.innerHTML = '<div class="emptyState">Refresh stats to compare this range against the period before it.</div>';
+      if(meta) meta.textContent = "Refresh stats to load the period-over-period comparison.";
+      return;
+    }
+
+    var doctorScope = (selectedDoctor && !isComparison) ? selectedDoctor : "";
+    var prevRoomRows = (lastRows.prevRoom || []).filter(function(row){
+      return !doctorScope || ((row.doctor_name || "").trim() === doctorScope);
+    });
+    prevRoomRows = filterRowsByTrendDays(filterRowsByDurationRules(prevRoomRows, averageRules), trendDays);
+    var prevCleaningRows = filterRowsByTrendDays(filterRowsByDurationRules(lastRows.prevCleaning || [], averageRules), trendDays);
+
+    var current = computeCompareMetrics(currentRoomRows, currentCleaningRows, averageRules);
+    var previous = computeCompareMetrics(prevRoomRows, prevCleaningRows, averageRules);
+
+    if(meta){
+      var prevLabel = lastRows.prevRange.start.toLocaleDateString([], { month: "short", day: "numeric" })
+        + " – " + lastRows.prevRange.end.toLocaleDateString([], { month: "short", day: "numeric" });
+      meta.textContent = "Previous period: " + prevLabel
+        + (doctorScope ? " · " + doctorScope : "")
+        + " · " + summarizeTrendDays(trendDays);
+    }
+
+    var cards = [
+      { label: "Visits", value: String(current.visits), prev: String(previous.visits), cur: current.visits, was: previous.visits, goodWhenUp: true },
+      { label: "Avg room time", value: formatDurationCompact(current.avgRoomMs), prev: formatDurationCompact(previous.avgRoomMs), cur: current.avgRoomMs, was: previous.avgRoomMs, goodWhenUp: false },
+      { label: "Median room time", value: formatDurationCompact(current.medianRoomMs), prev: formatDurationCompact(previous.medianRoomMs), cur: current.medianRoomMs, was: previous.medianRoomMs, goodWhenUp: false },
+      { label: "Room hours", value: formatCount(current.roomHours), prev: formatCount(previous.roomHours), cur: current.roomHours, was: previous.roomHours, goodWhenUp: true },
+      { label: "Cleanings", value: String(current.cleanings), prev: String(previous.cleanings), cur: current.cleanings, was: previous.cleanings, goodWhenUp: true },
+      { label: "Avg clean time", value: formatDurationCompact(current.avgCleanMs), prev: formatDurationCompact(previous.avgCleanMs), cur: current.avgCleanMs, was: previous.avgCleanMs, goodWhenUp: false }
+    ];
+
+    grid.innerHTML = cards.map(function(card){
+      var delta = formatCompareDelta(card.cur, card.was, card.goodWhenUp);
+      return '<article class="compareCard">'
+        + '<strong>' + escapeHtml(card.label) + '</strong>'
+        + '<span class="compareValue">' + escapeHtml(card.value) + '</span>'
+        + '<span class="compareDelta' + (delta.cls ? (" " + delta.cls) : "") + '">' + escapeHtml(delta.text) + '</span>'
+        + '<em>prev ' + escapeHtml(card.prev) + '</em>'
+        + '</article>';
+    }).join("");
+  }
+
   function renderStats(roomRows, cleaningRows){
     roomRows = roomRows || [];
     cleaningRows = cleaningRows || [];
@@ -1526,6 +1613,8 @@
           : (isComparison ? "No appointment data available to compare for this range." : "No appointment data available for this range."))
     });
 
+    renderTrendComparison(trendRoomRows, trendCleaningRows, averageRules, selectedDoctor, isComparison, selectedTrendDays);
+
     var outlierCount = shortOutliers + longOutliers;
     var outlierRate = statsRoomRows.length ? ((outlierCount / statsRoomRows.length) * 100) : 0;
     var dashboardOutlierCount = dashboardShortOutliers + dashboardLongOutliers;
@@ -1585,14 +1674,23 @@
     var refreshBtn = $("refreshStatsBtn");
     if(refreshBtn) refreshBtn.disabled = true;
     var range = getStatsRange();
+    var prevRange = getPreviousStatsRange(range);
     try{
       var results = await Promise.all([
         fetchStatsRows("room_sessions", "room_name, doctor_name, duration_ms, started_at, ended_at", range),
-        fetchStatsRows("cleaning_sessions", "room_name, duration_ms, started_at, ended_at", range)
+        fetchStatsRows("cleaning_sessions", "room_name, duration_ms, started_at, ended_at", range),
+        fetchStatsRows("room_sessions", "room_name, doctor_name, duration_ms, started_at, ended_at", prevRange),
+        fetchStatsRows("cleaning_sessions", "room_name, duration_ms, started_at, ended_at", prevRange)
       ]);
       if(token !== statsRequestToken) return;
 
-      lastRows = { room: results[0] || [], cleaning: results[1] || [] };
+      lastRows = {
+        room: results[0] || [],
+        cleaning: results[1] || [],
+        prevRoom: results[2] || [],
+        prevCleaning: results[3] || [],
+        prevRange: prevRange
+      };
       renderStats(lastRows.room, lastRows.cleaning);
       setStatus("Stats updated. Loaded " + lastRows.room.length + " visits and " + lastRows.cleaning.length + " cleanings.");
     } catch(e){
