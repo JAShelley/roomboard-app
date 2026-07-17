@@ -189,6 +189,221 @@ as $$
   select timezone('utc', now())::text;
 $$;
 
+-- Merge the fields that changed on a client with the latest persisted object.
+-- This is deliberately shallow: room fields such as timer/checklist are their
+-- own atomic units, while separate room-card fields can be saved concurrently
+-- without one device replacing another device's whole room snapshot.
+create or replace function public.merge_board_object_fields(
+  p_base jsonb,
+  p_proposed jsonb,
+  p_current jsonb
+)
+returns jsonb
+language plpgsql
+immutable
+set search_path = public
+as $$
+declare
+  base_object jsonb := case when jsonb_typeof(p_base) = 'object' then p_base else '{}'::jsonb end;
+  proposed_object jsonb := case when jsonb_typeof(p_proposed) = 'object' then p_proposed else '{}'::jsonb end;
+  result_object jsonb := case when jsonb_typeof(p_current) = 'object' then p_current else '{}'::jsonb end;
+  field_name text;
+  base_has_field boolean;
+  proposed_has_field boolean;
+begin
+  for field_name in
+    select jsonb_object_keys(base_object || proposed_object)
+  loop
+    base_has_field := base_object ? field_name;
+    proposed_has_field := proposed_object ? field_name;
+    if base_has_field is distinct from proposed_has_field
+      or (
+        base_has_field
+        and proposed_has_field
+        and (base_object -> field_name is distinct from proposed_object -> field_name)
+      ) then
+      if proposed_has_field then
+        result_object := jsonb_set(result_object, array[field_name], proposed_object -> field_name, true);
+      else
+        result_object := result_object - field_name;
+      end if;
+    end if;
+  end loop;
+  return result_object;
+end;
+$$;
+
+-- Atomically merge a board save against the caller's last synced snapshot.
+-- Different room fields merge independently under a row lock, so an update to
+-- Room A cannot overwrite an in-flight update to Room B. If two people update
+-- the exact same field, the later completed action intentionally wins.
+create or replace function public.merge_practice_board_state(
+  p_practice_id uuid,
+  p_base_board_state jsonb,
+  p_proposed_board_state jsonb
+)
+returns table (
+  board_state jsonb,
+  updated_at timestamptz
+)
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  stored_state jsonb;
+  stored_updated_at timestamptz;
+  merged_state jsonb;
+  saved_state jsonb;
+  saved_updated_at timestamptz;
+  base_state jsonb := case when jsonb_typeof(p_base_board_state) = 'object' then p_base_board_state else '{}'::jsonb end;
+  proposed_state jsonb := case when jsonb_typeof(p_proposed_board_state) = 'object' then p_proposed_board_state else '{}'::jsonb end;
+  current_rooms jsonb;
+  base_rooms jsonb;
+  proposed_rooms jsonb;
+  merged_rooms jsonb := '[]'::jsonb;
+  current_room jsonb;
+  base_room jsonb;
+  proposed_room jsonb;
+  room_key text;
+  root_key text;
+  base_has_root boolean;
+  proposed_has_root boolean;
+  has_stored_row boolean;
+  has_base_room boolean;
+  has_proposed_room boolean;
+  has_current_room boolean;
+begin
+  if p_practice_id is null then
+    raise exception 'A practice id is required.' using errcode = '22023';
+  end if;
+
+  -- Materialize the row before locking it. This closes the otherwise-racy
+  -- first-save case where two devices create a new clinic board together.
+  insert into public.practice_board_state (practice_id, board_state)
+  values (p_practice_id, '{}'::jsonb)
+  on conflict (practice_id) do nothing;
+
+  select state.board_state, state.updated_at
+    into stored_state, stored_updated_at
+  from public.practice_board_state as state
+  where state.practice_id = p_practice_id
+  for update;
+  has_stored_row := found;
+
+  if not has_stored_row then
+    stored_state := '{}'::jsonb;
+  elsif jsonb_typeof(stored_state) <> 'object' then
+    stored_state := '{}'::jsonb;
+  end if;
+
+  merged_state := stored_state;
+
+  -- Merge shared UI and any future top-level object fields field-by-field.
+  -- `rooms` is handled below because its members need identity-based merging.
+  for root_key in
+    select jsonb_object_keys(base_state || proposed_state)
+  loop
+    if root_key = 'rooms' then
+      continue;
+    end if;
+    base_has_root := base_state ? root_key;
+    proposed_has_root := proposed_state ? root_key;
+    if base_has_root is distinct from proposed_has_root
+      or (
+        base_has_root
+        and proposed_has_root
+        and (base_state -> root_key is distinct from proposed_state -> root_key)
+      ) then
+      if proposed_has_root then
+        if jsonb_typeof(base_state -> root_key) = 'object'
+          and jsonb_typeof(proposed_state -> root_key) = 'object'
+          and jsonb_typeof(merged_state -> root_key) = 'object' then
+          merged_state := jsonb_set(
+            merged_state,
+            array[root_key],
+            public.merge_board_object_fields(
+              base_state -> root_key,
+              proposed_state -> root_key,
+              merged_state -> root_key
+            ),
+            true
+          );
+        else
+          merged_state := jsonb_set(merged_state, array[root_key], proposed_state -> root_key, true);
+        end if;
+      else
+        merged_state := merged_state - root_key;
+      end if;
+    end if;
+  end loop;
+
+  current_rooms := case when jsonb_typeof(stored_state -> 'rooms') = 'array' then stored_state -> 'rooms' else '[]'::jsonb end;
+  base_rooms := case when jsonb_typeof(base_state -> 'rooms') = 'array' then base_state -> 'rooms' else '[]'::jsonb end;
+  proposed_rooms := case when jsonb_typeof(proposed_state -> 'rooms') = 'array' then proposed_state -> 'rooms' else '[]'::jsonb end;
+
+  -- Existing remote rooms stay in place. Only fields whose values changed
+  -- between the caller's base and proposed snapshots are applied.
+  for current_room in
+    select value from jsonb_array_elements(current_rooms)
+  loop
+    room_key := coalesce(nullif(current_room ->> 'dbId', ''), nullif(current_room ->> 'id', ''), '');
+    select value into base_room
+    from jsonb_array_elements(base_rooms)
+    where coalesce(nullif(value ->> 'dbId', ''), nullif(value ->> 'id', ''), '') = room_key
+    limit 1;
+    has_base_room := found;
+
+    if has_base_room then
+      select value into proposed_room
+      from jsonb_array_elements(proposed_rooms)
+      where coalesce(nullif(value ->> 'dbId', ''), nullif(value ->> 'id', ''), '') = room_key
+      limit 1;
+      has_proposed_room := found;
+      if has_proposed_room then
+        merged_rooms := merged_rooms || jsonb_build_array(
+          public.merge_board_object_fields(base_room, proposed_room, current_room)
+        );
+      end if;
+      -- A room removed from the proposed snapshot is deliberately removed.
+      -- Its canonical room configuration is also controlled by public.rooms.
+    else
+      -- A room added by another client after this caller loaded the board.
+      merged_rooms := merged_rooms || jsonb_build_array(current_room);
+    end if;
+  end loop;
+
+  -- Append rooms that were created locally after the caller's base snapshot.
+  for proposed_room in
+    select value from jsonb_array_elements(proposed_rooms)
+  loop
+    room_key := coalesce(nullif(proposed_room ->> 'dbId', ''), nullif(proposed_room ->> 'id', ''), '');
+    select exists(
+      select 1
+      from jsonb_array_elements(current_rooms)
+      where coalesce(nullif(value ->> 'dbId', ''), nullif(value ->> 'id', ''), '') = room_key
+    ) into has_current_room;
+    if not has_current_room then
+      merged_rooms := merged_rooms || jsonb_build_array(proposed_room);
+    end if;
+  end loop;
+
+  merged_state := jsonb_set(merged_state, '{rooms}', merged_rooms, true);
+
+  if merged_state is distinct from stored_state then
+    update public.practice_board_state as state
+    set board_state = merged_state
+    where state.practice_id = p_practice_id
+    returning state.board_state, state.updated_at into saved_state, saved_updated_at;
+  else
+    saved_state := stored_state;
+    saved_updated_at := stored_updated_at;
+  end if;
+
+  return query select saved_state, saved_updated_at;
+end;
+$$;
+
 alter table public.practices
   add column if not exists invite_code text;
 
@@ -381,6 +596,10 @@ $$;
 grant execute on function public.get_my_practice_id() to authenticated;
 grant execute on function public.is_practice_admin(uuid) to authenticated;
 grant execute on function public.get_server_now_iso() to authenticated;
+revoke execute on function public.merge_board_object_fields(jsonb, jsonb, jsonb) from public, anon;
+revoke execute on function public.merge_practice_board_state(uuid, jsonb, jsonb) from public, anon;
+grant execute on function public.merge_board_object_fields(jsonb, jsonb, jsonb) to authenticated, service_role;
+grant execute on function public.merge_practice_board_state(uuid, jsonb, jsonb) to authenticated, service_role;
 grant execute on function public.create_unique_practice_invite_code(uuid) to authenticated;
 grant execute on function public.get_my_practice_invite_details() to authenticated;
 grant execute on function public.rotate_my_practice_invite_code() to authenticated;

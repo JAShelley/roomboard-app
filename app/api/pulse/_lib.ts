@@ -60,6 +60,10 @@ type BoardData = {
   // so writes can round-trip it — the web app syncs practice-wide UI settings
   // (including the default patient checklist) through board_state.sharedUi.
   boardStateExtras: Record<string, unknown>;
+  // Raw server snapshot used as the optimistic merge base when Pulse changes
+  // a room. Keeping this separate from the normalized API response avoids a
+  // Pulse send replacing a concurrent RoomBoard edit in another room.
+  baseBoardState: Record<string, unknown>;
   settings: {
     displayCols: number;
     displayOnlyActive: boolean;
@@ -477,6 +481,7 @@ export async function fetchPracticeBoardData(practiceId: string): Promise<BoardD
     quickNotes,
     colorLabels,
     boardStateExtras,
+    baseBoardState: JSON.parse(JSON.stringify(boardState)),
     settings: {
       displayCols: Math.max(1, Number(settingsRow?.board_columns || 4)),
       displayOnlyActive: !!settingsRow?.show_only_active,
@@ -548,22 +553,25 @@ async function createRoomSession(practiceId: string, room: BoardRoom) {
 
 async function upsertBoardState(practiceId: string, boardData: BoardData) {
   const service = createServiceClient();
-  const payload = {
-    practice_id: practiceId,
+  const proposedBoardState = {
     // Round-trip the non-room parts of board_state (sharedUi etc.); writing
     // only { rooms } would wipe the practice-wide UI settings the web app
     // syncs through this row.
-    board_state: {
-      ...(boardData.boardStateExtras || {}),
-      rooms: JSON.parse(JSON.stringify(Array.isArray(boardData.rooms) ? boardData.rooms : [])),
-    },
+    ...(boardData.boardStateExtras || {}),
+    rooms: JSON.parse(JSON.stringify(Array.isArray(boardData.rooms) ? boardData.rooms : [])),
   };
   const res = await service
-    .from("practice_board_state")
-    .upsert(payload, { onConflict: "practice_id" })
-    .select("practice_id")
+    .rpc("merge_practice_board_state", {
+      p_practice_id: practiceId,
+      p_base_board_state: boardData.baseBoardState || {},
+      p_proposed_board_state: proposedBoardState,
+    })
+    .select("board_state")
     .single();
   if (res.error) throw new Error(res.error.message);
+  if (res.data?.board_state && typeof res.data.board_state === "object") {
+    boardData.baseBoardState = res.data.board_state as Record<string, unknown>;
+  }
 }
 
 export async function loadPulseBoard(input: { accessToken?: string; refreshToken?: string }) {
