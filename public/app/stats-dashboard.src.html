@@ -548,59 +548,6 @@
     font-size:1rem;
     font-weight:700;
   }
-  .trendCompareHead{ margin-bottom:12px; }
-  .trendCompareGrid{
-    grid-template-columns:repeat(3, minmax(0, 1fr));
-  }
-  .compareCard{
-    padding:14px;
-    border-radius:16px;
-    border:1px solid rgba(148,163,184,.14);
-    background:rgba(6,13,26,.5);
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-    min-width:0;
-  }
-  .compareCard strong{
-    color:var(--muted);
-    font-size:.74rem;
-    text-transform:uppercase;
-    letter-spacing:.08em;
-  }
-  .compareCard .compareValue{
-    font-size:1.36rem;
-    font-weight:800;
-    letter-spacing:-.02em;
-  }
-  .compareCard em{
-    font-style:normal;
-    color:var(--muted);
-    font-size:.85rem;
-  }
-  .compareDelta{
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    align-self:flex-start;
-    padding:4px 10px;
-    border-radius:999px;
-    border:1px solid rgba(148,163,184,.16);
-    background:rgba(148,163,184,.08);
-    color:var(--muted);
-    font-size:.85rem;
-    font-weight:800;
-  }
-  .compareDelta.success{
-    color:#b9ffe9;
-    background:rgba(52,211,153,.12);
-    border-color:rgba(52,211,153,.22);
-  }
-  .compareDelta.warn{
-    color:#ffd98a;
-    background:rgba(251,191,36,.10);
-    border-color:rgba(251,191,36,.22);
-  }
   .split{
     display:grid;
     grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);
@@ -1392,15 +1339,6 @@
         <div class="highlights" id="statsHighlights">
           <div class="highlightItem"><strong>Highlights</strong><span>Refresh stats to load summary.</span></div>
         </div>
-	      </div>
-	      <div class="inset trendCompare" style="margin-top:14px;">
-	        <div class="trendCompareHead">
-	          <h3 class="sectionTitle" style="margin-bottom:4px;">Compared to previous period</h3>
-	          <p class="sectionSubtitle" id="trendCompareMeta">Refresh stats to load the period-over-period comparison.</p>
-	        </div>
-	        <div class="statsGrid trendCompareGrid" id="trendCompareGrid">
-	          <div class="emptyState">Refresh stats to compare this range against the period before it.</div>
-	        </div>
 	      </div>
 	    </section>
     </div>
