@@ -107,7 +107,7 @@ Build from this `RoomBoard/` folder:
 xcodebuild -project ios/RoomBoardMobile/RoomBoardMobile.xcodeproj -scheme RoomBoardMobile -destination generic/platform=iOS -derivedDataPath ios/RoomBoardMobile/DerivedData CODE_SIGNING_ALLOWED=NO build
 ```
 
-The website download cards use `window.__ROOMBOARD_WINDOWS_DOWNLOAD_URL__` and `window.__ROOMBOARD_MAC_DOWNLOAD_URL__` from `public/app/config.js`. Update `window.__ROOMBOARD_RELEASE_TAG__` there when publishing a new app release tag.
+The website no longer links to this build — the Tools tab only offers the Capture app (the actively maintained, auto-updating helper). This build is manual/internal-only until it's back on a CI release pipeline with an auto-updater of its own.
 
 ## Vercel deployment
 Deploy the Next.js website from the `RoomBoard` folder, not the repository root.

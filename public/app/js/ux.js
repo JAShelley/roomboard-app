@@ -100,24 +100,6 @@
     }
 
     setupDownloadCard({
-      cardId: "desktopDownloadCard",
-      linkId: "desktopDownloadLink",
-      metaId: "desktopDownloadMeta",
-      fallbackLinkId: "desktopReleaseLink",
-      url: window.__ROOMBOARD_WINDOWS_DOWNLOAD_URL__,
-      filename: window.__ROOMBOARD_WINDOWS_DOWNLOAD_FILENAME__ || "RoomBoard-Setup-Windows-x64.exe",
-      fallbackUrl: window.__ROOMBOARD_WINDOWS_RELEASE_URL__ || window.__ROOMBOARD_RELEASES_URL__
-    });
-
-    setupDownloadCard({
-      cardId: "desktopMacDownloadCard",
-      linkId: "desktopMacDownloadLink",
-      metaId: "desktopMacDownloadMeta",
-      url: window.__ROOMBOARD_MAC_DOWNLOAD_URL__,
-      filename: window.__ROOMBOARD_MAC_DOWNLOAD_FILENAME__ || "RoomBoard-macOS.dmg"
-    });
-
-    setupDownloadCard({
       cardId: "captureDownloadCard",
       linkId: "captureDownloadLink",
       metaId: "captureDownloadMeta",
