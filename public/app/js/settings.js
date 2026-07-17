@@ -2080,6 +2080,34 @@
       }
     }
 
+    function describeClinicConfigImportCounts(payload){
+      var lines = [];
+      if(Array.isArray(payload.rooms) && payload.rooms.length){
+        lines.push((state.rooms || []).length + " rooms → " + payload.rooms.length + " rooms");
+      }
+      if(Array.isArray(payload.doctors) && payload.doctors.length){
+        lines.push((state.doctors || []).length + " doctors → " + payload.doctors.length + " doctors");
+      }
+      if(Array.isArray(payload.colorLabels) && payload.colorLabels.length){
+        lines.push((state.colorLabels || []).length + " color labels → " + payload.colorLabels.length + " color labels");
+      }
+      if(Array.isArray(payload.quickNotes)){
+        lines.push((state.quickNotes || []).length + " quick notes → " + payload.quickNotes.length + " quick notes");
+      }
+      if(payload.settings) lines.push("Display & timer settings");
+      return lines;
+    }
+
+    function confirmClinicConfigImport(payload){
+      if(!payload || typeof payload !== "object") throw new Error("Invalid RoomBoard config file.");
+      var counts = describeClinicConfigImportCounts(payload);
+      var practiceLabel = payload.practiceName ? ("\"" + payload.practiceName + "\"") : "this file";
+      var message = "Import " + practiceLabel + "? This replaces the following for everyone in this clinic, right now:\n\n"
+        + (counts.length ? counts.map(function(line){ return "• " + line; }).join("\n") : "• Nothing recognizable in this file")
+        + "\n\nThis cannot be undone.";
+      return window.confirm(message);
+    }
+
     if($("exportClinicConfigBtn")){
       $("exportClinicConfigBtn").addEventListener("click", function(){
         var btn = this;
@@ -2111,11 +2139,14 @@
       $("importClinicConfigFile").addEventListener("change", function(){
         var file = this.files && this.files[0];
         if(!file) return;
-        noteSettingsRemoteQueued("Importing clinic config…");
         var reader = new FileReader();
         reader.onload = function(){
           try{
             var payload = JSON.parse(String(reader.result || "{}"));
+            if(!confirmClinicConfigImport(payload)){
+              setStatus("Import cancelled.");
+              return;
+            }
             importClinicConfig(payload);
             if(typeof toast === "function") toast("Clinic config imported.");
             setStatus("Clinic config imported.");
@@ -2127,7 +2158,6 @@
           }
         };
         reader.onerror = function(){
-          noteSettingsRemoteFinished(false, "Import failed");
           setStatus("Import failed: Could not read file.");
           $("importClinicConfigFile").value = "";
         };

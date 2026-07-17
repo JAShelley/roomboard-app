@@ -2252,6 +2252,14 @@
         return normalizeColorLabelTitle(value, "").toLowerCase();
       });
     }
+    // missingColorLabels blocks autosave (collectSettingsValidationIssues), but that
+    // only ever surfaced on the buried Settings > Tools "Save check" card. Warn right
+    // on the Colors list, same as the duplicate-name checks above.
+    function refreshColorsEmptyWarning(){
+      var warn = $("colorsEmptyWarning");
+      if(!warn) return;
+      warn.hidden = !!(state.colorLabels && state.colorLabels.length);
+    }
 
     function renderSettingsLists(){
       bumpRenderPerf("settingsRenders");
@@ -2790,6 +2798,7 @@
         })(sortedColorLabels[c]);
       }
       refreshColorsDuplicateWarning();
+      refreshColorsEmptyWarning();
 
       // Quick notes list
       var quickNotesList = $("quickNotesList");
