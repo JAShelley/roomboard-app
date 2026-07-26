@@ -1080,6 +1080,7 @@
 	      targetState.settings.doctorBadgeStyles = normalizeDoctorBadgeStylesMap(targetState.settings.doctorBadgeStyles);
 	      targetState.settings.practiceLogoPath = String(targetState.settings.practiceLogoPath || "").trim();
       targetState.settings.practiceLogoUrl = String(targetState.settings.practiceLogoUrl || "").trim();
+      targetState.settings.statsPinHash = String(targetState.settings.statsPinHash || "").trim();
       targetState.settings.practiceLogoUpdatedAt = String(targetState.settings.practiceLogoUpdatedAt || "").trim();
       return targetState;
     }

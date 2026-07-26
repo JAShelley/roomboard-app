@@ -236,8 +236,207 @@
           if(existing) existing.remove();
         }
       }
+
+      refreshStatsPinGate();
     }
     window.refreshAdvancedPlanGating = refreshAdvancedPlanGating;
+
+    // ===== Stats access PIN =====
+    // Clinic-wide PIN that locks the Stats tab. Only the hash syncs (via the
+    // shared board UI payload) — the PIN itself is never stored. This is a
+    // front-desk deterrent, not cryptographic security: any signed-in device
+    // still holds credentials that can read the underlying session rows.
+    var statsPinUnlocked = false;
+
+    function getStatsPinHash(){
+      return String(state && state.settings && state.settings.statsPinHash || "").trim();
+    }
+    function statsPinIsLocked(){
+      return !!getStatsPinHash() && !statsPinUnlocked;
+    }
+    window.roomboardStatsPinIsLocked = statsPinIsLocked;
+
+    function fnvHashStatsPin(pin){
+      var text = "roomboard-stats-pin:" + String(pin || "");
+      var h = 0x811c9dc5;
+      for(var i=0;i<text.length;i++){ h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+      return "fnv:" + h.toString(16);
+    }
+    function sha256StatsPin(pin){
+      var bytes = new TextEncoder().encode("roomboard-stats-pin:" + String(pin || ""));
+      return crypto.subtle.digest("SHA-256", bytes).then(function(buf){
+        return Array.prototype.map.call(new Uint8Array(buf), function(b){
+          return ("0" + b.toString(16)).slice(-2);
+        }).join("");
+      });
+    }
+    function canSubtleHash(){
+      return !!(window.crypto && window.crypto.subtle && window.crypto.subtle.digest);
+    }
+    function hashStatsPin(pin){
+      if(canSubtleHash()){
+        return sha256StatsPin(pin).catch(function(){ return fnvHashStatsPin(pin); });
+      }
+      return Promise.resolve(fnvHashStatsPin(pin));
+    }
+    function verifyStatsPin(pin){
+      var stored = getStatsPinHash();
+      if(!stored) return Promise.resolve(true);
+      // Match the algorithm the stored hash was created with, so devices in
+      // non-secure contexts (no crypto.subtle) stay compatible.
+      if(stored.indexOf("fnv:") === 0) return Promise.resolve(fnvHashStatsPin(pin) === stored);
+      if(!canSubtleHash()) return Promise.resolve(false);
+      return sha256StatsPin(pin).then(function(h){ return h === stored; }, function(){ return false; });
+    }
+
+    function persistStatsPin(statusText){
+      normalizeSettingsForSave(state);
+      saveLocal();
+      if(!supabase || !currentPracticeId){
+        noteSettingsLocalSaved("Saved locally");
+      } else {
+        // Reuse the practice-default snapshot save (writes practice_default_settings + user_settings).
+        doctorBadgeSettingsDirty = true;
+        noteSettingsRemoteQueued(statusText || "Saving stats PIN…");
+        scheduleRemoteSave("board", { immediate: true });
+      }
+    }
+
+    function setStatsPinStatus(msg){
+      var el = document.getElementById("statsPinStatus");
+      if(el) el.textContent = msg || "";
+    }
+
+    function syncStatsPinAdminUi(){
+      var input = document.getElementById("statsPinNewInput");
+      var currentInput = document.getElementById("statsPinCurrentInput");
+      var setBtn = document.getElementById("statsPinSetBtn");
+      var removeBtn = document.getElementById("statsPinRemoveBtn");
+      var help = document.getElementById("statsPinHelp");
+      var hasPin = !!getStatsPinHash();
+      if(input) input.placeholder = hasPin ? "New PIN (4–12 digits)" : "Create a PIN (4–12 digits)";
+      if(currentInput) currentInput.style.display = hasPin ? "" : "none";
+      if(setBtn) setBtn.textContent = hasPin ? "Change PIN" : "Set PIN";
+      if(removeBtn) removeBtn.style.display = hasPin ? "" : "none";
+      if(help) help.textContent = hasPin
+        ? "Stats are PIN-locked on every device in this clinic. Enter the current PIN plus a new one to change it, or the current PIN to remove the lock."
+        : "Lock this Stats tab behind a PIN so only staff who know it can open analytics. Applies on every device in this clinic.";
+    }
+
+    // Changing or removing an existing PIN requires re-entering the current
+    // one — unlocking the tab alone isn't enough (an unlocked screen left
+    // open shouldn't let a passer-by take over the PIN).
+    function requireCurrentStatsPin(){
+      if(!getStatsPinHash()) return Promise.resolve(true);
+      var currentInput = document.getElementById("statsPinCurrentInput");
+      var current = currentInput ? String(currentInput.value || "").trim() : "";
+      if(!current){
+        setStatsPinStatus("Enter the current PIN first.");
+        if(currentInput) currentInput.focus();
+        return Promise.resolve(false);
+      }
+      return verifyStatsPin(current).then(function(ok){
+        if(!ok){
+          setStatsPinStatus("Current PIN is wrong.");
+          if(currentInput){ currentInput.value = ""; currentInput.focus(); }
+        }
+        return ok;
+      });
+    }
+    function clearStatsPinInputs(){
+      var currentInput = document.getElementById("statsPinCurrentInput");
+      var newInput = document.getElementById("statsPinNewInput");
+      if(currentInput) currentInput.value = "";
+      if(newInput) newInput.value = "";
+    }
+
+    function refreshStatsPinGate(){
+      var statsTab = document.getElementById("tabStats");
+      if(!statsTab) return;
+      var gate = document.getElementById("statsPinGate");
+      // The Advanced-plan gate owns the tab on Base plans; don't stack a
+      // second overlay (or fight its inert locking) underneath it.
+      var locked = statsPinIsLocked() && !isBasePlanGated();
+      var host = document.getElementById("statsViewerRoot");
+      if(!locked){
+        var hadGate = !!gate;
+        if(gate) gate.remove();
+        if(!isBasePlanGated()) setPlanGateLock(statsTab, null, false);
+        syncStatsPinAdminUi();
+        // Coming out of a lock: re-show the dashboard and (re)load data.
+        if(hadGate && typeof window.roomboardLoadStats === "function") window.roomboardLoadStats();
+        return;
+      }
+      if(host) host.style.display = "none";
+      if(!gate){
+        gate = document.createElement("div");
+        gate.id = "statsPinGate";
+        gate.className = "planGateOverlay";
+        gate.innerHTML = '<div class="planGateBox"><div class="planGateBadge">Locked</div><strong>Stats are PIN-protected</strong><p>Enter your clinic&#039;s stats PIN to view analytics.</p><form id="statsPinForm" class="statsPinForm"><input id="statsPinInput" type="password" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Enter PIN" aria-label="Stats PIN"><button class="btn primary" type="submit">Unlock</button></form><div class="muted" id="statsPinGateStatus" role="status" aria-live="polite"></div></div>';
+        statsTab.insertBefore(gate, statsTab.firstChild);
+        gate.querySelector("#statsPinForm").addEventListener("submit", function(e){
+          e.preventDefault();
+          var pinInput = gate.querySelector("#statsPinInput");
+          var status = gate.querySelector("#statsPinGateStatus");
+          var pin = pinInput ? pinInput.value : "";
+          if(!pin){ if(status) status.textContent = "Enter the PIN."; return; }
+          verifyStatsPin(pin).then(function(ok){
+            if(ok){
+              statsPinUnlocked = true;
+              refreshStatsPinGate();
+            } else {
+              if(pinInput){ pinInput.value = ""; pinInput.focus(); }
+              if(status) status.textContent = "Wrong PIN. Ask whoever manages your clinic's stats PIN.";
+            }
+          });
+        });
+      }
+      setPlanGateLock(statsTab, gate, true);
+      syncStatsPinAdminUi();
+    }
+    window.refreshStatsPinGate = refreshStatsPinGate;
+
+    // Called from applySharedBoardUiPayload when another device sets, changes
+    // or removes the PIN: drop any local unlock so the new PIN applies here.
+    window.roomboardOnStatsPinChanged = function(){
+      statsPinUnlocked = false;
+      refreshStatsPinGate();
+    };
+
+    if(document.getElementById("statsPinSetBtn")){
+      document.getElementById("statsPinSetBtn").addEventListener("click", function(){
+        var input = document.getElementById("statsPinNewInput");
+        var pin = input ? String(input.value || "").trim() : "";
+        if(!/^\d{4,12}$/.test(pin)){
+          setStatsPinStatus("PIN must be 4–12 digits.");
+          return;
+        }
+        requireCurrentStatsPin().then(function(allowed){
+          if(!allowed) return;
+          hashStatsPin(pin).then(function(hash){
+            state.settings.statsPinHash = hash;
+            statsPinUnlocked = true;
+            clearStatsPinInputs();
+            persistStatsPin("Saving stats PIN…");
+            refreshStatsPinGate();
+            setStatsPinStatus("Stats PIN saved. Everyone will need it to open Stats.");
+          });
+        });
+      });
+    }
+    if(document.getElementById("statsPinRemoveBtn")){
+      document.getElementById("statsPinRemoveBtn").addEventListener("click", function(){
+        requireCurrentStatsPin().then(function(allowed){
+          if(!allowed) return;
+          state.settings.statsPinHash = "";
+          statsPinUnlocked = false;
+          clearStatsPinInputs();
+          persistStatsPin("Removing stats PIN…");
+          refreshStatsPinGate();
+          setStatsPinStatus("Stats PIN removed. Stats are open to everyone in the clinic.");
+        });
+      });
+    }
 
     // ===== Drawer controls =====
 	    function openDrawer(){
@@ -262,6 +461,12 @@
       document.body.className = document.body.className.replace(/\bdrawerOpen\b|\bsettingsPageMode\b/g,"").replace(/\s+/g," ").trim();
       flushPendingSettingsSaves();
       flushPendingRemoteRefresh();
+      // Re-lock PIN-protected Stats when leaving Settings so a shared front-desk
+      // computer doesn't stay unlocked for the next person.
+      if(statsPinUnlocked){
+        statsPinUnlocked = false;
+        refreshStatsPinGate();
+      }
     }
     window.openRoomBoardSettingsDrawer = openDrawer;
     window.closeRoomBoardSettingsDrawer = closeDrawer;
@@ -566,6 +771,7 @@
         p.classList.toggle("active", p.id === tabId);
       });
       if(select) select.value = tabId;
+      if(tabId === "tabStats" && typeof window.refreshStatsPinGate === "function") window.refreshStatsPinGate();
     }
     window.activateRoomBoardSettingsTab = activateSettingsTab;
     tabs.addEventListener("click", function(e){

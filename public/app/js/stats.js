@@ -44,11 +44,21 @@
     if(el) el.textContent = msg || "";
   }
 
+  function isPinLocked(){
+    return typeof window.roomboardStatsPinIsLocked === "function" && window.roomboardStatsPinIsLocked();
+  }
+
   function requireReady(forLogs){
     if(isBasePlan()){
       var gated = "Stats are available on the Advanced plan. Upgrade in Settings → Clinic.";
       setStatus(gated);
       if(forLogs) setRoomLogsStatus(gated);
+      return false;
+    }
+    if(isPinLocked()){
+      var lockedMsg = "Stats are PIN-locked. Enter your clinic's stats PIN to view analytics.";
+      setStatus(lockedMsg);
+      if(forLogs) setRoomLogsStatus(lockedMsg);
       return false;
     }
     if(!getSupabase() || !getPracticeId()){
@@ -2399,6 +2409,12 @@
     if(!build()) return;
     var host = document.getElementById("statsViewerRoot");
     if(isBasePlan()){
+      if(host) host.style.display = "none";
+      return;
+    }
+    if(isPinLocked()){
+      // The PIN gate overlay (settings.js) owns the tab; hide the dashboard so
+      // nothing renders (or loads) behind the lock.
       if(host) host.style.display = "none";
       return;
     }

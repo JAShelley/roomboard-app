@@ -6810,6 +6810,31 @@ details.sxSection[open] > summary { border-bottom: 1px solid rgba(255,255,255,.0
   max-width: 260px;
   line-height: 1.55;
 }
+
+/* ── Stats access PIN (lock overlay + settings row) ───────────────── */
+.statsPinForm {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+}
+.statsPinForm input {
+  width: 140px;
+  text-align: center;
+  letter-spacing: .2em;
+}
+.statsPinRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 8px 0 4px;
+}
+.statsPinRow input {
+  width: 200px;
+  max-width: 100%;
+}
 /* Generic plan badge — used inline in section headings (e.g. "Default
    patient checklist"). Without this base rule the badge inherits the
    heading's font and reads as part of the title text. */

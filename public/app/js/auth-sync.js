@@ -3094,7 +3094,9 @@
 		              .map(function(it){ return typeof it === "string" ? it : String(it && it.text || ""); })
 		              .filter(function(t){ return t && t.trim(); })
 		          : [],
-		        patientChecklistEnabled: sourceSettings.patientChecklistEnabled !== false
+		        patientChecklistEnabled: sourceSettings.patientChecklistEnabled !== false,
+		        // Stats PIN lock is practice-wide: only the hash syncs, never the PIN.
+		        statsPinHash: String(sourceSettings.statsPinHash || "").trim()
 		        // NOTE: cardStyle is intentionally NOT shared. Like displayLayout,
 		        // it is a per-device/per-window preference (see WINDOW_UI_SETTING_KEYS).
 		        // Including it here let any other device's sync overwrite this
@@ -3152,6 +3154,14 @@
 		            .filter(function(t){ return t && t.trim(); })
 		        : [];
 		      if(sharedUi.patientChecklistEnabled != null) targetState.settings.patientChecklistEnabled = sharedUi.patientChecklistEnabled !== false;
+		      if(sharedUi.statsPinHash != null){
+		        var incomingStatsPinHash = String(sharedUi.statsPinHash || "").trim();
+		        if(incomingStatsPinHash !== String(targetState.settings.statsPinHash || "").trim()){
+		          targetState.settings.statsPinHash = incomingStatsPinHash;
+		          // Another device set/changed/removed the PIN — drop any local unlock.
+		          if(targetState === state && typeof window.roomboardOnStatsPinChanged === "function") window.roomboardOnStatsPinChanged();
+		        }
+		      }
 		      // cardStyle intentionally not applied from shared payload — it is a
 		      // per-device preference (matches displayLayout). See buildSharedBoardUiPayload.
 		    }
