@@ -2846,6 +2846,14 @@
       room.cleaningTimer.startedAt = null;
       room.cleaningTimer.startedAtIso = null;
       if(room.cleaningTimer.updatedAtIso == null) room.cleaningTimer.updatedAtIso = null;
+
+      // Nothing starts a room timer without a patient, so a running timer on an
+      // empty room is drift (a board merge can take needsCleaning from one
+      // client and the timer from another). Freeze it instead of letting an
+      // empty card count up.
+      if(!roomHasAssignedPatient(room) && room.timer.running){
+        applyTimerStopAt(room.timer, getEstimatedServerNowIso(), false);
+      }
     }
 
 	    function getRoomEncounterSignature(room){
@@ -3417,6 +3425,11 @@
 	          }
 	          preserveFresherLocalTimers(previousRoom, nextRoom);
 	        }
+	        // Incoming rooms are applied verbatim and the merge RPC combines a
+	        // room field by field, so a payload can carry a timer that
+	        // contradicts the room's own mode. Normalize on arrival instead of
+	        // waiting for a local action to expose it.
+	        normalizeRoomTimerModes(nextRoom);
 	      }
       var roomDiff = diffBoardRooms(previousRooms, nextState.rooms || []);
       applyAccountSettingsToState(nextState);

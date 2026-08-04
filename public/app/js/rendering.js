@@ -2048,6 +2048,14 @@
       room.cleaningTimer = room.cleaningTimer || { elapsedMs: 0, running: false, startedAt: null, startedAtIso: null, updatedAtIso: null };
       applyTimerStopAt(room.cleaningTimer, stoppedAtIso || isoNow(), true);
       room.activeCleaningSessionId = null;
+      // A cleaned room lands on empty, so its room timer starts from zero as
+      // well. Without this it keeps whatever it carried through cleaning — a
+      // board merge can leave it running (needsCleaning from one client, a
+      // running timer from another) and the empty card then counts up.
+      if(!roomHasAssignedPatient(room)){
+        room.timer = room.timer || { elapsedMs: 0, running: false, startedAt: null, startedAtIso: null, updatedAtIso: null };
+        applyTimerStopAt(room.timer, stoppedAtIso || isoNow(), true);
+      }
       normalizeRoomTimerModes(room);
       if(!preserveRedo) room.lastDischargeSnapshot = null;
     }
