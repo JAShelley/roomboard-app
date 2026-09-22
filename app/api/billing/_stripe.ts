@@ -47,18 +47,27 @@ function isMissingPaymentMethodColumn(message: string) {
   return /has_payment_method|schema cache|column/i.test(message);
 }
 
+// null means "Stripe could not tell us" — distinct from a confirmed "no card".
+// Never collapse the two: practice_has_access() gates trialing clinics on
+// has_payment_method, so persisting a false here on a Stripe timeout revokes a
+// paying clinic's board access via RLS until the next successful check.
 export async function hasPaymentMethodForBilling(
   billing: Pick<PracticeBilling, "stripeCustomerId" | "stripeSubscriptionId" | "hasPaymentMethod">,
-): Promise<boolean> {
+): Promise<boolean | null> {
   if (!billing.stripeCustomerId) return false;
 
   const stripe = getStripe();
+  // Any Stripe call that fails makes the whole answer unknown: a card we could
+  // not see is not the same as a card that is not there.
+  let stripeReachable = true;
+
   try {
     const customer = await stripe.customers.retrieve(billing.stripeCustomerId);
+    // A deleted customer is a definite answer, not an outage.
     if ("deleted" in customer && customer.deleted) return false;
     if (hasDefaultPaymentMethod(customer)) return true;
   } catch {
-    return false;
+    stripeReachable = false;
   }
 
   if (billing.stripeSubscriptionId) {
@@ -66,7 +75,7 @@ export async function hasPaymentMethodForBilling(
       const subscription = await stripe.subscriptions.retrieve(billing.stripeSubscriptionId);
       if (hasDefaultPaymentMethod(subscription)) return true;
     } catch {
-      return false;
+      stripeReachable = false;
     }
   }
 
@@ -76,17 +85,22 @@ export async function hasPaymentMethodForBilling(
       type: "card",
       limit: 1,
     });
-    return methods.data.length > 0;
+    if (methods.data.length > 0) return true;
   } catch {
-    return false;
+    stripeReachable = false;
   }
+
+  // Only report "no card" when every lookup actually succeeded and came back empty.
+  return stripeReachable ? false : null;
 }
 
 export async function updatePracticePaymentMethodFlag(
   customerId: string | null | undefined,
   practiceId: string | null | undefined,
-  hasPaymentMethod: boolean,
+  hasPaymentMethod: boolean | null,
 ) {
+  // Unknown (Stripe unreachable) — leave whatever is stored alone.
+  if (hasPaymentMethod === null) return;
   const service = getServiceClient();
   const payload = { has_payment_method: hasPaymentMethod };
   const patch = (tbl: ReturnType<typeof service.from>) =>

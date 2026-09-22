@@ -1,5 +1,11 @@
 import { verify as verifySignature, X509Certificate } from "node:crypto";
-import { computeAccess, getPracticeBilling, getServiceClient, resolveSessionContext } from "../../_lib";
+import {
+  computeAccess,
+  getPracticeBilling,
+  getServiceClient,
+  resolveSessionContext,
+  rotatedSessionPayload,
+} from "../../_lib";
 import { optionsResponse, pulseError, pulseJson } from "../../../pulse/_lib";
 
 export const runtime = "nodejs";
@@ -259,7 +265,11 @@ export async function POST(request: Request) {
     if (practiceRes.error) throw new Error(practiceRes.error.message);
 
     const billing = await getPracticeBilling(ctx.practiceId);
-    return pulseJson(buildBillingResponse(billing));
+    const rotated = rotatedSessionPayload(ctx);
+    return pulseJson({
+      ...buildBillingResponse(billing),
+      ...(rotated ? { session: rotated } : {}),
+    });
   } catch (error) {
     const message = String(error instanceof Error ? error.message : error || "Could not confirm Apple subscription.");
     const status = /login required|expired|sign in/i.test(message) ? 401 : 400;

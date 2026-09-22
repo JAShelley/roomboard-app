@@ -1,6 +1,7 @@
 import {
   priceIdForPlan,
   resolveSessionContext,
+  rotatedSessionPayload,
   getPracticeBilling,
   TRIAL_DAYS,
 } from "../_lib";
@@ -99,7 +100,11 @@ export async function POST(request: Request) {
       cancel_url: `${appBase}&billing=cancel`,
     });
 
-    return pulseJson({ url: checkout.url });
+    const rotated = rotatedSessionPayload(ctx);
+    return pulseJson({
+      url: checkout.url,
+      ...(rotated ? { session: rotated } : {}),
+    });
   } catch (error) {
     const message = String(error instanceof Error ? error.message : error || "Could not start checkout.");
     const status = /login required|expired|sign in/i.test(message) ? 401 : 400;

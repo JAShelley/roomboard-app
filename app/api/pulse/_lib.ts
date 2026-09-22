@@ -8,6 +8,12 @@ type PulseSession = {
   email: string;
   userId: string;
   apiBase?: string;
+  // True when this session came from spending the caller's refresh token.
+  // Supabase rotates on refresh: the token the caller sent is now dead and its
+  // replacement lives only in this object. Any route that sees this MUST hand
+  // the new pair back to the caller, or the caller's next refresh fails with
+  // "Invalid Refresh Token: Already Used" and reuse detection signs it out.
+  rotated?: boolean;
 };
 
 type BoardColorLabel = {
@@ -252,6 +258,7 @@ export async function resolvePulseSession(input: {
   if (!refreshedUser) throw new Error("Your RoomBoard session expired. Please sign in again.");
   refreshedSession.email = String(refreshedUser.email || refreshedSession.email || "").trim();
   refreshedSession.userId = String(refreshedUser.id || refreshedSession.userId || "").trim();
+  refreshedSession.rotated = true;
   return { session: refreshedSession, user: refreshedUser };
 }
 

@@ -1,4 +1,4 @@
-import { resolveSessionContext } from "../_lib";
+import { resolveSessionContext, rotatedSessionPayload } from "../_lib";
 import { ensureStripeCustomer, getStripe } from "../_stripe";
 import { optionsResponse, pulseJson, pulseError } from "../../pulse/_lib";
 
@@ -30,7 +30,11 @@ export async function POST(request: Request) {
     }
     const portal = await stripe.billingPortal.sessions.create(portalParams);
 
-    return pulseJson({ url: portal.url });
+    const rotated = rotatedSessionPayload(ctx);
+    return pulseJson({
+      url: portal.url,
+      ...(rotated ? { session: rotated } : {}),
+    });
   } catch (error) {
     const message = String(error instanceof Error ? error.message : error || "Could not open the billing portal.");
     const status = /login required|expired|sign in/i.test(message) ? 401 : 400;

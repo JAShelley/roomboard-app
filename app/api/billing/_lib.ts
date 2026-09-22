@@ -3,6 +3,17 @@ import { resolvePulseSession, getPracticeIdForUser } from "../pulse/_lib";
 
 export const TRIAL_DAYS = 14;
 
+// Billing enforcement kill switch (server half). OFF unless BILLING_ENFORCED is
+// explicitly truthy, so the paywall cannot lock a clinic out because an env var
+// was missed on a deploy. The database half is the billing_settings row read by
+// practice_has_access() — see supabase/billing-enforcement-switch.sql. BOTH must
+// be on to actually charge: this one decides what the API reports, that one
+// decides whether Postgres lets the board save.
+export function isBillingEnforced() {
+  const raw = String(process.env.BILLING_ENFORCED || "").trim().toLowerCase();
+  return raw === "1" || raw === "true" || raw === "yes" || raw === "on";
+}
+
 export function requireEnv(name: string) {
   const value = process.env[name];
   if (!value) throw new Error(`Missing required environment variable: ${name}`);
@@ -66,6 +77,11 @@ export type SessionContext = {
   email: string;
   accessToken: string;
   refreshToken: string;
+  // Set when resolving the session spent the caller's refresh token (Supabase
+  // rotates on refresh). Routes must echo the replacement pair back via
+  // rotatedSessionPayload() so the browser can adopt it; otherwise the caller
+  // is holding a dead token and gets signed out on its next refresh.
+  rotated: boolean;
 };
 
 // Authenticate a request the same way the Pulse routes do: the client
@@ -83,7 +99,15 @@ export async function resolveSessionContext(input: {
     email: String(user.email || session.email || "").trim(),
     accessToken: session.accessToken,
     refreshToken: session.refreshToken,
+    rotated: session.rotated === true,
   };
+}
+
+// Tokens the client must adopt, or null when nothing rotated. Spread this into
+// every billing JSON response that resolved a session the slow way.
+export function rotatedSessionPayload(ctx: { rotated?: boolean; accessToken: string; refreshToken: string } | null) {
+  if (!ctx || ctx.rotated !== true) return null;
+  return { accessToken: ctx.accessToken, refreshToken: ctx.refreshToken };
 }
 
 export async function getPracticeBilling(practiceId: string): Promise<PracticeBilling> {
@@ -113,15 +137,25 @@ export function computeAccess(billing: PracticeBilling) {
   const status = String(billing.subscriptionStatus || "").toLowerCase();
   const now = Date.now();
   const trialMs = billing.trialEndsAt ? Date.parse(billing.trialEndsAt) : 0;
-  const trialing = status === "trialing" && Number.isFinite(trialMs) && trialMs > now;
   const subscribed = status === "active" || status === "past_due";
   const hasCustomer = !!billing.stripeCustomerId;
   const hasSubscription = !!billing.stripeSubscriptionId;
   const hasPaymentMethod = billing.hasPaymentMethod === true;
   const hasAppStoreAccess = billing.hasAppStoreAccess === true;
-  const hasAccess = subscribed || (trialing && hasCustomer && hasSubscription && hasPaymentMethod) || hasAppStoreAccess;
+  const enforced = isBillingEnforced();
+
+  // With enforcement off, report a plainly unrestricted account rather than a
+  // trial. Leaving trialing true here would keep the UI counting days down and
+  // telling clinics their trial is ending, which is exactly the alarm we do not
+  // want while nothing is actually being charged.
+  const trialing = enforced && status === "trialing" && Number.isFinite(trialMs) && trialMs > now;
+  const hasAccess =
+    !enforced ||
+    subscribed ||
+    (trialing && hasCustomer && hasSubscription && hasPaymentMethod) ||
+    hasAppStoreAccess;
   const trialDaysLeft = trialing ? Math.max(0, Math.ceil((trialMs - now) / 86_400_000)) : 0;
-  return { hasAccess, trialing, subscribed, trialDaysLeft, hasPaymentMethod, hasAppStoreAccess };
+  return { hasAccess, trialing, subscribed, trialDaysLeft, hasPaymentMethod, hasAppStoreAccess, billingEnforced: enforced };
 }
 
 function isMissingAppStoreTable(error: unknown) {
