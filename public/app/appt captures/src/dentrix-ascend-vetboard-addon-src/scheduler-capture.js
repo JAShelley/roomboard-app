@@ -256,6 +256,8 @@
       }
     } catch (_) {}
 
+    watchStoredAuthState();
+
     pendingAppointment = null;
     captureArmed = false;
     updateBadgeUi();
@@ -2473,37 +2475,123 @@
     return mapAuthPayload(data, email);
   }
 
-  async function ensureValidAuthSession() {
+  // Supabase rotates the refresh token on every exchange, and every scheduler
+  // tab runs its own copy of this content script against one shared
+  // chrome.storage session. Two tabs refreshing the same token means the loser
+  // gets "Invalid Refresh Token: Already Used", and Supabase's reuse detection
+  // then revokes the whole token family — which is why one stale tab could sign
+  // the whole clinic out. Three things keep that from happening: one in-flight
+  // refresh per tab, a re-read of storage right before spending a token (a
+  // sibling may already have rotated it), and a re-read after a failure before
+  // concluding the session is really gone.
+  let authRefreshInFlight = null;
+
+  // Pull whatever the other tabs have written since we last looked.
+  async function readStoredAuthState() {
+    try {
+      const stored = await storageGet([AUTH_KEY]);
+      return stored?.[AUTH_KEY] || null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function authStateIsFresh(candidate) {
+    if (!candidate?.accessToken) return false;
+    const expiresAt = Number(candidate.expiresAt || 0);
+    return !!expiresAt && expiresAt > Date.now() + 60 * 1000;
+  }
+
+  // A stored session is only worth adopting if it is fresh AND is not the exact
+  // access token the server just rejected. Without the second half, a 401 retry
+  // would re-read storage, see the same dead token still marked unexpired, and
+  // retry with it forever.
+  function adoptableStoredAuth(candidate, rejectedAccessToken) {
+    if (!authStateIsFresh(candidate)) return false;
+    return !rejectedAccessToken || candidate.accessToken !== rejectedAccessToken;
+  }
+
+  async function ensureValidAuthSession(options) {
+    const rejectedAccessToken = String(options?.rejectedAccessToken || "");
     if (!authState?.accessToken) {
       throw new Error(authNeedsLogin ? (authErrorMessage || "Your RoomBoard session expired. Please sign in again.") : "Login required.");
     }
-    const expiresAt = Number(authState.expiresAt || 0);
-    if (expiresAt && expiresAt > Date.now() + 60 * 1000) return authState;
+    // Fresh is enough normally; on a 401 retry it must also not be the token
+    // the server just rejected.
+    if (adoptableStoredAuth(authState, rejectedAccessToken)) return authState;
+    if (authRefreshInFlight) return authRefreshInFlight;
 
-    if (!authState.refreshToken) {
-      await markAuthReloginRequired("Your RoomBoard session expired. Please sign in again.");
-      throw new Error(authErrorMessage || "Your RoomBoard session expired. Please sign in again.");
-    }
+    authRefreshInFlight = (async () => {
+      // Another tab may have refreshed while we sat on a stale in-memory copy.
+      const stored = await readStoredAuthState();
+      if (adoptableStoredAuth(stored, rejectedAccessToken)) {
+        authState = stored;
+        await clearAuthReloginFlag();
+        return authState;
+      }
+      // Always spend the newest token we can see, not the one we booted with.
+      if (stored?.refreshToken) authState = Object.assign({}, authState, stored);
+
+      if (!authState.refreshToken) {
+        await markAuthReloginRequired("Your RoomBoard session expired. Please sign in again.");
+        throw new Error(authErrorMessage || "Your RoomBoard session expired. Please sign in again.");
+      }
+
+      try {
+        const data = await fetchJson(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+          method: "POST",
+          headers: { apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh_token: authState.refreshToken }),
+          __skipAuthRetry: true
+        });
+        if (!data?.access_token) throw new Error("RoomBoard refresh did not return a session.");
+        authState = Object.assign({}, authState, mapAuthPayload(data, authState.email || ""));
+        await storageSet({ [AUTH_KEY]: authState });
+        await clearAuthReloginFlag();
+        return authState;
+      } catch (error) {
+        const message = getErrorMessage(error);
+        // Losing the rotation race looks exactly like a dead session. Before
+        // signing anyone out, check whether the tab that beat us left a working
+        // session behind.
+        const afterFailure = await readStoredAuthState();
+        if (adoptableStoredAuth(afterFailure, rejectedAccessToken)) {
+          authState = afterFailure;
+          await clearAuthReloginFlag();
+          return authState;
+        }
+        if (isLikelyAuthErrorMessage(message)) {
+          await markAuthReloginRequired("Your RoomBoard session expired. Please sign in again.");
+          throw new Error(authErrorMessage || message);
+        }
+        throw error;
+      }
+    })();
 
     try {
-      const data = await fetchJson(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
-        method: "POST",
-        headers: { apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh_token: authState.refreshToken })
-      });
-      if (!data?.access_token) throw new Error("RoomBoard refresh did not return a session.");
-      authState = Object.assign({}, authState, mapAuthPayload(data, authState.email || ""));
-      await storageSet({ [AUTH_KEY]: authState });
-      await clearAuthReloginFlag();
-      return authState;
-    } catch (error) {
-      const message = getErrorMessage(error);
-      if (isLikelyAuthErrorMessage(message)) {
-        await markAuthReloginRequired("Your RoomBoard session expired. Please sign in again.");
-        throw new Error(authErrorMessage || message);
-      }
-      throw error;
+      return await authRefreshInFlight;
+    } finally {
+      authRefreshInFlight = null;
     }
+  }
+
+  // Keep every open scheduler tab on the same session, so a tab that has been
+  // idle for hours doesn't wake up and spend a refresh token that another tab
+  // already replaced.
+  function watchStoredAuthState() {
+    try {
+      api.storage.onChanged.addListener((changes, area) => {
+        if (area !== "local" || !changes[AUTH_KEY]) return;
+        const next = changes[AUTH_KEY].newValue || null;
+        if (next?.accessToken) {
+          authState = next;
+          if (authNeedsLogin) clearAuthReloginFlag();
+        } else if (!next) {
+          authState = null;
+        }
+        updateBadgeUi();
+      });
+    } catch (_) {}
   }
 
   function mapAuthPayload(data, fallbackEmail) {
@@ -2540,12 +2628,33 @@
     if (isModalOpen()) { modalMessage = authErrorMessage; renderModal(); }
   }
 
+  // Only phrases that mean "this credential is dead". Deliberately NOT here:
+  // a bare "unauthorized" or "jwt", which Postgres/PostgREST also emit for a
+  // row-level-security denial. Treating those as an expired session made a
+  // billing hiccup (RLS says no) look like a logout and wipe a valid session.
   function isLikelyAuthErrorMessage(message) {
     const text = normalizeSpaces(message).toLowerCase();
     if (!text) return false;
-    return text.includes("invalid token") || text.includes("jwt") || text.includes("token is expired") ||
-      text.includes("session expired") || text.includes("refresh token") || text.includes("invalid grant") ||
-      text.includes("login required") || text.includes("unauthorized");
+    return text.includes("invalid token") || text.includes("token is expired") ||
+      text.includes("jwt expired") || text.includes("jwt is expired") ||
+      text.includes("bad_jwt") || text.includes("invalid jwt") ||
+      text.includes("session expired") || text.includes("session_not_found") ||
+      text.includes("refresh token") || text.includes("invalid grant") ||
+      text.includes("invalid_grant") || text.includes("login required") ||
+      text.includes("user from sub claim in jwt does not exist");
+  }
+
+  // A 403 is authorization, not authentication: the token is fine, the row or
+  // the billing gate said no. Retrying it as if the session expired burns a
+  // refresh token for nothing and can cascade into a forced sign-out.
+  function isPermissionDeniedResponse(parsed) {
+    const code = String((parsed && parsed.code) || "").trim();
+    if (code === "42501" || code === "PGRST301") return true;
+    const text = normalizeSpaces(getErrorMessage(parsed)).toLowerCase();
+    return text.includes("permission denied") ||
+      text.includes("row-level security") ||
+      text.includes("violates row-level") ||
+      text.includes("billing");
   }
 
   async function loadBoardState(forceRefresh) {
@@ -2834,8 +2943,9 @@
       const canRetryAuth = hasAuthHeader && !options.__skipAuthRetry && !/\/auth\/v1\/token\b/i.test(String(url || ""));
       if (canRetryAuth && shouldTreatAsAuthFailure(response, parsed) && authState && authState.refreshToken) {
         try {
+          const rejectedAccessToken = authState.accessToken || "";
           authState.expiresAt = 0;
-          await ensureValidAuthSession();
+          await ensureValidAuthSession({ rejectedAccessToken });
           const retryOptions = Object.assign({}, options, { headers: Object.assign({}, options.headers), __skipAuthRetry: true });
           if (retryOptions.headers.Authorization) retryOptions.headers.Authorization = `Bearer ${authState.accessToken}`;
           if (retryOptions.headers.authorization) retryOptions.headers.authorization = `Bearer ${authState.accessToken}`;
@@ -2853,7 +2963,8 @@
 
   function shouldTreatAsAuthFailure(response, parsed) {
     const status = Number(response && response.status || 0);
-    if (status === 401 || status === 403) return true;
+    if (status === 403) return !isPermissionDeniedResponse(parsed) && isLikelyAuthErrorMessage(getErrorMessage(parsed));
+    if (status === 401) return true;
     return isLikelyAuthErrorMessage(getErrorMessage(parsed));
   }
 

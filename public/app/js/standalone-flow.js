@@ -70,6 +70,56 @@
     return null;
   }
 
+  // Never post the raw storage snapshot: after the machine wakes from sleep it
+  // holds an EXPIRED access token, which makes the server fall back to
+  // spending our refresh token. Supabase rotates on refresh, so the token still
+  // sitting in storage is then dead and the next client-side refresh signs the
+  // user out. Going through supabase-js instead refreshes under its cross-tab
+  // navigator lock and writes the replacement back to storage, so the token we
+  // send is live and the server never has to refresh on our behalf.
+  function getFreshTokens(){
+    var client = window.__roomboardSupabase;
+    if(!client || !client.auth || typeof client.auth.getSession !== "function"){
+      return Promise.resolve(getStoredTokens());
+    }
+    return client.auth.getSession().then(function(res){
+      var session = res && res.data ? res.data.session : null;
+      if(session && session.access_token){
+        return { accessToken: session.access_token, refreshToken: session.refresh_token || "" };
+      }
+      return getStoredTokens();
+    }).catch(function(){
+      return getStoredTokens();
+    });
+  }
+
+  // A billing route that had to refresh for us returns the replacement pair.
+  // Adopt it or our stored refresh token is already dead.
+  function adoptRotatedSession(data){
+    var next = data && data.session;
+    if(!next || !next.accessToken || !next.refreshToken) return;
+    var client = window.__roomboardSupabase;
+    if(!client || !client.auth || typeof client.auth.setSession !== "function") return;
+    try{
+      client.auth.setSession({ access_token: next.accessToken, refresh_token: next.refreshToken });
+    }catch(e){}
+  }
+
+  // Reject non-2xx BEFORE reading the body. An error response is
+  // { error: "..." } with no hasAccess field, and treating that as a billing
+  // verdict is what showed paying clinics "Your free trial has ended."
+  function billingJson(response){
+    return response.json().catch(function(){ return null; }).then(function(data){
+      if(!response.ok){
+        var err = new Error(String((data && (data.error || data.message)) || ("Billing request failed (" + response.status + ")")));
+        err.httpStatus = response.status;
+        throw err;
+      }
+      adoptRotatedSession(data);
+      return data || {};
+    });
+  }
+
   function setVisualStage(stage){
     var route = getRoute();
     if(!document.body) return;
@@ -725,21 +775,21 @@
   }
 
   function startCheckout(plan, btn){
-    var tokens = getStoredTokens();
-    if(!tokens){ enterAuth(); return; }
-    if(btn){ btn.disabled = true; btn.querySelector("span") && (btn.querySelector("span").textContent = "Loading…"); }
-    var returnUrl = window.location.origin || "";
-    fetch("/api/billing/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan: plan, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, returnUrl: returnUrl })
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if(data.url){ window.location.href = data.url; return; }
-      if(btn){ btn.disabled = false; btn.querySelector("span") && (btn.querySelector("span").textContent = btn.querySelector("span").getAttribute("data-orig") || "Get " + plan); }
-      var msg = data.error || data.message || "Could not start checkout.";
-      if(typeof window.toast === "function") window.toast("Checkout error: " + msg);
+    getFreshTokens().then(function(tokens){
+      if(!tokens){ enterAuth(); return; }
+      if(btn){ btn.disabled = true; btn.querySelector("span") && (btn.querySelector("span").textContent = "Loading…"); }
+      var returnUrl = window.location.origin || "";
+      return fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: plan, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, returnUrl: returnUrl })
+      })
+      .then(billingJson)
+      .then(function(data){
+        if(data.url){ window.location.href = data.url; return; }
+        if(btn){ btn.disabled = false; btn.querySelector("span") && (btn.querySelector("span").textContent = btn.querySelector("span").getAttribute("data-orig") || "Get " + plan); }
+        if(typeof window.toast === "function") window.toast("Checkout error: Could not start checkout.");
+      });
     })
     .catch(function(e){
       if(btn){ btn.disabled = false; }
@@ -748,15 +798,16 @@
   }
 
   function openBillingPortal(){
-    var tokens = getStoredTokens();
-    if(!tokens) return;
-    fetch("/api/billing/portal", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, returnUrl: window.location.href })
+    getFreshTokens().then(function(tokens){
+      if(!tokens) return;
+      return fetch("/api/billing/portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, returnUrl: window.location.href })
+      })
+      .then(billingJson)
+      .then(function(data){ if(data.url) window.location.href = data.url; });
     })
-    .then(function(r){ return r.json(); })
-    .then(function(data){ if(data.url) window.location.href = data.url; })
     .catch(function(){});
   }
 
@@ -773,8 +824,26 @@
   // hasAccess===true lets us fail open; anything else fails closed (paywall).
   var ACCESS_CACHE_KEY = "roomboard.billing.access.v1";
   var ACCESS_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24h
-  function setAccessCache(ok){
-    try{ window.localStorage.setItem(ACCESS_CACHE_KEY, JSON.stringify({ ok: !!ok, ts: Date.now() })); }catch(e){}
+  function setAccessCache(ok, billingEnforced){
+    try{
+      var entry = { ok: !!ok, ts: Date.now() };
+      // Remember whether the server is charging at all, so an unreachable
+      // server can't resurrect a paywall for a product that currently has none.
+      if(billingEnforced === false || billingEnforced === true) entry.enforced = billingEnforced;
+      window.localStorage.setItem(ACCESS_CACHE_KEY, JSON.stringify(entry));
+    }catch(e){}
+  }
+
+  // Last thing the server told us about whether billing is enforced at all.
+  // null = never heard from it on this browser.
+  function lastKnownBillingEnforced(){
+    try{
+      var raw = window.localStorage.getItem(ACCESS_CACHE_KEY);
+      if(!raw) return null;
+      var c = JSON.parse(raw);
+      if(!c || typeof c.enforced !== "boolean") return null;
+      return c.enforced;
+    }catch(e){ return null; }
   }
   function hasRecentConfirmedAccess(){
     try{
@@ -793,6 +862,10 @@
   // fail closed and show the paywall so an unpaid account can't slip in.
   function onUnverifiedAccess(onAccess){
     if(hasRecentConfirmedAccess()){ onAccess(); return; }
+    // Billing was switched off last time we heard from the server, so there is
+    // nothing to gate on. Blocking here would show a "trial ended" wall for a
+    // product that is not charging anyone.
+    if(lastKnownBillingEnforced() === false){ onAccess(); return; }
     showPaywall({ trialing: false, trialDaysLeft: 0, subscribed: false, hasCustomer: false, hasPaymentMethod: false });
   }
 
@@ -801,7 +874,10 @@
   // confirmed access decision (see onUnverifiedAccess) so we never let an
   // unpaid account in, but never lock out a known subscriber either.
   function checkBillingThenOpen(onAccess){
-    var tokens = getStoredTokens();
+    getFreshTokens().then(function(tokens){ checkBillingWithTokens(tokens, onAccess); });
+  }
+
+  function checkBillingWithTokens(tokens, onAccess){
     if(!tokens){
       // If returning from a cancelled Stripe checkout, no tokens means the
       // session is gone — send to auth rather than silently granting access.
@@ -834,13 +910,13 @@
         body: JSON.stringify({ sessionId: sessionId, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }),
         signal: controller2 ? controller2.signal : undefined
       })
-      .then(function(r){ return r.json(); })
+      .then(billingJson)
       .then(function(data){
         if(data.hasAccess){
-          setAccessCache(true);
+          setAccessCache(true, data.billingEnforced);
           finish2(function(){ hidePaywall(); onAccess(); });
         } else {
-          setAccessCache(false);
+          setAccessCache(false, data.billingEnforced);
           finish2(function(){
             showPaywall({
               trialing: !!data.trialing,
@@ -852,6 +928,9 @@
           });
         }
       })
+      // Network failure OR an HTTP error (billingJson throws on non-2xx). An
+      // error body carries no verdict, so treat it as "unknown" and let the
+      // last confirmed decision stand — never as "trial over".
       .catch(function(){ finish2(function(){ onUnverifiedAccess(onAccess); }); });
       return;
     }
@@ -866,13 +945,13 @@
       body: JSON.stringify({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }),
       signal: controller ? controller.signal : undefined
     })
-    .then(function(r){ return r.json(); })
+    .then(billingJson)
     .then(function(data){
       if(data.hasAccess){
-        setAccessCache(true);
+        setAccessCache(true, data.billingEnforced);
         finish(function(){ hidePaywall(); onAccess(); });
       } else {
-        setAccessCache(false);
+        setAccessCache(false, data.billingEnforced);
         finish(function(){
           showPaywall({
             trialing: !!data.trialing,
@@ -884,6 +963,9 @@
         });
       }
     })
+    // Network failure OR an HTTP error (billingJson throws on non-2xx). An
+    // error body has no hasAccess field; reading it as a verdict is what told
+    // paying clinics their free trial had ended.
     .catch(function(){ finish(function(){ onUnverifiedAccess(onAccess); }); });
   }
 

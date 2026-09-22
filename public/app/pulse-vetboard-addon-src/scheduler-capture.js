@@ -73,6 +73,8 @@
   const TECH_COLUMN_RE = /\b(?:tech|walk back)\b/i;
   const DROP_OFF_COLUMN_RE = /\b(?:drop ?off)\b/i;
   const URL_HINT_RE = /(schedule|calendar|appointment|appt|booking|practice)/i;
+  // Pulse "Block" / "Lunch" rows hold time, not a patient.
+  const NON_PATIENT_TYPE_RE = /^(?:block(?:ed)?|lunch|break|meeting|closed|holiday|out of office|ooo|training|unavailable)$/;
   const TYPE_MATCH_STOPWORDS = {
     appt: true,
     appointment: true,
@@ -95,27 +97,35 @@
     visit: true,
     with: true
   };
+  // Pulse type text (left) -> RoomBoard type titles in preference order (right).
+  // Same-name types (Emergency, Exam, Recheck, Ultrasound, Euthanasia,
+  // Illness/Injury, Work-In, Drop-off, OUTSIDE**CONTAGIOUS) are resolved by exact
+  // title match before this table is consulted, so only genuine renames belong
+  // here. Each right-hand list degrades for clinics with a smaller type list.
   const PULSE_TYPE_LABEL_MAP = [
-    { pulse: ["surgery consult"], vetboard: ["sx consult"] },
-    { pulse: ["surgical"], vetboard: ["sx consult"] },
-    { pulse: ["dental"], vetboard: ["sx consult"] },
-    { pulse: ["emergency"], vetboard: ["emergency"] },
-    { pulse: ["euthanasia", "euthanasia consult", "quality of life", "qol", "pts"], vetboard: ["euthanasia consult", "euthanasia"] },
+    { pulse: ["surgery consult", "surgical referral", "surgical", "dental"], vetboard: ["sx consult", "surgery consult", "surgery"] },
+    { pulse: ["emergency"], vetboard: ["emergency", "urgent"] },
+    { pulse: ["euthanasia", "euthanasia consult", "quality of life", "qol", "pts"], vetboard: ["euthanasia", "euthanasia consult"] },
     { pulse: ["illness/injury", "illness / injury", "illness injury", "injury illness"], vetboard: ["illness/injury", "illness injury"] },
-    { pulse: ["exam"], vetboard: ["exam"] },
-    { pulse: ["recheck"], vetboard: ["exam"] },
+    { pulse: ["recheck"], vetboard: ["recheck", "exam"] },
     { pulse: ["new puppy/kitten", "new puppy kitten", "new puppy", "new kitten"], vetboard: ["exam"] },
+    { pulse: ["exam"], vetboard: ["exam"] },
     { pulse: ["ultrasound", "ultra sound", "u/s", "abd ultrasound", "abdominal ultrasound"], vetboard: ["ultrasound", "u/s"] },
-    { pulse: ["tech/walk back", "tech/walkback", "tech walk back", "tech walkback"], vetboard: ["tech/walkback", "tech/walk back", "tech appt", "tech"] },
     { pulse: ["outside**contagious", "outside contagious", "outside contageous", "outside constagious"], vetboard: ["outside**contagious", "outside contagious", "car isolation", "car - isolation"] },
-    { pulse: ["work-in", "work in"], vetboard: ["work-in", "work in"] },
-    { pulse: ["drop off", "drop-off", "sample drop off"], vetboard: ["work-in", "work in"] },
-    { pulse: ["euthanasia"], vetboard: ["euthanasia"] },
     { pulse: ["bandage change"], vetboard: ["tech/walkback", "tech/walk back", "tech appt", "tech"] },
-    { pulse: ["surgical referral"], vetboard: ["sx consult"] }
+    { pulse: ["tech/walk back", "tech/walkback", "tech walk back", "tech walkback"], vetboard: ["tech/walkback", "tech/walk back", "tech appt", "tech"] },
+    { pulse: ["sample drop-off", "sample drop off", "drop off", "drop-off"], vetboard: ["drop-off", "drop off", "work-in", "work in"] },
+    { pulse: ["work-in", "work in"], vetboard: ["work-in", "work in"] },
+    { pulse: ["discharge"], vetboard: ["discharge"] }
   ];
 
+  const HOVER_DETAILS_POLL_MS = 220;
+  const HOVER_DETAILS_MAX_POLLS = 14;
+
   let hoveredCard = null;
+  let hoverDetailsCache = null;
+  let hoverDetailsTimer = 0;
+  let hoverDetailsPolls = 0;
   let rafId = 0;
   let lastMoveEvent = null;
   let enabled = false;
@@ -158,6 +168,8 @@
         authFormState.email = String(authState.email || "").trim();
       }
     } catch (_) {}
+
+    watchStoredAuthState();
 
     pendingAppointment = null;
     captureArmed = false;
@@ -215,6 +227,9 @@
       appointmentTime: parsed.appointmentTime,
       columnHeader: parsed.columnHeader,
       rawText: parsed.rawText,
+      typeText: parsed.typeText,
+      providerText: parsed.providerText,
+      descriptionText: parsed.descriptionText,
       sourceUrl: location.href,
       capturedAt: new Date().toISOString()
     };
@@ -313,7 +328,7 @@
       if (!cleaned.includes(line)) cleaned.push(line);
     }
 
-    const hoverDetails = parseVisitHighlights(card);
+    const hoverDetails = resolveVisitHighlights(card);
     const attributeText = getAppointmentAttributeText(card);
     const rawTextParts = [
       cleaned.join(" | "),
@@ -659,12 +674,50 @@
       details[currentKey].push(line);
     }
 
-    return {
+    const parsed = {
       type: normalizeSpaces((details.type || []).join(" ")),
       description: normalizeSpaces((details.description || []).join(" ")),
       status: normalizeSpaces((details.status || []).join(" ")),
       provider: extractProviderName((details.provider || []).join(" ")) || normalizeSpaces((details.provider || []).join(" ")),
       patient: normalizeSpaces((details.patient || []).join(" "))
+    };
+
+    // A leftover flyout from an earlier hover still scores well on proximity, so
+    // only trust the panel when the patient it names also appears on the card.
+    if (!panelMatchesCard(card, parsed)) return {};
+    return parsed;
+  }
+
+  function panelMatchesCard(card, details) {
+    const panelPatient = normalizeLooseCompare(cleanTooltipPatientName(details?.patient || ""));
+    if (!panelPatient) return true;
+
+    const cardText = normalizeLooseCompare([card?.innerText || "", getAppointmentAttributeText(card)].join(" "));
+    if (!cardText) return true;
+
+    const tokens = panelPatient.split(" ").filter((token) => token.length > 1);
+    if (!tokens.length) return true;
+    return tokens.some((token) => cardText.includes(token));
+  }
+
+  function hasUsefulVisitDetails(details) {
+    return !!(normalizeSpaces(details?.type || "")
+      || normalizeSpaces(details?.description || "")
+      || normalizeSpaces(details?.provider || ""));
+  }
+
+  function resolveVisitHighlights(card) {
+    const live = parseVisitHighlights(card) || {};
+    const cached = hoverDetailsCache && hoverDetailsCache.card === card ? hoverDetailsCache.details : null;
+    if (!cached) return live;
+    if (!hasUsefulVisitDetails(live)) return cached;
+
+    return {
+      type: normalizeSpaces(live.type || "") || cached.type || "",
+      description: normalizeSpaces(live.description || "") || cached.description || "",
+      status: normalizeSpaces(live.status || "") || cached.status || "",
+      provider: normalizeSpaces(live.provider || "") || cached.provider || "",
+      patient: normalizeSpaces(live.patient || "") || cached.patient || ""
     };
   }
 
@@ -801,9 +854,52 @@
 
   function setHoveredCard(card) {
     if (hoveredCard) hoveredCard.classList.remove(HOVER_CLASS);
+    const changedCard = hoveredCard !== card;
     hoveredCard = card;
     if (hoveredCard && captureArmed) hoveredCard.classList.add(HOVER_CLASS);
+
+    if (changedCard) {
+      if (hoverDetailsCache && hoverDetailsCache.card !== card) hoverDetailsCache = null;
+      hoverDetailsPolls = 0;
+      stopHoverDetailsPolling();
+    }
+    // Pulse renders the Visit Highlights flyout after a hover delay, so watch for
+    // it instead of hoping it is on screen at the moment of the click.
+    if (hoveredCard && captureArmed) {
+      captureHoverDetails();
+      if (!hoverDetailsCache) startHoverDetailsPolling();
+    }
+
     refreshOverlay();
+  }
+
+  function startHoverDetailsPolling() {
+    if (hoverDetailsTimer) return;
+    hoverDetailsTimer = window.setInterval(captureHoverDetails, HOVER_DETAILS_POLL_MS);
+  }
+
+  function stopHoverDetailsPolling() {
+    if (!hoverDetailsTimer) return;
+    window.clearInterval(hoverDetailsTimer);
+    hoverDetailsTimer = 0;
+  }
+
+  function captureHoverDetails() {
+    if (!hoveredCard || !captureArmed || !document.contains(hoveredCard)) {
+      stopHoverDetailsPolling();
+      return;
+    }
+    if (hoverDetailsPolls >= HOVER_DETAILS_MAX_POLLS) {
+      stopHoverDetailsPolling();
+      return;
+    }
+
+    hoverDetailsPolls += 1;
+    const details = parseVisitHighlights(hoveredCard);
+    if (!hasUsefulVisitDetails(details)) return;
+
+    hoverDetailsCache = { card: hoveredCard, details };
+    stopHoverDetailsPolling();
   }
 
   function ensureOverlay() {
@@ -1033,24 +1129,45 @@
     }
   }
 
+  // Only phrases that mean "this credential is dead". Deliberately NOT here:
+  // a bare "unauthorized" or "jwt", which Postgres/PostgREST also emit for a
+  // row-level-security denial. Treating those as an expired session made a
+  // billing hiccup (RLS says no) look like a logout and wipe a valid session.
   function isLikelyAuthErrorMessage(message) {
     const text = normalizeSpaces(message).toLowerCase();
     if (!text) return false;
     return text.includes("invalid token")
-      || text.includes("jwt")
       || text.includes("invalid jwt")
+      || text.includes("jwt expired")
+      || text.includes("jwt is expired")
+      || text.includes("bad_jwt")
       || text.includes("token is expired")
       || text.includes("session expired")
+      || text.includes("session_not_found")
       || text.includes("refresh token")
       || text.includes("invalid grant")
+      || text.includes("invalid_grant")
       || text.includes("login required")
-      || text.includes("user from sub claim in jwt does not exist")
-      || text.includes("unauthorized");
+      || text.includes("user from sub claim in jwt does not exist");
+  }
+
+  // A 403 is authorization, not authentication: the token is fine, the row or
+  // the billing gate said no. Retrying it as an expired session burns a refresh
+  // token for nothing and can cascade into a forced sign-out.
+  function isPermissionDeniedResponse(parsed) {
+    const code = String((parsed && parsed.code) || "").trim();
+    if (code === "42501" || code === "PGRST301") return true;
+    const text = normalizeSpaces(getErrorMessage(parsed)).toLowerCase();
+    return text.includes("permission denied")
+      || text.includes("row-level security")
+      || text.includes("violates row-level")
+      || text.includes("billing");
   }
 
   function shouldTreatAsAuthFailure(response, parsed) {
     const status = Number(response && response.status || 0);
-    if (status === 401 || status === 403) return true;
+    if (status === 403) return !isPermissionDeniedResponse(parsed) && isLikelyAuthErrorMessage(getErrorMessage(parsed));
+    if (status === 401) return true;
     return isLikelyAuthErrorMessage(getErrorMessage(parsed));
   }
 
@@ -1580,7 +1697,9 @@
     return {
       roomId: room.id || previousForm?.roomId || "",
       patientName: previousForm?.patientName || appointment.patientName || room.patientName || "",
-      colorLabelId: techTypeMatch?.id || surgeryTypeMatch?.id || (hasPreviousColor ? (previousForm.colorLabelId || "") : (reasonMatch || defaultColorId || room.colorLabelId || "")),
+      colorLabelId: hasPreviousColor
+        ? (previousForm.colorLabelId || "")
+        : (techTypeMatch?.id || surgeryTypeMatch?.id || reasonMatch || defaultColorId || ""),
       doctor: previousDoctorChosen ? previousForm.doctor : (techDoctorMatch || doctorMatch || room.doctor || ""),
       tech: room.tech || "",
       quickNote: room.quickNote || "",
@@ -1638,7 +1757,13 @@
     const searchText = normalizeForCompare([typeText, reason, rawText, columnHeader].filter(Boolean).join(" "));
     const looseReason = normalizeLooseCompare([typeText, reason].filter(Boolean).join(" "));
     const looseSearchText = normalizeLooseCompare([typeText, reason, rawText, columnHeader].filter(Boolean).join(" "));
-    if (!searchText) return colors[0]?.id || "";
+    if (!searchText) return "";
+    if (isNonPatientBlock(appointment)) return "";
+
+    // The clinic's own type list is the best mapping table available: when Pulse
+    // and RoomBoard use the same word, take it and skip the heuristics entirely.
+    const sameNameMatch = findExactTypeTitleMatch(colors, typeText);
+    if (sameNameMatch) return sameNameMatch.id;
 
     const directTypeMatch = findDirectPulseTypeMatch(colors, appointment);
     if (directTypeMatch) return directTypeMatch.id;
@@ -1709,7 +1834,21 @@
       if (match) return match.id;
     }
 
-    return colors[0]?.id || "";
+    // Nothing matched: leave the picker empty so the miss is visible instead of
+    // quietly filing the patient under whichever type happens to sort first.
+    return "";
+  }
+
+  function findExactTypeTitleMatch(colors, typeText) {
+    const loose = normalizeLooseCompare(typeText || "");
+    if (!loose) return null;
+    return colors.find((label) => normalizeLooseCompare(label?.title || "") === loose) || null;
+  }
+
+  function isNonPatientBlock(appointment) {
+    const typeText = normalizeLooseCompare(appointment?.typeText || "");
+    if (!typeText) return false;
+    return NON_PATIENT_TYPE_RE.test(typeText);
   }
 
   function findAliasColorLabel(colors, looseSearchText) {
@@ -1859,11 +1998,16 @@
     ].filter(Boolean).join(" "));
     if (!typeOnly && !directContext) return null;
 
-    if (["euthanasia", "euthanasia consult", "quality of life", "qol", "pts", "put to sleep", "euth"].some((keyword) => directContext.includes(normalizeLooseCompare(keyword)))) {
+    // When Pulse gave us an explicit type, that field decides. Searching the whole
+    // card instead lets a word in the description ("owner wants to discuss
+    // euthanasia", "ultrasound on Friday") outrank the type actually booked.
+    const primary = typeOnly || directContext;
+
+    if (["euthanasia", "euthanasia consult", "quality of life", "qol", "pts", "put to sleep", "euth"].some((keyword) => primary.includes(normalizeLooseCompare(keyword)))) {
       return findColorLabelByMatchTerms(colors, ["euthanasia", "euthanasia consult"]);
     }
 
-    if (["ultrasound", "ultra sound", "u/s", "u s", "abd ultrasound", "abdominal ultrasound"].some((keyword) => directContext.includes(normalizeLooseCompare(keyword)))) {
+    if (["ultrasound", "ultra sound", "u/s", "u s", "abd ultrasound", "abdominal ultrasound"].some((keyword) => primary.includes(normalizeLooseCompare(keyword)))) {
       return findColorLabelByMatchTerms(colors, ["ultrasound", "ultra sound", "u/s", "u s"]);
     }
 
@@ -2207,44 +2351,122 @@
     return mapAuthPayload(data, email);
   }
 
-  async function ensureValidAuthSession() {
+  // Supabase rotates the refresh token on every exchange, and every scheduler
+  // tab runs its own copy of this content script against one shared
+  // chrome.storage session. Two tabs refreshing the same token means the loser
+  // gets "Invalid Refresh Token: Already Used", and Supabase's reuse detection
+  // then revokes the whole token family. One in-flight refresh per tab, a
+  // re-read of storage before spending a token, and a re-read after a failure
+  // before concluding the session is gone.
+  let authRefreshInFlight = null;
+
+  async function readStoredAuthState() {
+    try {
+      const stored = await storageGet([AUTH_KEY]);
+      return stored?.[AUTH_KEY] || null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function authStateIsFresh(candidate) {
+    if (!candidate?.accessToken) return false;
+    const expiresAt = Number(candidate.expiresAt || 0);
+    return !!expiresAt && expiresAt > Date.now() + 60 * 1000;
+  }
+
+  // A stored session is only worth adopting if it is fresh AND is not the exact
+  // access token the server just rejected. Without the second half, a 401 retry
+  // would re-read storage, see the same dead token still marked unexpired, and
+  // retry with it forever.
+  function adoptableStoredAuth(candidate, rejectedAccessToken) {
+    if (!authStateIsFresh(candidate)) return false;
+    return !rejectedAccessToken || candidate.accessToken !== rejectedAccessToken;
+  }
+
+  async function ensureValidAuthSession(options) {
+    const rejectedAccessToken = String(options?.rejectedAccessToken || "");
     if (!authState?.accessToken) {
       throw new Error(authNeedsLogin ? (authErrorMessage || "Your VetBoard session expired. Please sign in again.") : "Login required.");
     }
+    // Fresh is enough normally; on a 401 retry it must also not be the token
+    // the server just rejected.
+    if (adoptableStoredAuth(authState, rejectedAccessToken)) return authState;
+    if (authRefreshInFlight) return authRefreshInFlight;
 
-    const expiresAt = Number(authState.expiresAt || 0);
-    const freshEnough = expiresAt && expiresAt > Date.now() + 60 * 1000;
-    if (freshEnough) return authState;
+    authRefreshInFlight = (async () => {
+      // Another tab may have refreshed while we sat on a stale in-memory copy.
+      const stored = await readStoredAuthState();
+      if (adoptableStoredAuth(stored, rejectedAccessToken)) {
+        authState = stored;
+        await clearAuthReloginFlag();
+        return authState;
+      }
+      if (stored?.refreshToken) authState = Object.assign({}, authState, stored);
 
-    if (!authState.refreshToken) {
-      await markAuthReloginRequired("Your VetBoard session expired. Please sign in again.");
-      throw new Error(authErrorMessage || "Your VetBoard session expired. Please sign in again.");
-    }
+      if (!authState.refreshToken) {
+        await markAuthReloginRequired("Your VetBoard session expired. Please sign in again.");
+        throw new Error(authErrorMessage || "Your VetBoard session expired. Please sign in again.");
+      }
+
+      try {
+        const data = await fetchJson(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            refresh_token: authState.refreshToken
+          }),
+          __skipAuthRetry: true
+        });
+        if (!data?.access_token) throw new Error("RoomBoard refresh did not return a session.");
+        authState = Object.assign({}, authState, mapAuthPayload(data, authState.email || ""));
+        await storageSet({ [AUTH_KEY]: authState });
+        await clearAuthReloginFlag();
+        return authState;
+      } catch (error) {
+        const message = getErrorMessage(error);
+        // Losing the rotation race looks exactly like a dead session. Check
+        // whether the tab that beat us left a working one behind.
+        const afterFailure = await readStoredAuthState();
+        if (adoptableStoredAuth(afterFailure, rejectedAccessToken)) {
+          authState = afterFailure;
+          await clearAuthReloginFlag();
+          return authState;
+        }
+        if (isLikelyAuthErrorMessage(message)) {
+          await markAuthReloginRequired("Your VetBoard session expired. Please sign in again.");
+          throw new Error(authErrorMessage || message);
+        }
+        throw error;
+      }
+    })();
 
     try {
-      const data = await fetchJson(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
-        method: "POST",
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          refresh_token: authState.refreshToken
-        })
-      });
-      if (!data?.access_token) throw new Error("RoomBoard refresh did not return a session.");
-      authState = Object.assign({}, authState, mapAuthPayload(data, authState.email || ""));
-      await storageSet({ [AUTH_KEY]: authState });
-      await clearAuthReloginFlag();
-      return authState;
-    } catch (error) {
-      const message = getErrorMessage(error);
-      if (isLikelyAuthErrorMessage(message)) {
-        await markAuthReloginRequired("Your VetBoard session expired. Please sign in again.");
-        throw new Error(authErrorMessage || message);
-      }
-      throw error;
+      return await authRefreshInFlight;
+    } finally {
+      authRefreshInFlight = null;
     }
+  }
+
+  // Keep every open scheduler tab on the same session, so an idle tab does not
+  // wake up and spend a refresh token another tab already replaced.
+  function watchStoredAuthState() {
+    try {
+      api.storage.onChanged.addListener((changes, area) => {
+        if (area !== "local" || !changes[AUTH_KEY]) return;
+        const next = changes[AUTH_KEY].newValue || null;
+        if (next?.accessToken) {
+          authState = next;
+          if (authNeedsLogin) clearAuthReloginFlag();
+        } else if (!next) {
+          authState = null;
+        }
+        updateBadgeUi();
+      });
+    } catch (_) {}
   }
 
   function mapAuthPayload(data, fallbackEmail) {
@@ -2686,8 +2908,9 @@
       const canRetryAuth = hasAuthHeader && !options.__skipAuthRetry && !/\/auth\/v1\/token\b/i.test(String(url || ""));
       if (canRetryAuth && shouldTreatAsAuthFailure(response, parsed) && authState && authState.refreshToken) {
         try {
+          const rejectedAccessToken = authState.accessToken || "";
           authState.expiresAt = 0;
-          await ensureValidAuthSession();
+          await ensureValidAuthSession({ rejectedAccessToken });
           const retryOptions = cloneRequestOptions(options);
           retryOptions.__skipAuthRetry = true;
           if (retryOptions.headers.Authorization) retryOptions.headers.Authorization = `Bearer ${authState.accessToken}`;

@@ -4,6 +4,30 @@
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxcWp0Z2JmdnRzY3doYmhzY3BzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NTIxNDEsImV4cCI6MjA5MDMyODE0MX0.hi_ruvxOBNbUIdQ-BYhjhuy6KM5oigqib-zIWL8dsts";
   const AUTH_STORAGE_KEY = "roomboardCapture.auth";
 
+  // Pulse type text (left) -> RoomBoard type titles in preference order (right).
+  // Same-name types resolve by exact title match before this table is consulted,
+  // so only genuine renames belong here. Keep in sync with the copy in
+  // public/app/pulse-vetboard-addon-src/scheduler-capture.js.
+  const PULSE_TYPE_LABEL_MAP = [
+    { pulse: ["surgery consult", "surgical referral", "surgical", "dental"], vetboard: ["sx consult", "surgery consult", "surgery"] },
+    { pulse: ["emergency"], vetboard: ["emergency", "urgent"] },
+    { pulse: ["euthanasia", "euthanasia consult", "quality of life", "qol", "pts"], vetboard: ["euthanasia", "euthanasia consult"] },
+    { pulse: ["illness/injury", "illness / injury", "illness injury", "injury illness"], vetboard: ["illness/injury", "illness injury"] },
+    { pulse: ["recheck"], vetboard: ["recheck", "exam"] },
+    { pulse: ["new puppy/kitten", "new puppy kitten", "new puppy", "new kitten"], vetboard: ["exam"] },
+    { pulse: ["exam"], vetboard: ["exam"] },
+    { pulse: ["ultrasound", "ultra sound", "u/s", "abd ultrasound", "abdominal ultrasound"], vetboard: ["ultrasound", "u/s"] },
+    { pulse: ["outside**contagious", "outside contagious", "outside contageous", "outside constagious"], vetboard: ["outside**contagious", "outside contagious", "car isolation", "car - isolation"] },
+    { pulse: ["bandage change"], vetboard: ["tech/walkback", "tech/walk back", "tech appt", "tech"] },
+    { pulse: ["tech/walk back", "tech/walkback", "tech walk back", "tech walkback"], vetboard: ["tech/walkback", "tech/walk back", "tech appt", "tech"] },
+    { pulse: ["sample drop-off", "sample drop off", "drop off", "drop-off"], vetboard: ["drop-off", "drop off", "work-in", "work in"] },
+    { pulse: ["work-in", "work in"], vetboard: ["work-in", "work in"] },
+    { pulse: ["discharge"], vetboard: ["discharge"] }
+  ];
+
+  // Pulse "Block" / "Lunch" rows hold time, not a patient.
+  const NON_PATIENT_TYPE_RE = /^(?:block(?:ed)?|lunch|break|meeting|closed|holiday|out of office|ooo|training|unavailable)$/;
+
   const state = {
     auth: readJson(AUTH_STORAGE_KEY),
     boardData: null,
@@ -440,7 +464,7 @@
     els.reason.value = parsed.reason;
     els.time.value = parsed.appointmentTime;
     setSelectByText(els.doctor, parsed.doctor);
-    setSelectByText(els.colorLabel, parsed.reason);
+    setTypeSelect(els.colorLabel, parsed);
     els.notes.value = buildNotes(parsed, payload);
     const method = /visual|screen|preview/i.test(String(payload?.captureMethod || "")) ? " Preview attached." : "";
     const message = parsed.rawText
@@ -757,6 +781,81 @@
     return parts.join("\n\n");
   }
 
+  function setTypeSelect(select, parsed) {
+    const options = Array.from(select.options || []).filter((option) => option.value);
+    if (!options.length) return;
+
+    const typeText = normalizeLoose(parsed?.typeText || "");
+    if (typeText && NON_PATIENT_TYPE_RE.test(typeText)) return;
+
+    if (typeText) {
+      // The clinic's own type list is the best mapping table available.
+      const sameName = options.find((option) => normalizeLoose(option.textContent) === typeText);
+      if (sameName) {
+        select.value = sameName.value;
+        return;
+      }
+
+      for (const mapping of PULSE_TYPE_LABEL_MAP) {
+        if (!mapping.pulse.some((term) => typeText.includes(normalizeLoose(term)))) continue;
+        const match = findOptionByTerms(options, mapping.vetboard);
+        if (match) {
+          select.value = match.value;
+          return;
+        }
+      }
+    }
+
+    // No usable type field. parsed.reason is a comma-joined blob of up to five
+    // lines, so matching against it lets any incidental word decide the type;
+    // work down from the most specific text and leave the picker on "Choose type"
+    // when nothing really matches.
+    const candidates = [parsed?.descriptionText, parsed?.reason]
+      .map((value) => normalizeLoose(value))
+      .filter(Boolean);
+    if (!candidates.length) return;
+
+    for (const candidate of candidates) {
+      const exact = options.find((option) => normalizeLoose(option.textContent) === candidate);
+      if (exact) {
+        select.value = exact.value;
+        return;
+      }
+    }
+
+    // Prefer the most specific label present in the text rather than whichever
+    // short label happens to sort first.
+    for (const candidate of candidates) {
+      let best = null;
+      let bestLength = 0;
+      for (const option of options) {
+        const label = normalizeLoose(option.textContent);
+        if (!label || label.length <= bestLength) continue;
+        if (!containsWholePhrase(candidate, label)) continue;
+        best = option;
+        bestLength = label.length;
+      }
+      if (best) {
+        select.value = best.value;
+        return;
+      }
+    }
+  }
+
+  function findOptionByTerms(options, terms) {
+    for (const term of terms) {
+      const normalizedTerm = normalizeLoose(term);
+      const match = options.find((option) => normalizeLoose(option.textContent).includes(normalizedTerm));
+      if (match) return match;
+    }
+    return null;
+  }
+
+  function containsWholePhrase(haystack, needle) {
+    if (!haystack || !needle) return false;
+    return ` ${haystack} `.includes(` ${needle} `);
+  }
+
   function setSelectByText(select, text) {
     const looseText = normalizeLoose(text);
     if (!looseText) return;
@@ -794,25 +893,76 @@
     };
   }
 
-  async function ensureValidAuthSession() {
+  // Supabase rotates the refresh token on every exchange, so two overlapping
+  // refreshes mean the second one sends a spent token: Supabase answers
+  // "Invalid Refresh Token: Already Used" and reuse detection revokes the whole
+  // family, signing the app out. loadBoard, sendAppointment and the 401 retry
+  // path in fetchJson can all land here at once, so they must share one refresh.
+  let authRefreshInFlight = null;
+
+  function authIsFresh(auth) {
+    if (!auth?.accessToken) return false;
+    return Number(auth.expiresAt || 0) > Date.now() + 60 * 1000;
+  }
+
+  // A stored session is only worth adopting if it is fresh AND is not the exact
+  // access token the server just rejected. Without the second half, a 401 retry
+  // would re-read storage, see the same dead token still marked unexpired, and
+  // retry with it forever.
+  function adoptableStoredAuth(candidate, rejectedAccessToken) {
+    if (!authIsFresh(candidate)) return false;
+    return !rejectedAccessToken || candidate.accessToken !== rejectedAccessToken;
+  }
+
+  async function ensureValidAuthSession(options) {
+    const rejectedAccessToken = String(options?.rejectedAccessToken || "");
     if (!state.auth?.accessToken && !state.auth?.refreshToken) throw new Error("Sign in required.");
+    // Fresh is enough normally; on a 401 retry it must also not be the token
+    // the server just rejected.
+    if (adoptableStoredAuth(state.auth, rejectedAccessToken)) return state.auth;
+    if (authRefreshInFlight) return authRefreshInFlight;
 
-    const expiresAt = Number(state.auth.expiresAt || 0);
-    if (state.auth.accessToken && expiresAt > Date.now() + 60 * 1000) return state.auth;
-    if (!state.auth.refreshToken) throw new Error("Your RoomBoard session expired. Please sign in again.");
+    authRefreshInFlight = (async () => {
+      // Another window on this origin may have rotated the token already.
+      const stored = readJson(AUTH_STORAGE_KEY);
+      if (adoptableStoredAuth(stored, rejectedAccessToken)) {
+        state.auth = stored;
+        return state.auth;
+      }
+      if (stored?.refreshToken) state.auth = { ...state.auth, ...stored };
+      if (!state.auth.refreshToken) throw new Error("Your RoomBoard session expired. Please sign in again.");
 
-    const data = await fetchJson(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
-      method: "POST",
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ refresh_token: state.auth.refreshToken })
-    });
-    if (!data?.access_token) throw new Error("RoomBoard refresh did not return a session.");
-    state.auth = { ...state.auth, ...mapAuthPayload(data, state.auth.email || "") };
-    writeJson(AUTH_STORAGE_KEY, state.auth);
-    return state.auth;
+      try {
+        const data = await fetchJson(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ refresh_token: state.auth.refreshToken }),
+          __skipAuthRetry: true
+        });
+        if (!data?.access_token) throw new Error("RoomBoard refresh did not return a session.");
+        state.auth = { ...state.auth, ...mapAuthPayload(data, state.auth.email || "") };
+        writeJson(AUTH_STORAGE_KEY, state.auth);
+        return state.auth;
+      } catch (error) {
+        // Losing a rotation race is indistinguishable from a dead session until
+        // you look at what the winner stored.
+        const afterFailure = readJson(AUTH_STORAGE_KEY);
+        if (adoptableStoredAuth(afterFailure, rejectedAccessToken)) {
+          state.auth = afterFailure;
+          return state.auth;
+        }
+        throw error;
+      }
+    })();
+
+    try {
+      return await authRefreshInFlight;
+    } finally {
+      authRefreshInFlight = null;
+    }
   }
 
   async function fetchPracticeId(forceRefresh) {
@@ -1080,8 +1230,9 @@
       const message = getErrorMessage(parsed) || `Request failed (${response.status})`;
       const canRetryAuth = hasAuthHeader(options) && !options.__skipAuthRetry && !/\/auth\/v1\/token\b/i.test(String(url || ""));
       if (canRetryAuth && shouldTreatAsAuthFailure(response, parsed) && state.auth?.refreshToken) {
+        const rejectedAccessToken = state.auth.accessToken || "";
         state.auth.expiresAt = 0;
-        await ensureValidAuthSession();
+        await ensureValidAuthSession({ rejectedAccessToken });
         const retryOptions = cloneRequestOptions(options);
         retryOptions.__skipAuthRetry = true;
         retryOptions.headers.Authorization = `Bearer ${state.auth.accessToken}`;
@@ -1312,23 +1463,45 @@
     return !!(headers.Authorization || headers.authorization);
   }
 
+  // Only phrases that mean "this credential is dead". Deliberately NOT here:
+  // a bare "unauthorized" or "jwt", which Postgres/PostgREST also emit for a
+  // row-level-security denial — treating those as an expired session turned a
+  // billing hiccup into a forced sign-out.
   function isLikelyAuthErrorMessage(message) {
     const text = normalizeSpaces(message).toLowerCase();
     if (!text) return false;
     return text.includes("invalid token")
-      || text.includes("jwt")
+      || text.includes("invalid jwt")
+      || text.includes("jwt expired")
+      || text.includes("jwt is expired")
+      || text.includes("bad_jwt")
       || text.includes("token is expired")
       || text.includes("session expired")
+      || text.includes("session_not_found")
       || text.includes("refresh token")
       || text.includes("invalid grant")
+      || text.includes("invalid_grant")
       || text.includes("login required")
-      || text.includes("user from sub claim in jwt does not exist")
-      || text.includes("unauthorized");
+      || text.includes("user from sub claim in jwt does not exist");
+  }
+
+  // A 403 is authorization, not authentication: the token is fine, the row or
+  // the billing gate said no. Retrying it as an expired session burns a refresh
+  // token for nothing.
+  function isPermissionDeniedResponse(parsed) {
+    const code = String((parsed && parsed.code) || "").trim();
+    if (code === "42501" || code === "PGRST301") return true;
+    const text = normalizeSpaces(getErrorMessage(parsed)).toLowerCase();
+    return text.includes("permission denied")
+      || text.includes("row-level security")
+      || text.includes("violates row-level")
+      || text.includes("billing");
   }
 
   function shouldTreatAsAuthFailure(response, parsed) {
     const status = Number(response?.status || 0);
-    if (status === 401 || status === 403) return true;
+    if (status === 403) return !isPermissionDeniedResponse(parsed) && isLikelyAuthErrorMessage(getErrorMessage(parsed));
+    if (status === 401) return true;
     return isLikelyAuthErrorMessage(getErrorMessage(parsed));
   }
 

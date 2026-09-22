@@ -277,7 +277,22 @@
       var settingsAutosaveJobs = Object.create(null);
       var settingsRemoteSaveQueued = false;
       var renderPerf = createRenderPerfTracker();
-    var REMOTE_BOARD_SAVE_DELAY_MS = 180;
+    // This is the largest controllable chunk of end-to-end board latency:
+    // local edit -> debounce -> RPC -> commit -> logical replication ->
+    // Realtime -> other screens. Everything after the debounce is already
+    // fast, so this number IS the "how realtime does it feel" dial.
+    //
+    // 250ms is chosen over the original 180ms and the 500ms tried while the
+    // project was IO-starved on the free tier. It still collapses a burst of
+    // rapid edits (typing a note, dragging patients) into one write — each
+    // board save rewrites the entire board_state JSONB, which Postgres MVCC
+    // turns into a whole new row version plus a WAL record plus a dead tuple
+    // — while staying imperceptible to someone watching a wall display.
+    //
+    // Lowering this is only safe because pending saves now flush on
+    // pagehide/visibilitychange (see auth-sync.js). Without that flush, this
+    // window is silent data loss whenever a tab closes mid-edit.
+    var REMOTE_BOARD_SAVE_DELAY_MS = 250;
     var REMOTE_CONFIG_SAVE_DELAY_MS = 450;
     var REMOTE_REFRESH_THROTTLE_MS = 750;
 
@@ -347,6 +362,16 @@
       // full board is still downloaded only when its version moved.
       var AUTO_PULL_INTERVAL_MS = 5000;
       var REALTIME_HEALTHY_PROBE_INTERVAL_MS = 60000;
+      // Realtime is down but REST still answers (websockets blocked by a
+      // clinic firewall, say). Polling is now the only way the board stays
+      // current, so keep a steady cadence — just not the 5s recovery rate,
+      // which is 12x the read load for no extra freshness a room board needs.
+      var REALTIME_DEGRADED_PROBE_INTERVAL_MS = 15000;
+      // Probes are actually FAILING (server down / offline). Back off
+      // exponentially instead of hammering: during the Sep 2026 outages every
+      // open display kept probing a throttled database every 5 seconds, which
+      // made each incident deeper and longer than it needed to be.
+      var PROBE_BACKOFF_MAX_MS = 60000;
       var SHORT_INTERACTION_HOLD_MS = 450;
       var CHANGE_INTERACTION_HOLD_MS = 700;
       var TEXT_INPUT_HOLD_MS = 1200;

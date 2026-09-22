@@ -182,6 +182,7 @@
 	    // displays (wifi drops, device sleep/wake), so nothing is surfaced until
 	    // the streak shows a real outage; the probe loop retries regardless.
 	    var boardProbeFailureStreak = 0;
+	    var lastDegradedBoardVersionProbeAt = 0;
 	    var BOARD_PROBE_OFFLINE_STREAK = 3;
 
 	    function getBoardUpdatedAtMs(updatedAt){
@@ -208,6 +209,7 @@
 	      lastKnownBoardUpdatedAtIso = null;
 	      lastKnownBoardUpdatedAtMs = 0;
 	      lastHealthyBoardVersionProbeAt = 0;
+	      lastDegradedBoardVersionProbeAt = 0;
 	      lastSyncedBoardState = null;
 	    }
 
@@ -864,6 +866,9 @@
 	      var subscribed = !!(data && data.subscribed);
 	      var trialing = !!(data && data.trialing);
 	      var hasPaymentMethod = !!(data && data.hasPaymentMethod);
+	      // Server-side kill switch (BILLING_ENFORCED). Absent field = older API
+	      // response, which only ever came from an enforcing server.
+	      var billingEnforced = !(data && data.billingEnforced === false);
 	      var trialNeedsCard = !!(trialing && !hasPaymentMethod);
 	      var currentPeriodEnd = (data && data.currentPeriodEnd) || null;
       var isAdvanced = plan.indexOf("advanced") !== -1;
@@ -880,27 +885,34 @@
         else badge.classList.add("isBlocked");
         badge.textContent = subscribed
           ? (isAdvanced ? "Advanced" : "Base") + " · " + (isMonthly ? "Monthly" : "Annual")
+	          : !billingEnforced ? "Early access"
 	          : trialNeedsCard ? "Card required"
 	          : trialing ? "Trial · " + trialDaysLeft + "d left"
 	          : "Billing required";
 	      }
 
 	      if(currentValue){
-	        if(trialNeedsCard) currentValue.textContent = "Trial pending";
-	        else if(trialing) currentValue.textContent = "Free trial";
-	        else if(subscribed) currentValue.textContent = isAdvanced
+	        if(subscribed) currentValue.textContent = isAdvanced
 	          ? "Advanced · " + (isMonthly ? "Monthly" : "Annual")
 	          : "Base · " + (isMonthly ? "Monthly" : "Annual");
+	        else if(!billingEnforced) currentValue.textContent = "Early access";
+	        else if(trialNeedsCard) currentValue.textContent = "Trial pending";
+	        else if(trialing) currentValue.textContent = "Free trial";
         else currentValue.textContent = "No active plan";
       }
 
 	      if(currentMeta){
-	        if(trialNeedsCard){
+	        if(subscribed && currentPeriodEnd){
+	          currentMeta.textContent = "Renews " + formatBillingDate(currentPeriodEnd);
+	        } else if(!billingEnforced){
+	          // Billing is switched off. Say nothing about trials or end dates —
+	          // a countdown here is alarming and, while nothing is being charged,
+	          // simply untrue.
+	          currentMeta.textContent = "Free while RoomBoard is in early access.";
+	        } else if(trialNeedsCard){
 	          currentMeta.textContent = "Add a card to start your trial.";
 	        } else if(trialing){
 	          currentMeta.textContent = trialDaysLeft + " day" + (trialDaysLeft === 1 ? "" : "s") + " remaining";
-        } else if(subscribed && currentPeriodEnd){
-          currentMeta.textContent = "Renews " + formatBillingDate(currentPeriodEnd);
         } else if(!subscribed && !trialing){
           currentMeta.textContent = "Your trial has ended";
         } else {
@@ -929,6 +941,21 @@
       updateStandaloneOpenBoardAccess();
     }
 
+    // A billing route that had to refresh on our behalf returns the replacement
+    // token pair. Supabase rotates on refresh, so the token still in our storage
+    // is dead the moment that happens — adopt the new pair or the next
+    // auto-refresh fails with "Already Used" and signs the clinic out.
+    async function adoptRotatedSession(data){
+      var next = data && data.session;
+      if(!next || !next.accessToken || !next.refreshToken) return;
+      if(!supabase || !supabase.auth || typeof supabase.auth.setSession !== "function") return;
+      try{
+        await supabase.auth.setSession({ access_token: next.accessToken, refresh_token: next.refreshToken });
+      }catch(e){
+        console.warn("Could not adopt rotated billing session:", e);
+      }
+    }
+
     async function billingRequest(path, payload){
       var tokens = await getCurrentSessionTokens();
       var response = await fetch(path, {
@@ -941,6 +968,7 @@
       if(!response.ok){
         throw new Error(String(data && data.error || "Billing request failed."));
       }
+      await adoptRotatedSession(data);
       return data || {};
     }
 
@@ -1892,12 +1920,30 @@
 
 	    function roomNeedsStatsCoverageWork(room){
 	      if(!room) return false;
+	      // A room that is idle but still carries a session link is ALSO broken,
+	      // just in the opposite direction from a missing session. This used to
+	      // return false for every idle room, so the self-heal never ran on it
+	      // and the stale link sat on the board forever, reported by the
+	      // diagnostics panel as idle-room-session-linked /
+	      // idle-cleaning-session-linked.
+	      if(roomHasStaleStatsSessionLink(room)) return true;
 	      if(room.needsCleaning){
 	        if(!hasCleaningCoverageEvidence(room)) return false;
 	        return !timerHasProgress(room.cleaningTimer) || !room.activeCleaningSessionId;
 	      }
 	      if(!roomHasAssignedPatient(room)) return false;
 	      return !timerHasProgress(room.timer) || !room.activeRoomSessionId;
+	    }
+
+	    // Idle room + a session id still attached. Either the session is already
+	    // closed in the database and only the pointer is stale, or the end-write
+	    // never landed and the row is genuinely orphaned. reconcileStatsCoverage
+	    // tells the two apart; this only decides whether to look.
+	    function roomHasStaleStatsSessionLink(room){
+	      if(!room) return false;
+	      if(!roomHasAssignedPatient(room) && isUuidLike(room.activeRoomSessionId)) return true;
+	      if(!room.needsCleaning && isUuidLike(room.activeCleaningSessionId)) return true;
+	      return false;
 	    }
 
 	    function adoptOpenStatsSessionForRoom(room, openRows, linkedIds, pendingEndIds, nowIso){
@@ -1932,6 +1978,11 @@
 	      // converge on one session instead of racing to insert duplicates.
 	      var openRoomSessions = [];
 	      var openCleaningSessions = [];
+	      // Whether the two lists below are trustworthy. Clearing a session link
+	      // is only safe when we positively know the session is already closed;
+	      // if this fetch failed we cannot tell closed from open, and guessing
+	      // would orphan a live session row forever.
+	      var openSessionsLoaded = false;
 	      try{
 	        var openRows = await Promise.all([
 	          fetchOpenStatsSessionsForDiagnostics("room_sessions"),
@@ -1939,6 +1990,7 @@
 	        ]);
 	        openRoomSessions = openRows[0];
 	        openCleaningSessions = openRows[1];
+	        openSessionsLoaded = true;
 	      }catch(err){
 	        if(isMissingStatsTableError(err)){
 	          disableStatsLogging(err);
@@ -1946,6 +1998,10 @@
 	        }
 	        // adoption is best-effort; the session-start guards below still hold
 	      }
+	      var openRoomIdMap = {};
+	      var openCleaningIdMap = {};
+	      openRoomSessions.forEach(function(r){ if(r && r.id) openRoomIdMap[String(r.id)] = true; });
+	      openCleaningSessions.forEach(function(r){ if(r && r.id) openCleaningIdMap[String(r.id)] = true; });
 	      var linkedIds = {};
 	      state.rooms.forEach(function(r){
 	        if(r && isUuidLike(r.activeRoomSessionId)) linkedIds[String(r.activeRoomSessionId)] = true;
@@ -1956,6 +2012,39 @@
       for(var i=0;i<state.rooms.length;i++){
         var room = state.rooms[i];
         if(!room) continue;
+
+	        // ---- Heal the "idle room still linked to a session" direction ----
+	        // The rest of this loop only ever ADDS a session when one is missing.
+	        // Without this pass a discharged room keeps its activeRoomSessionId
+	        // (and a finished clean keeps activeCleaningSessionId) indefinitely.
+	        if(openSessionsLoaded){
+	          if(!roomHasAssignedPatient(room) && isUuidLike(room.activeRoomSessionId)){
+	            var staleRoomId = String(room.activeRoomSessionId);
+	            if(openRoomIdMap[staleRoomId]){
+	              // Still open server-side: a real orphan. Close it through the
+	              // outbox path so a failed write is retried rather than lost.
+	              await logRoomSessionEnd(room, { sessionId: staleRoomId, endedAtIso: coverageNowIso });
+	            }
+	            // Already closed (or just closed above): drop the dead pointer.
+	            if(String(room.activeRoomSessionId || "") === staleRoomId){
+	              room.activeRoomSessionId = null;
+	            }
+	            delete linkedIds[staleRoomId];
+	            if(changedRoomIds.indexOf(room.id) < 0) changedRoomIds.push(room.id);
+	          }
+	          if(!room.needsCleaning && isUuidLike(room.activeCleaningSessionId)){
+	            var staleCleaningId = String(room.activeCleaningSessionId);
+	            if(openCleaningIdMap[staleCleaningId]){
+	              await logCleaningSessionEnd(room, { sessionId: staleCleaningId, endedAtIso: coverageNowIso });
+	            }
+	            if(String(room.activeCleaningSessionId || "") === staleCleaningId){
+	              room.activeCleaningSessionId = null;
+	            }
+	            delete linkedIds[staleCleaningId];
+	            if(changedRoomIds.indexOf(room.id) < 0) changedRoomIds.push(room.id);
+	          }
+	        }
+
 	        if(room.needsCleaning){
 	          if(!hasCleaningCoverageEvidence(room)) continue;
 	          if(!timerHasProgress(room.cleaningTimer)){
@@ -2676,7 +2765,14 @@
 	          }
 	          updateAuthUI(true);
 	          var expiresAt = session.expires_at ? Number(session.expires_at) * 1000 : 0;
-	          var shouldRefresh = !expiresAt || (expiresAt - Date.now()) <= (45 * 60 * 1000);
+	          // Margin must stay well under the access-token lifetime (60 min by
+	          // default). At 45 min this fired on nearly every focus, visibility
+	          // change and 5-minute tick, so the refresh token rotated all day —
+	          // and every rotation is another chance to race a sibling tab or a
+	          // server-side refresh and get signed out. supabase-js already
+	          // auto-refreshes ~90s before expiry; this is only the safety net
+	          // for a tab that was asleep through that window.
+	          var shouldRefresh = !expiresAt || (expiresAt - Date.now()) <= (5 * 60 * 1000);
 	          if(!shouldRefresh) return true;
 	          var refreshed = await supabase.auth.refreshSession();
 	          if(refreshed && refreshed.error) throw refreshed.error;
@@ -2716,6 +2812,7 @@
               // Hidden tabs do not poll. On return, verify the version now
               // instead of waiting up to the healthy-channel safety interval.
               lastHealthyBoardVersionProbeAt = 0;
+              lastDegradedBoardVersionProbeAt = 0;
               setTimeout(function(){ runBoardVersionProbeTick(); }, 0);
               scheduleStatsCoverageCheck("Tab visible");
               scheduleStatsEndFlush(2000);
@@ -2726,13 +2823,37 @@
           window.addEventListener("focus", function(){
             refreshSupabaseSessionIfNeeded("focus");
           });
+          // Board edits are debounced before they reach the server, so closing
+          // the tab (or a wall display going to sleep) inside that window used
+          // to drop the last change silently. Flush anything still queued the
+          // moment the page is hidden or torn down. pagehide is the reliable
+          // signal on iOS/Safari, where beforeunload often never fires.
+          function flushPendingSavesOnHide(){
+            if(!supabase || !currentPracticeId) return;
+            if(!(pendingBoardSave || pendingConfigSave || pendingAppointmentTypesSave || pendingUserSettingsSave)) return;
+            if(saveDebounce){
+              clearTimeout(saveDebounce);
+              saveDebounce = null;
+            }
+            try{ flushRemoteSave(); }catch(e){}
+          }
+          window.addEventListener("pagehide", flushPendingSavesOnHide);
+          document.addEventListener("visibilitychange", function(){
+            if(document.visibilityState === "hidden") flushPendingSavesOnHide();
+          });
           window.addEventListener("pageshow", function(){
             refreshSupabaseSessionIfNeeded("pageshow");
           });
           window.addEventListener("online", function(){
             refreshSupabaseSessionIfNeeded("online");
             // don't wait for the next 5s tick: probe as soon as the network
-            // is back (small delay — routing isn't always instantly usable)
+            // is back (small delay — routing isn't always instantly usable).
+            // Clearing the backoff gate matters most here: after a long outage
+            // the degraded interval has grown to 60s, and without this the
+            // recovery probe would be swallowed and the board would sit stale
+            // for up to a minute after the network actually came back.
+            lastDegradedBoardVersionProbeAt = 0;
+            boardProbeFailureStreak = 0;
             setTimeout(function(){
               if(typeof runBoardVersionProbeTick === "function") runBoardVersionProbeTick();
             }, 800);
@@ -3357,6 +3478,7 @@
         // Verify a newly restored channel once, then fall back to the
         // low-frequency healthy-channel safety probe.
         lastHealthyBoardVersionProbeAt = 0;
+        lastDegradedBoardVersionProbeAt = 0;
         noteRealtimeEvent("realtime-subscribed");
         clearRealtimeReconnectTimer();
         if(__pendingRemoteState){
@@ -5148,6 +5270,33 @@
 	      }
 	    }, true);
 
+	    // How long to wait between probes while Realtime is unavailable.
+	    // Two very different situations share this path:
+	    //   - probes SUCCEED, socket is dead  -> polling is the only sync path,
+	    //     so keep a steady 15s cadence (fresh enough for a room board).
+	    //   - probes FAIL                     -> the server or network is gone.
+	    //     Retrying every 5s just piles load onto something already failing,
+	    //     so back off 10s, 20s, 40s, 60s. This is what stops an outage from
+	    //     being amplified by every open display in the clinic.
+	    function getDegradedProbeIntervalMs(){
+	      // These constants live in board-state.js. The two files are separate
+	      // <script> tags with independent cache-bust versions, so a browser can
+	      // legitimately hold a NEW auth-sync.js against an OLD cached
+	      // board-state.js. Reading a missing global throws ReferenceError, and
+	      // this runs inside the probe tick — an uncaught throw there would kill
+	      // the board's fallback sync entirely and log an error every 5s.
+	      // Degrade to the old behaviour instead of breaking.
+	      var base = typeof AUTO_PULL_INTERVAL_MS === "number" ? AUTO_PULL_INTERVAL_MS : 5000;
+	      var steady = typeof REALTIME_DEGRADED_PROBE_INTERVAL_MS === "number"
+	        ? REALTIME_DEGRADED_PROBE_INTERVAL_MS
+	        : base;
+	      var cap = typeof PROBE_BACKOFF_MAX_MS === "number" ? PROBE_BACKOFF_MAX_MS : 60000;
+	      if(boardProbeFailureStreak > 0){
+	        return Math.min(base * Math.pow(2, boardProbeFailureStreak), cap);
+	      }
+	      return steady;
+	    }
+
 	    function runBoardVersionProbeTick(){
 	      if(!supabase || !currentPracticeId) return null;
 	      if(typeof document !== "undefined" && document.visibilityState === "hidden") return null;
@@ -5157,6 +5306,11 @@
 	      if(realtimeChannelHealthy){
 	        if(now - lastHealthyBoardVersionProbeAt < REALTIME_HEALTHY_PROBE_INTERVAL_MS) return null;
 	        lastHealthyBoardVersionProbeAt = now;
+	      } else {
+	        // Realtime is down. The timer still ticks every 5s, but how often we
+	        // actually hit the database depends on WHY it is down.
+	        if(now - lastDegradedBoardVersionProbeAt < getDegradedProbeIntervalMs()) return null;
+	        lastDegradedBoardVersionProbeAt = now;
 	      }
         // Realtime carries normal updates. This is a low-egress safety probe
         // when subscribed and a 5-second recovery probe only when Realtime is

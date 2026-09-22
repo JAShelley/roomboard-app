@@ -98,7 +98,10 @@
     "patient": "patient",
     "animal notes": "ignore",
     "notes": "ignore",
-    "demeanor": "ignore",
+    // Demeanor is the one "extra" field worth surfacing: "Anxious"/"Aggressive"
+    // is a staff-safety cue, and it is the first thing ezyVet shows on the flyout.
+    "demeanor": "demeanor",
+    "demeanour": "demeanor",
     "master problems": "ignore",
     "problems": "ignore",
     // ezyVet-specific
@@ -122,17 +125,39 @@
     "color": "color",
     "age": "age",
     "weight": "weight",
+    // ezyVet renders the client address as "ADDRESS(MAIN ADDRESS)" and friends.
+    // Any spelling we miss is not a no-op: the label falls through and the street
+    // address is appended to whatever field was open (owner), so keep this broad.
     "appointment address": "ignore",
+    "address": "ignore",
     "address(physical)": "ignore",
     "address physical": "ignore",
+    "address(main address)": "ignore",
+    "address main address": "ignore",
+    "address(postal address)": "ignore",
+    "address postal address": "ignore",
+    "address(billing address)": "ignore",
+    "address billing address": "ignore",
+    "address(street address)": "ignore",
+    "address street address": "ignore",
     "phone numbers": "ignore",
     "phone": "ignore",
+    "mobile": "ignore",
+    "email": "ignore",
+    // "TIME SINCE DEPARTED" starts with the "time" label, so without an explicit
+    // entry the longest-label rule still leaves "SINCE DEPARTED 5 hours..." glued
+    // onto the appointment time.
     "time since in hospital": "ignore",
+    "time since departed": "ignore",
+    "time since arrived": "ignore",
+    "time since admitted": "ignore",
+    "time since discharged": "ignore",
     "first date seen for patient": "ignore",
     "first date seen for case": "ignore",
     "last date seen for case": "ignore",
     "created by": "ignore",
     "referring clinic": "ignore",
+    "referring vet": "ignore",
     "health status": "ignore",
     "history": "ignore",
     "er history form": "ignore",
@@ -146,7 +171,10 @@
     "client communications exams": "ignore",
     "shared": "ignore"
   };
-  const EZYVET_DETAIL_STOP_RE = /^(?:animal notes|notes|demeanor|master problems|problems|health status|history|er history form|standard of care|soc event|visit exams|er physical exam|physical examination findings|medication s|medications|client communications exams|shared|rabies|wellness exam|dhpp|leptospirosis|heartworm test|semi annual exam|bordetella|influenza|lyme|fecal|weight kg|temp f|h r|r r|comments)\b/;
+  const EZYVET_DETAIL_STOP_RE = /^(?:animal notes|notes|master problems|problems|health status|history|er history form|standard of care|soc event|visit exams|er physical exam|physical examination findings|medication s|medications|client communications exams|shared|address|phone numbers|time since \w+|referring vet|referring clinic|clinic \d|rabies|wellness exam|dhpp|leptospirosis|heartworm test|semi annual exam|bordetella|influenza|lyme|fecal|weight kg|temp f|h r|r r|comments)\b/;
+
+  // ezyVet "Block"/"Lunch"/"Staff Meeting" rows hold time, not a patient.
+  const EZYVET_NON_PATIENT_TYPE_RE = /^(?:block(?:ed)?|blocked time|lunch|break|meeting|staff meeting|closed|holiday|out of office|ooo|training|unavailable|admin|no appointments)$/;
 
   const TYPE_MATCH_STOPWORDS = {
     appt: true, appointment: true, consult: false, consultation: true,
@@ -192,6 +220,11 @@
   let validationState = { patientName: false, colorLabelId: false };
   let calendarGridTopCache = { value: 0, measuredAt: 0 };
   let ezyvetHoverPollTimer = null;
+  // Last summary we managed to read while hovering. ezyVet tears the flyout down
+  // on mousedown, so the click meant to capture is often the event that destroys
+  // the only copy of the data — without this, capture dead-ends with a toast.
+  let ezyvetSummaryCache = null;
+  const EZYVET_SUMMARY_CACHE_MS = 20000;
 
   bootstrap();
 
@@ -218,6 +251,8 @@
         authFormState.email = String(authState.email || "").trim();
       }
     } catch (_) {}
+
+    watchStoredAuthState();
 
     pendingAppointment = null;
     captureArmed = false;
@@ -333,13 +368,20 @@
       descriptionText: normalizeSpaces(detailData.reason || detailData.description || immediateData.descriptionText),
       ownerName: normalizeSpaces(detailData.owner || immediateData.ownerName),
       caseNumber: immediateData.caseNumber,
+      statusText: normalizeSpaces(detailData.status || ""),
+      demeanor: normalizeSpaces(detailData.demeanor || ""),
+      species: normalizeSpaces(detailData.species || ""),
+      breed: normalizeSpaces(detailData.breed || ""),
+      sex: normalizeSpaces(detailData.sex || ""),
+      age: normalizeSpaces(detailData.age || ""),
+      weight: normalizeSpaces(detailData.weight || ""),
       sourceUrl: location.href,
       capturedAt: new Date().toISOString()
     };
 
     formState = null;
     validationState = { patientName: false, colorLabelId: false };
-    modalMessage = "";
+    modalMessage = getCaptureStatusWarning(pendingAppointment);
     await setCaptureArmed(false);
     await storageSet({ [STORAGE_KEY]: pendingAppointment });
     updateBadgeUi();
@@ -348,7 +390,11 @@
   }
 
   async function captureVisibleEzyvetSummary(event) {
-    const summary = parseVisibleEzyvetSummary();
+    // Live panel first, then the one we cached while hovering, then whatever the
+    // card itself says. Only give up once all three come back empty.
+    const summary = parseVisibleEzyvetSummary()
+      || getCachedEzyvetSummary()
+      || summaryFromAppointmentCard(event);
     if (!summary?.patientName) {
       showToast("Hover an appointment until the ezyVet summary appears, then click.");
       refreshEzyvetHoverSelection();
@@ -373,13 +419,21 @@
       notesText: summary.notesText,
       ownerName: summary.ownerName,
       caseNumber: summary.caseNumber,
+      statusText: summary.statusText,
+      columnHeaderText: summary.columnHeader || "",
+      demeanor: summary.demeanor,
+      species: summary.species,
+      breed: summary.breed,
+      sex: summary.sex,
+      age: summary.age,
+      weight: summary.weight,
       sourceUrl: location.href,
       capturedAt: new Date().toISOString()
     };
 
     formState = null;
     validationState = { patientName: false, colorLabelId: false };
-    modalMessage = "";
+    modalMessage = getCaptureStatusWarning(pendingAppointment);
     await setCaptureArmed(false);
     await storageSet({ [STORAGE_KEY]: pendingAppointment });
     updateBadgeUi();
@@ -387,8 +441,8 @@
     await openQuickSendModal();
   }
 
-  function parseVisibleEzyvetSummary() {
-    const panel = findVisibleEzyvetSummaryPanel();
+  function parseVisibleEzyvetSummary(knownPanel) {
+    const panel = knownPanel || findVisibleEzyvetSummaryPanel();
     if (!panel) return null;
     const details = parseEzyvetPanelElement(panel);
     const patientName = formatEzyvetPatientDisplayName(details.patient, details.owner);
@@ -407,18 +461,69 @@
       descriptionText: presentingProblem,
       notesText: presentingProblem,
       ownerName: normalizeSpaces(details.owner),
-      caseNumber: patientId
+      caseNumber: patientId,
+      statusText: normalizeSpaces(details.status),
+      demeanor: normalizeSpaces(details.demeanor),
+      species: normalizeSpaces(details.species),
+      breed: normalizeSpaces(details.breed),
+      sex: normalizeSpaces(details.sex),
+      age: normalizeSpaces(details.age),
+      weight: normalizeSpaces(details.weight)
+    };
+  }
+
+  // Last resort when both the live flyout and the cache are gone: the card text
+  // alone still carries patient, owner, case number and reason.
+  function summaryFromAppointmentCard(event) {
+    const card = findAppointmentCardFromEvent(event) || hoveredCard;
+    if (!card || !document.contains(card)) return null;
+    const parsed = parseAppointmentFromCard(card);
+    const patientName = normalizeSpaces(
+      formatEzyvetPatientDisplayName(parsed?.patientName, parsed?.ownerName) || parsed?.patientName || ""
+    );
+    if (!patientName) return null;
+
+    return {
+      patientName,
+      reason: parsed.reason,
+      doctor: parsed.doctor,
+      appointmentTime: parsed.appointmentTime,
+      columnHeader: parsed.columnHeader,
+      rawText: parsed.rawText,
+      typeText: parsed.typeText,
+      providerText: parsed.providerText,
+      descriptionText: parsed.descriptionText,
+      notesText: "",
+      ownerName: parsed.ownerName,
+      caseNumber: parsed.caseNumber,
+      statusText: parsed.statusText || "",
+      demeanor: "", species: "", breed: "", sex: "", age: "", weight: ""
     };
   }
 
   function refreshEzyvetHoverSelection() {
     if (!captureArmed || !isEzyvetHost() || isModalOpen()) return;
     const panel = findVisibleEzyvetSummaryPanel();
+    if (panel) rememberEzyvetSummary(parseVisibleEzyvetSummary(panel));
     if (panel === hoveredCard) {
       refreshOverlay();
       return;
     }
     setHoveredCard(panel);
+  }
+
+  function rememberEzyvetSummary(summary) {
+    if (!summary?.patientName) return;
+    ezyvetSummaryCache = { summary, at: Date.now() };
+  }
+
+  function getCachedEzyvetSummary() {
+    if (!ezyvetSummaryCache) return null;
+    if (Date.now() - ezyvetSummaryCache.at > EZYVET_SUMMARY_CACHE_MS) {
+      ezyvetSummaryCache = null;
+      return null;
+    }
+    return ezyvetSummaryCache.summary;
   }
 
   function findVisibleEzyvetSummaryPanel() {
@@ -877,7 +982,8 @@
       providerText: "",
       descriptionText: reason,
       ownerName: ezyvetParsed?.ownerName || "",
-      caseNumber: ezyvetParsed?.caseNumber || ""
+      caseNumber: ezyvetParsed?.caseNumber || "",
+      statusText: ezyvetParsed?.statusText || ""
     };
   }
 
@@ -951,7 +1057,14 @@
       providerText: normalizeSpaces(hoverDetails.provider),
       descriptionText: normalizeSpaces(hoverDetails.reason || hoverDetails.description),
       ownerName: hoverDetails.owner || ezyvetParsed?.ownerName || "",
-      caseNumber: ezyvetParsed?.caseNumber || ""
+      caseNumber: ezyvetParsed?.caseNumber || "",
+      statusText: normalizeSpaces(hoverDetails.status || ""),
+      demeanor: normalizeSpaces(hoverDetails.demeanor || ""),
+      species: normalizeSpaces(hoverDetails.species || ""),
+      breed: normalizeSpaces(hoverDetails.breed || ""),
+      sex: normalizeSpaces(hoverDetails.sex || ""),
+      age: normalizeSpaces(hoverDetails.age || ""),
+      weight: normalizeSpaces(hoverDetails.weight || "")
     };
   }
 
@@ -971,6 +1084,9 @@
   function parseEzyvetCardText(text) {
     const str = normalizeSpaces(text);
     if (!str) return null;
+
+    const piped = parseEzyvetPipedCardText(str);
+    if (piped) return piped;
 
     const match = str.match(EZYVET_CARD_RE);
     if (match) {
@@ -997,6 +1113,33 @@
     }
 
     return null;
+  }
+
+  // "Havik (Welch) | Canine (Dog) | 1212459 | PE, CBC/r" — the layout ezyVet uses
+  // on the calendar card itself, as opposed to the dash format in the tooltip.
+  function parseEzyvetPipedCardText(str) {
+    if (!str.includes("|")) return null;
+    const cancelMatch = str.match(/^\s*(cancell?ed|no ?show)\s*:\s*/i);
+    const body = cancelMatch ? str.slice(cancelMatch[0].length) : str;
+
+    const segments = body.split("|").map(normalizeSpaces).filter(Boolean);
+    if (segments.length < 2) return null;
+
+    const caseIndex = segments.findIndex((segment) => /^\d{6,8}$/.test(segment));
+    const head = segments[0];
+    const headMatch = head.match(/^\*?\s*(.+?)\s*\(([^)]+)\)\s*$/);
+    const patientName = normalizeSpaces((headMatch ? headMatch[1] : head).replace(/^\*/, ""));
+    if (!patientName) return null;
+
+    const reasonSegments = caseIndex >= 0 ? segments.slice(caseIndex + 1) : [];
+    return {
+      patientName,
+      ownerName: headMatch ? normalizeSpaces(headMatch[2]) : "",
+      species: caseIndex > 0 ? segments[caseIndex - 1] : (segments[1] || ""),
+      caseNumber: caseIndex >= 0 ? segments[caseIndex] : "",
+      reason: normalizeSpaces(reasonSegments.join(" ")),
+      statusText: cancelMatch ? normalizeSpaces(cancelMatch[1]) : ""
+    };
   }
 
   // Strip ezyVet patient name artifacts like "(527357)" or breed suffixes
@@ -1035,6 +1178,22 @@
     return normalizeSpaces(parts[parts.length - 1] || "");
   }
 
+  // Belt and braces for the address bleed: even if ezyVet ships a label spelling
+  // we do not know, the client's street address never reaches the board.
+  function cleanEzyvetOwnerText(value) {
+    const text = normalizeSpaces(value);
+    if (!text) return "";
+    const stopMatch = text.match(/\b(?:address|phone numbers?|mobile|email|first date seen|last date seen|type|date|time|case owner|status|reason)\b/i);
+    return normalizeSpaces(stopMatch ? text.slice(0, stopMatch.index) : text).replace(/[,;]\s*$/, "");
+  }
+
+  function cleanEzyvetSignalment(value) {
+    const text = normalizeSpaces(value);
+    if (!text) return "";
+    const stopMatch = text.match(/\b(?:master problems|animal notes|appointment address|address|owner|phone|type|date|time|case owner|status|reason|health status|history)\b/i);
+    return normalizeSpaces(stopMatch ? text.slice(0, stopMatch.index) : text);
+  }
+
   function cleanEzyvetProblemText(value) {
     const text = normalizeSpaces(value);
     if (!text) return "";
@@ -1069,7 +1228,15 @@
       status: normalizeSpaces((details.status || []).join(" ")),
       provider: extractProviderName(providerText) || providerText,
       patient: normalizeSpaces((details.patient || []).join(" ")),
-      owner: normalizeSpaces((details.owner || []).join(" ")),
+      owner: cleanEzyvetOwnerText(joinDetailValues(details.owner)),
+      // Signalment: collected by the label map all along, but previously dropped
+      // on the floor here instead of reaching the capture payload.
+      demeanor: normalizeSpaces((details.demeanor || []).join(" ")),
+      species: cleanEzyvetSignalment(joinDetailValues(details.species)),
+      breed: cleanEzyvetSignalment(joinDetailValues(details.breed)),
+      sex: cleanEzyvetSignalment(joinDetailValues(details.sex)),
+      age: cleanEzyvetSignalment(joinDetailValues(details.age)),
+      weight: cleanEzyvetSignalment(joinDetailValues(details.weight)),
       appointmentDate: normalizeSpaces((details.appointmentDate || []).join(" ")),
       appointmentTime: normalizeSpaces((details.appointmentTime || []).join(" ")),
       rawText: lines.join(" | ")
@@ -1552,17 +1719,21 @@
     const typeText = normalizeSpaces(appointment?.typeText || "");
     const reason = normalizeSpaces(appointment?.reason || "");
     const rawText = normalizeSpaces(appointment?.rawText || "");
-    const looseType = normalizeLooseCompare(typeText);
     const looseSearch = normalizeLooseCompare([typeText, reason, rawText].filter(Boolean).join(" "));
-    if (!looseSearch) return colors[0]?.id || "";
+    if (!looseSearch) return "";
+    if (isNonPatientBlock(appointment)) return "";
 
-    // 1. ezyVet type map — highest priority
+    // 1. The clinic's own type list is the best mapping table available. ezyVet
+    //    prefixes types with the department ("ONCO - Recheck", "ECC- Emergency"),
+    //    so try the bare type too before falling back to guesswork.
+    for (const candidate of getEzyvetTypeCandidates(typeText)) {
+      const exact = colors.find((label) => normalizeLooseCompare(label?.title || "") === candidate);
+      if (exact) return exact.id;
+    }
+
+    // 2. ezyVet type map, keyed on the type field when we have one.
     const ezyvetMatch = findEzyvetTypeLabel(colors, appointment);
     if (ezyvetMatch) return ezyvetMatch.id;
-
-    // 2. Exact label match
-    const exact = colors.find((label) => normalizeLooseCompare(label.title) === looseType);
-    if (exact) return exact.id;
 
     // 3. Alias fallback
     const aliasMatch = findAliasColorLabel(colors, looseSearch);
@@ -1572,23 +1743,49 @@
     const scored = findBestScoredColorLabel(colors, looseSearch);
     if (scored) return scored.id;
 
-    return colors[0]?.id || "";
+    // Nothing matched: leave the picker empty so the miss is visible instead of
+    // quietly filing the patient under whichever type happens to sort first.
+    return "";
+  }
+
+  // "ONCO - Recheck" -> ["onco recheck", "recheck"]. Only splits on a dash that
+  // has whitespace on at least one side, so "Follow-up" stays intact.
+  function getEzyvetTypeCandidates(typeText) {
+    const text = normalizeSpaces(typeText);
+    if (!text) return [];
+    const candidates = [normalizeLooseCompare(text)];
+    const parts = text.split(/\s+[-–—]\s*|\s*[-–—]\s+/).map(normalizeSpaces).filter(Boolean);
+    if (parts.length > 1) {
+      const tail = normalizeLooseCompare(parts[parts.length - 1]);
+      if (tail && !candidates.includes(tail)) candidates.push(tail);
+    }
+    return candidates.filter(Boolean);
+  }
+
+  function isNonPatientBlock(appointment) {
+    const typeText = normalizeLooseCompare(appointment?.typeText || "");
+    if (!typeText) return false;
+    return EZYVET_NON_PATIENT_TYPE_RE.test(typeText);
   }
 
   function findEzyvetTypeLabel(colors, appointment) {
-    const sources = {
-      type: normalizeLooseCompare(appointment?.typeText || ""),
-      reason: normalizeLooseCompare(appointment?.reason || ""),
-      desc: normalizeLooseCompare(appointment?.descriptionText || ""),
-      raw: normalizeLooseCompare(appointment?.rawText || "")
-    };
-    const searchText = [sources.type, sources.reason, sources.desc].filter(Boolean).join(" ");
-    if (!searchText) return null;
+    // When ezyVet gave us an explicit type, that field decides. Searching the
+    // reason as well lets an incidental word ("owner considering euthanasia
+    // later", "recheck ultrasound in 3 months") outrank the type actually booked.
+    const typeCandidates = getEzyvetTypeCandidates(appointment?.typeText || "");
+    const searchTexts = typeCandidates.length
+      ? typeCandidates
+      : [normalizeLooseCompare([appointment?.reason, appointment?.descriptionText].filter(Boolean).join(" "))].filter(Boolean);
+    if (!searchTexts.length) return null;
 
-    for (const mapping of EZYVET_TYPE_LABEL_MAP) {
-      if (!mapping.ezyvet.some((term) => searchText.includes(normalizeLooseCompare(term)))) continue;
-      const match = findColorLabelByMatchTerms(colors, mapping.vetboard);
-      if (match) return match;
+    // Most specific candidate first: the bare type ("Tech") must beat the
+    // department-prefixed form ("ECC- Tech"), or every ECC row lands on Emergency.
+    for (const text of searchTexts.slice().reverse()) {
+      for (const mapping of EZYVET_TYPE_LABEL_MAP) {
+        if (!mapping.ezyvet.some((term) => text.includes(normalizeLooseCompare(term)))) continue;
+        const match = findColorLabelByMatchTerms(colors, mapping.vetboard);
+        if (match) return match;
+      }
     }
     return null;
   }
@@ -1733,7 +1930,9 @@
     return {
       roomId: room.id || previousForm?.roomId || "",
       patientName: previousForm?.patientName || appointment.patientName || room.patientName || "",
-      colorLabelId: hasPreviousColor ? (previousForm.colorLabelId || "") : (reasonMatch || defaultColorId || room.colorLabelId || ""),
+      colorLabelId: hasPreviousColor
+        ? (previousForm.colorLabelId || "")
+        : (reasonMatch || defaultColorId || ""),
       doctor: previousDoctorChosen ? previousForm.doctor : (doctorMatch || room.doctor || ""),
       tech: room.tech || "",
       quickNote: room.quickNote || "",
@@ -1744,8 +1943,13 @@
   }
 
   function buildAppointmentNotes(appointment, fallbackNotes) {
+    const demeanor = normalizeSpaces(appointment?.demeanor || "");
+    // "Anxious"/"Aggressive" is the one flyout extra that changes how staff walk
+    // into the room, so it rides along with the reason instead of the signalment.
+    const withDemeanor = (text) => [text, demeanor ? `Demeanor: ${demeanor}` : ""].filter(Boolean).join("\n");
+
     const notesText = normalizeSpaces(appointment?.notesText || "");
-    if (notesText) return notesText;
+    if (notesText) return withDemeanor(notesText);
 
     const parts = [];
     const reason = normalizeSpaces(appointment?.reason || "");
@@ -1757,6 +1961,7 @@
     if (ownerName) parts.push(`Owner: ${ownerName}`);
     if (caseNumber) parts.push(`Case #${caseNumber}`);
     if (appointmentTime) parts.push(`Appt time: ${appointmentTime}`);
+    if (demeanor) parts.push(`Demeanor: ${demeanor}`);
 
     if (parts.length) return parts.join("\n");
     return fallbackNotes || "";
@@ -1838,6 +2043,8 @@
     if (!captureArmed) {
       stopEzyvetHoverPolling();
       setHoveredCard(null);
+      // Do not let a summary read minutes ago be captured on the next arm.
+      ezyvetSummaryCache = null;
     }
     updateBadgeUi();
     await storageSet({ [CAPTURE_ARMED_KEY]: captureArmed });
@@ -2004,6 +2211,16 @@
     document.documentElement.appendChild(modal);
   }
 
+  // ezyVet keeps cancelled and departed rows on the calendar, so a mis-click is
+  // easy. Warn instead of blocking: sending one is occasionally intentional.
+  const EZYVET_STALE_STATUS_RE = /\b(?:cancel(?:l)?ed|no show|noshow|departed|discharged|deceased)\b/i;
+
+  function getCaptureStatusWarning(appointment) {
+    const status = normalizeSpaces(appointment?.statusText || "");
+    if (!status || !EZYVET_STALE_STATUS_RE.test(status)) return "";
+    return `Heads up — this appointment's ezyVet status is "${status}".`;
+  }
+
   async function openQuickSendModal() {
     if (!pendingAppointment?.patientName) return;
     document.documentElement.classList.add("vetboard-send-open");
@@ -2090,10 +2307,29 @@
 
   function renderCaptureSummary() {
     if (!pendingAppointment) return "";
-    const parts = [];
-    if (pendingAppointment.appointmentTime) parts.push(`<div class="vbSummaryCard"><div class="vbLabel">Time</div><div class="vbSummaryValue">${escapeHtml(pendingAppointment.appointmentTime)}</div></div>`);
-    if (pendingAppointment.ownerName) parts.push(`<div class="vbSummaryCard"><div class="vbLabel">Owner</div><div class="vbSummaryValue">${escapeHtml(pendingAppointment.ownerName)}</div></div>`);
-    if (pendingAppointment.caseNumber) parts.push(`<div class="vbSummaryCard"><div class="vbLabel">Case #</div><div class="vbSummaryValue">${escapeHtml(pendingAppointment.caseNumber)}</div></div>`);
+    const card = (label, value) => value
+      ? `<div class="vbSummaryCard"><div class="vbLabel">${escapeHtml(label)}</div><div class="vbSummaryValue">${escapeHtml(value)}</div></div>`
+      : "";
+
+    // Signalment is shown here for the person doing the capture, not pushed to the
+    // board — a room card has no room for breed and age.
+    const signalment = [
+      normalizeSpaces(pendingAppointment.species || ""),
+      normalizeSpaces(pendingAppointment.breed || ""),
+      normalizeSpaces(pendingAppointment.sex || ""),
+      normalizeSpaces(pendingAppointment.age || "")
+    ].filter(Boolean).join(" · ");
+
+    const parts = [
+      card("Type", pendingAppointment.typeText),
+      card("Time", pendingAppointment.appointmentTime),
+      card("Demeanor", pendingAppointment.demeanor),
+      card("Status", pendingAppointment.statusText),
+      card("Owner", pendingAppointment.ownerName),
+      card("Case #", pendingAppointment.caseNumber),
+      card("Patient", signalment)
+    ].filter(Boolean);
+
     if (!parts.length) return "";
     return `<div class="vbSummaryRow">${parts.join("")}</div>`;
   }
@@ -2397,37 +2633,123 @@
     return mapAuthPayload(data, email);
   }
 
-  async function ensureValidAuthSession() {
+  // Supabase rotates the refresh token on every exchange, and every scheduler
+  // tab runs its own copy of this content script against one shared
+  // chrome.storage session. Two tabs refreshing the same token means the loser
+  // gets "Invalid Refresh Token: Already Used", and Supabase's reuse detection
+  // then revokes the whole token family — which is why one stale tab could sign
+  // the whole clinic out. Three things keep that from happening: one in-flight
+  // refresh per tab, a re-read of storage right before spending a token (a
+  // sibling may already have rotated it), and a re-read after a failure before
+  // concluding the session is really gone.
+  let authRefreshInFlight = null;
+
+  // Pull whatever the other tabs have written since we last looked.
+  async function readStoredAuthState() {
+    try {
+      const stored = await storageGet([AUTH_KEY]);
+      return stored?.[AUTH_KEY] || null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function authStateIsFresh(candidate) {
+    if (!candidate?.accessToken) return false;
+    const expiresAt = Number(candidate.expiresAt || 0);
+    return !!expiresAt && expiresAt > Date.now() + 60 * 1000;
+  }
+
+  // A stored session is only worth adopting if it is fresh AND is not the exact
+  // access token the server just rejected. Without the second half, a 401 retry
+  // would re-read storage, see the same dead token still marked unexpired, and
+  // retry with it forever.
+  function adoptableStoredAuth(candidate, rejectedAccessToken) {
+    if (!authStateIsFresh(candidate)) return false;
+    return !rejectedAccessToken || candidate.accessToken !== rejectedAccessToken;
+  }
+
+  async function ensureValidAuthSession(options) {
+    const rejectedAccessToken = String(options?.rejectedAccessToken || "");
     if (!authState?.accessToken) {
       throw new Error(authNeedsLogin ? (authErrorMessage || "Your RoomBoard session expired. Please sign in again.") : "Login required.");
     }
-    const expiresAt = Number(authState.expiresAt || 0);
-    if (expiresAt && expiresAt > Date.now() + 60 * 1000) return authState;
+    // Fresh is enough normally; on a 401 retry it must also not be the token
+    // the server just rejected.
+    if (adoptableStoredAuth(authState, rejectedAccessToken)) return authState;
+    if (authRefreshInFlight) return authRefreshInFlight;
 
-    if (!authState.refreshToken) {
-      await markAuthReloginRequired("Your RoomBoard session expired. Please sign in again.");
-      throw new Error(authErrorMessage || "Your RoomBoard session expired. Please sign in again.");
-    }
+    authRefreshInFlight = (async () => {
+      // Another tab may have refreshed while we sat on a stale in-memory copy.
+      const stored = await readStoredAuthState();
+      if (adoptableStoredAuth(stored, rejectedAccessToken)) {
+        authState = stored;
+        await clearAuthReloginFlag();
+        return authState;
+      }
+      // Always spend the newest token we can see, not the one we booted with.
+      if (stored?.refreshToken) authState = Object.assign({}, authState, stored);
+
+      if (!authState.refreshToken) {
+        await markAuthReloginRequired("Your RoomBoard session expired. Please sign in again.");
+        throw new Error(authErrorMessage || "Your RoomBoard session expired. Please sign in again.");
+      }
+
+      try {
+        const data = await fetchJson(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+          method: "POST",
+          headers: { apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh_token: authState.refreshToken }),
+          __skipAuthRetry: true
+        });
+        if (!data?.access_token) throw new Error("RoomBoard refresh did not return a session.");
+        authState = Object.assign({}, authState, mapAuthPayload(data, authState.email || ""));
+        await storageSet({ [AUTH_KEY]: authState });
+        await clearAuthReloginFlag();
+        return authState;
+      } catch (error) {
+        const message = getErrorMessage(error);
+        // Losing the rotation race looks exactly like a dead session. Before
+        // signing anyone out, check whether the tab that beat us left a working
+        // session behind.
+        const afterFailure = await readStoredAuthState();
+        if (adoptableStoredAuth(afterFailure, rejectedAccessToken)) {
+          authState = afterFailure;
+          await clearAuthReloginFlag();
+          return authState;
+        }
+        if (isLikelyAuthErrorMessage(message)) {
+          await markAuthReloginRequired("Your RoomBoard session expired. Please sign in again.");
+          throw new Error(authErrorMessage || message);
+        }
+        throw error;
+      }
+    })();
 
     try {
-      const data = await fetchJson(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
-        method: "POST",
-        headers: { apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh_token: authState.refreshToken })
-      });
-      if (!data?.access_token) throw new Error("RoomBoard refresh did not return a session.");
-      authState = Object.assign({}, authState, mapAuthPayload(data, authState.email || ""));
-      await storageSet({ [AUTH_KEY]: authState });
-      await clearAuthReloginFlag();
-      return authState;
-    } catch (error) {
-      const message = getErrorMessage(error);
-      if (isLikelyAuthErrorMessage(message)) {
-        await markAuthReloginRequired("Your RoomBoard session expired. Please sign in again.");
-        throw new Error(authErrorMessage || message);
-      }
-      throw error;
+      return await authRefreshInFlight;
+    } finally {
+      authRefreshInFlight = null;
     }
+  }
+
+  // Keep every open scheduler tab on the same session, so a tab that has been
+  // idle for hours doesn't wake up and spend a refresh token that another tab
+  // already replaced.
+  function watchStoredAuthState() {
+    try {
+      api.storage.onChanged.addListener((changes, area) => {
+        if (area !== "local" || !changes[AUTH_KEY]) return;
+        const next = changes[AUTH_KEY].newValue || null;
+        if (next?.accessToken) {
+          authState = next;
+          if (authNeedsLogin) clearAuthReloginFlag();
+        } else if (!next) {
+          authState = null;
+        }
+        updateBadgeUi();
+      });
+    } catch (_) {}
   }
 
   function mapAuthPayload(data, fallbackEmail) {
@@ -2464,12 +2786,33 @@
     if (isModalOpen()) { modalMessage = authErrorMessage; renderModal(); }
   }
 
+  // Only phrases that mean "this credential is dead". Deliberately NOT here:
+  // a bare "unauthorized" or "jwt", which Postgres/PostgREST also emit for a
+  // row-level-security denial. Treating those as an expired session made a
+  // billing hiccup (RLS says no) look like a logout and wipe a valid session.
   function isLikelyAuthErrorMessage(message) {
     const text = normalizeSpaces(message).toLowerCase();
     if (!text) return false;
-    return text.includes("invalid token") || text.includes("jwt") || text.includes("token is expired") ||
-      text.includes("session expired") || text.includes("refresh token") || text.includes("invalid grant") ||
-      text.includes("login required") || text.includes("unauthorized");
+    return text.includes("invalid token") || text.includes("token is expired") ||
+      text.includes("jwt expired") || text.includes("jwt is expired") ||
+      text.includes("bad_jwt") || text.includes("invalid jwt") ||
+      text.includes("session expired") || text.includes("session_not_found") ||
+      text.includes("refresh token") || text.includes("invalid grant") ||
+      text.includes("invalid_grant") || text.includes("login required") ||
+      text.includes("user from sub claim in jwt does not exist");
+  }
+
+  // A 403 is authorization, not authentication: the token is fine, the row or
+  // the billing gate said no. Retrying it as if the session expired burns a
+  // refresh token for nothing and can cascade into a forced sign-out.
+  function isPermissionDeniedResponse(parsed) {
+    const code = String((parsed && parsed.code) || "").trim();
+    if (code === "42501" || code === "PGRST301") return true;
+    const text = normalizeSpaces(getErrorMessage(parsed)).toLowerCase();
+    return text.includes("permission denied") ||
+      text.includes("row-level security") ||
+      text.includes("violates row-level") ||
+      text.includes("billing");
   }
 
   async function loadBoardState(forceRefresh) {
@@ -2758,8 +3101,9 @@
       const canRetryAuth = hasAuthHeader && !options.__skipAuthRetry && !/\/auth\/v1\/token\b/i.test(String(url || ""));
       if (canRetryAuth && shouldTreatAsAuthFailure(response, parsed) && authState && authState.refreshToken) {
         try {
+          const rejectedAccessToken = authState.accessToken || "";
           authState.expiresAt = 0;
-          await ensureValidAuthSession();
+          await ensureValidAuthSession({ rejectedAccessToken });
           const retryOptions = Object.assign({}, options, { headers: Object.assign({}, options.headers), __skipAuthRetry: true });
           if (retryOptions.headers.Authorization) retryOptions.headers.Authorization = `Bearer ${authState.accessToken}`;
           if (retryOptions.headers.authorization) retryOptions.headers.authorization = `Bearer ${authState.accessToken}`;
@@ -2777,7 +3121,8 @@
 
   function shouldTreatAsAuthFailure(response, parsed) {
     const status = Number(response && response.status || 0);
-    if (status === 401 || status === 403) return true;
+    if (status === 403) return !isPermissionDeniedResponse(parsed) && isLikelyAuthErrorMessage(getErrorMessage(parsed));
+    if (status === 401) return true;
     return isLikelyAuthErrorMessage(getErrorMessage(parsed));
   }
 

@@ -10,7 +10,10 @@
 <title data-id="th-modified">RoomBoard</title>
 <link rel="icon" type="image/png" href="/favicon.png?v=mark2">
 <link rel="apple-touch-icon" href="/favicon.png?v=mark2">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Pinned: an unpinned @2 lets jsDelivr swap the auth client (token refresh,
+     storage locking) under a live clinic with no deploy on our side. Bump
+     deliberately, in all three pages that load this. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.103.3/dist/umd/supabase.min.js"></script>
 <link rel="stylesheet" href="./styles.css?v=20260726a">
 <meta property="og:title" content="RoomBoard" data-id="th-modified" ><meta name="description" content="RoomBoard display board website" data-id="th-modified" ><meta property="og:description" content="RoomBoard display board website" data-id="th-modified" ><meta property="og:type" content="website" data-id="th-modified" ></head>
 <body class="displayTabActive"><button aria-label="Back to top" id="toTopBtn" title="Back to top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
@@ -929,18 +932,18 @@ Manage subscription
 </aside>
 <script src="./config.js?v=20260717a"></script>
 <script src="./js/compat.js?v=20260712d"></script>
-<script src="./js/board-state.js?v=20260726a"></script>
+<script src="./js/board-state.js?v=20260919a"></script>
 <script src="./js/rendering.js?v=20260804a"></script>
 <script src="./js/settings.js?v=20260726b"></script>
 <script src="./js/checklist.js?v=20260626d"></script>
 <script src="./js/patient-checklist.js?v=20260709a"></script>
-<script src="./js/auth-sync.js?v=20260804a"></script>
+<script src="./js/auth-sync.js?v=20260919a"></script>
 <script src="./js/ux.js?v=20260717a"></script>
 <script src="./js/theme.js?v=20260517d"></script>
 <script src="./js/desktop-capture-panel.js?v=20260606a"></script>
-<script src="./js/stats-dashboard.js?v=20260717c"></script>
-<script src="./js/stats.js?v=20260726a"></script>
-<script src="./js/standalone-flow.js?v=20260708b"></script>
+<script src="./js/stats-dashboard.js?v=20260726a"></script>
+<script src="./js/stats.js?v=20260726c"></script>
+<script src="./js/standalone-flow.js?v=20260919a"></script>
 <script src="./js/demo-mode.js?v=20260711a"></script>
 <script src="./js/init.js?v=20260712a"></script>
 </body>

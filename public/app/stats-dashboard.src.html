@@ -990,6 +990,34 @@
 	    }
 	  }
 
+  /* ===== Readability pass ===== */
+  /* Numbers keep a fixed width so values don't jiggle and columns align. */
+  .metricCard span,
+  .compareValue,
+  td.numeric{ font-variant-numeric:tabular-nums; }
+  /* Small uppercase labels need more contrast than body-muted text. */
+  .metricCard strong,
+  .highlightItem strong,
+  .overviewTrendTitle,
+  label{ color:#a9bad4; }
+  /* Sentence-case table headers — small letterspaced caps are the hardest text to read. */
+  th{
+    text-transform:none;
+    letter-spacing:.02em;
+    font-size:.84rem;
+    color:#a9bad4;
+  }
+  /* Period-over-period delta line on the Overview hero cards. */
+  .metricCard span.metricDelta{
+    font-size:.8rem;
+    font-weight:700;
+    letter-spacing:0;
+    color:var(--muted);
+    min-height:1.05em;
+  }
+  .metricCard span.metricDelta.success{ color:#34d399; }
+  .metricCard span.metricDelta.warn{ color:#fbbf24; }
+
   /* ===== Calm Overview layout (in-app Stats) ===== */
   .overviewSummary{ display:grid; gap:16px; }
   .overviewSummary > .toolbar{ margin-bottom:0; }
@@ -1002,6 +1030,7 @@
   }
   .heroMetrics .metricCard.hero strong{ font-size:.78rem; }
   .heroMetrics .metricCard.hero span{ font-size:2.3rem; line-height:1.02; }
+  .heroMetrics .metricCard.hero span.metricDelta{ font-size:.8rem; line-height:1.2; }
 
   .secondaryMetrics{ grid-template-columns:repeat(5, minmax(0,1fr)); gap:12px; }
   .secondaryMetrics .metricCard{ min-height:0; padding:13px 14px; }
@@ -1180,21 +1209,25 @@
           <article class="metricCard hero">
             <strong>Visits</strong>
             <span id="visitCount">0</span>
+            <span class="metricDelta" id="visitCountDelta"></span>
             <em>Appointments in range</em>
           </article>
           <article class="metricCard hero">
             <strong>Throughput / day</strong>
             <span id="throughputPerDay">0</span>
+            <span class="metricDelta" id="throughputPerDayDelta"></span>
             <em>Average visits per day</em>
           </article>
           <article class="metricCard hero">
             <strong>Avg room time</strong>
-            <span id="avgRoomTime">00:00:00</span>
+            <span id="avgRoomTime">0 min</span>
+            <span class="metricDelta" id="avgRoomTimeDelta"></span>
             <em>Mean visit duration</em>
           </article>
           <article class="metricCard hero">
             <strong>Utilization</strong>
             <span id="utilizationRate">0%</span>
+            <span class="metricDelta" id="utilizationRateDelta"></span>
             <em>Room hours vs available</em>
           </article>
         </div>
@@ -1211,12 +1244,12 @@
             <div class="statsGrid secondaryMetrics">
               <article class="metricCard">
                 <strong>Median room time</strong>
-                <span id="medianRoomTime">00:00:00</span>
+                <span id="medianRoomTime">0 min</span>
                 <em>Typical visit duration</em>
               </article>
               <article class="metricCard">
                 <strong>P90 room time</strong>
-                <span id="p90RoomTime">00:00:00</span>
+                <span id="p90RoomTime">0 min</span>
                 <em>Upper-end visit duration</em>
               </article>
               <article class="metricCard">
@@ -1246,7 +1279,7 @@
               </article>
               <article class="metricCard">
                 <strong>Avg clean time</strong>
-                <span id="avgCleanTime">00:00:00</span>
+                <span id="avgCleanTime">0 min</span>
                 <em>Average turnaround</em>
               </article>
               <article class="metricCard">
@@ -1583,7 +1616,10 @@ window.__SUPABASE_URL__ = window.__SUPABASE_URL__ || "https://bqqjtgbfvtscwhbhsc
 window.__SUPABASE_PUBLISHABLE_KEY__ = window.__SUPABASE_PUBLISHABLE_KEY__ || "sb_publishable_NqK4gR7x45P1rjA-6DJngg_QmOiWXMi";
 window.__SUPABASE_ANON_KEY__ = window.__SUPABASE_ANON_KEY__ || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxcWp0Z2JmdnRzY3doYmhzY3BzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NTIxNDEsImV4cCI6MjA5MDMyODE0MX0.hi_ruvxOBNbUIdQ-BYhjhuy6KM5oigqib-zIWL8dsts";
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Pinned: an unpinned @2 lets jsDelivr swap the auth client (token refresh,
+     storage locking) under a live clinic with no deploy on our side. Bump
+     deliberately, in all three pages that load this. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.103.3/dist/umd/supabase.min.js"></script>
 <script>
   (function(){
     function $(id){ return document.getElementById(id); }
