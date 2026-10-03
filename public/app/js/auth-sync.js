@@ -2975,6 +2975,32 @@
       if(!roomHasAssignedPatient(room) && room.timer.running){
         applyTimerStopAt(room.timer, getEstimatedServerNowIso(), false);
       }
+
+      // Freezing alone is not enough. applyTimerStopAt(..., false) keeps
+      // elapsedMs, and applyTimerStartAt PRESERVES elapsedMs when it starts a
+      // timer — so a leftover value on an empty room is inherited by the NEXT
+      // patient and their timer begins mid-count. That is the "random timer
+      // after discharge and clean": clearRoomCleaning zeroes the timer locally
+      // (resetElapsed = true), but a board arriving from another client was
+      // only ever frozen, never zeroed.
+      //
+      // An idle room — no patient, not cleaning, no stats session in flight —
+      // has nothing to measure, so any elapsed value is drift. Clear it.
+      //
+      // The session-id guard matters: a field-independent merge can briefly
+      // drop patientName while the room really is occupied elsewhere. An open
+      // activeRoomSessionId means a patient visit is still in flight, so the
+      // elapsed time is real and must survive.
+      if(!roomHasAssignedPatient(room) && !isUuidLike(room.activeRoomSessionId)){
+        if(Number(room.timer.elapsedMs || 0) !== 0 || room.timer.running){
+          applyTimerStopAt(room.timer, getEstimatedServerNowIso(), true);
+        }
+      }
+      if(!isUuidLike(room.activeCleaningSessionId)){
+        if(Number(room.cleaningTimer.elapsedMs || 0) !== 0 || room.cleaningTimer.running){
+          applyTimerStopAt(room.cleaningTimer, getEstimatedServerNowIso(), true);
+        }
+      }
     }
 
 	    function getRoomEncounterSignature(room){

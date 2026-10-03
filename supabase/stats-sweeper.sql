@@ -1,15 +1,30 @@
 -- RoomBoard stats sweeper
+-- ===========================================================================
 -- Server-side backstop for stopwatch statistics: closes room/cleaning stat
--- sessions that have been open for more than 48 hours. Clients normally close
--- their own sessions (with a localStorage retry outbox in auth-sync.js), but a
--- device that dies mid-session and never comes back would leave the row open
--- forever and show up as an orphan in the stopwatch diagnostics panel.
+-- sessions that have been left open. Clients normally close their own (with a
+-- localStorage retry outbox in auth-sync.js), but the common leak is
+-- CROSS-CLIENT: device A opens the session, device B marks the room clean, and
+-- device B has no session id to close because the board merges fields
+-- independently and the id syncs last-writer-wins. Device A's row then stays
+-- open forever, accruing duration, and poisons every average in Stats.
 --
--- The 48h threshold stays clear of legitimate overnight hospitalizations.
--- Durations are capped (1h room / 30min cleaning) because the real duration is
--- unknowable for an abandoned row and a multi-day value would poison averages.
+-- Measured on prod 2026-10-03 before this was installed:
+--   cleaning_sessions  median 4.1 min, p90 63 min, max 12,915 min (9 DAYS)
+--                      63 of 979 rows (6.4%) over two hours
+--   room_sessions      median 57 min,  p90 115 min, max 20,885 min (14.5 days)
+--                      14 of 993 rows (1.4%) over four hours
 --
--- Requires pg_cron (available on hosted Supabase; run this in the SQL editor).
+-- Thresholds are deliberately different:
+--   room     48h — must clear legitimate overnight hospitalisation.
+--   cleaning  4h — a clean has a 4-minute median and a 63-minute p90, so a
+--                  4h row is already impossible. The original 48h here let a
+--                  stuck clean accrue two days before anything noticed.
+--
+-- Durations are CAPPED rather than computed, because the true duration of an
+-- abandoned row is unknowable and a multi-day value poisons the mean.
+--
+-- Requires pg_cron (available on hosted Supabase). Safe to run more than once.
+-- ===========================================================================
 
 create extension if not exists pg_cron;
 
@@ -29,7 +44,7 @@ as $$
      set ended_at = started_at + interval '30 minutes',
          duration_ms = 30 * 60 * 1000
    where ended_at is null
-     and started_at < now() - interval '48 hours';
+     and started_at < now() - interval '4 hours';
 $$;
 
 -- Only the cron scheduler should run this; don't expose it through the API.
@@ -47,3 +62,6 @@ select cron.schedule(
   '27 * * * *',
   $$select public.close_stale_stat_sessions()$$
 );
+
+-- Close anything already stale right now, rather than waiting for the next tick.
+select public.close_stale_stat_sessions();
