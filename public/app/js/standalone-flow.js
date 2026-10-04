@@ -407,7 +407,9 @@
           '<p class="rbAStatus" id="rbAStatus"></p>',
           '<div class="rbAFooterLinks">',
             '<a href="#" id="rbaForgotLink">Forgot password?</a>',
-            '<a href="/">← theroomboard.com</a>',
+            // /landing, not /: the root now redirects to this very sign-in
+            // screen, so href="/" would be a loop back to where we already are.
+            '<a href="/landing">← theroomboard.com</a>',
           '</div>',
         '</div>',
       '</div>',
